@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a197618b5b21a143b0265f179e634bd, type: 3}
+  m_Name: Building_barracks
+  m_EditorClassIdentifier: VoidClash.Runtime::VoidClash.BuildingData
+  id: barracks
+  displayName: Barracks
+  description: Trains Soldiers and Rangers.
+  hotkey: 101
+  mineralCost: 150
+  buildTime: 20
+  maxHP: 900
+  armor: 1
+  armorClass: 2
+  sizeX: 5
+  sizeZ: 5
+  canLift: 1
+  supplyProvided: 0
+  isDropoff: 0
+  trainableUnits:
+  - soldier
+  - ranged
+  damage: 0
+  damageClass: 1
+  attackRange: 9
+  attackCooldown: 1
+  projectileSpeed: 30
+  visionRadius: 10
+  accentColor: {r: 0.4, g: 1, b: 0.5, a: 1}

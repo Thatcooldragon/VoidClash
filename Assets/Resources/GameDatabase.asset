@@ -1,0 +1,188 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9251811e11f32d347a70fbc0daa3f524, type: 3}
+  m_Name: GameDatabase
+  m_EditorClassIdentifier: VoidClash.Runtime::VoidClash.GameDatabase
+  units:
+  - {fileID: 11400000, guid: 0f2b8c3d6a685c949bb32c833fa57cee, type: 2}
+  - {fileID: 11400000, guid: ef4779ce5844af140aebe0ce695c8740, type: 2}
+  - {fileID: 11400000, guid: db0878565264aa94bbb0532e7ba39c0b, type: 2}
+  - {fileID: 11400000, guid: 0ef8b9f5b65b55845a8e51932a3fd8ea, type: 2}
+  - {fileID: 11400000, guid: 003ad7692ca21684a8d5095642acdecb, type: 2}
+  - {fileID: 11400000, guid: 027939e0c49411248bd324c1207280f2, type: 2}
+  - {fileID: 11400000, guid: 2e16def67ca54ee4795acf26d8d057d0, type: 2}
+  - {fileID: 11400000, guid: 4d12b98ed2b782348b7ed691eeca537a, type: 2}
+  - {fileID: 11400000, guid: 4915f675823227f408b1e33e5c594dbb, type: 2}
+  buildings:
+  - {fileID: 11400000, guid: ad3d7bd1649bc2a4f8346c5379117eff, type: 2}
+  - {fileID: 11400000, guid: 4fbf10188812a9f4b8beab9d5d99154c, type: 2}
+  - {fileID: 11400000, guid: 41080176dc89c634b8d077cf483dd5f4, type: 2}
+  - {fileID: 11400000, guid: e2239abd8f05dc74b95dc03676fae65b, type: 2}
+  - {fileID: 11400000, guid: b1392b793079b8c448048e7555cf7f95, type: 2}
+  materialNames:
+  - ground
+  - cliff
+  - rock
+  - metal_dark
+  - metal_light
+  - player_body
+  - enemy_body
+  - player_accent
+  - enemy_accent
+  - zerg_body
+  - zerg_accent
+  - protoss_body
+  - protoss_accent
+  - crystal
+  - crystal_dim
+  - particle_add
+  - ghost_valid
+  - ghost_invalid
+  - hp_back
+  - hp_green
+  - hp_yellow
+  - hp_red
+  - hp_build
+  - ring_player
+  - ring_enemy
+  - ring_hover
+  - fog
+  - marker_move
+  - marker_attack
+  - projectile_player
+  - projectile_enemy
+  - rally
+  materials:
+  - {fileID: 2100000, guid: cf36cdc488114e840bab07027d2c1296, type: 2}
+  - {fileID: 2100000, guid: e9e863255db7f2d458f1355c057e1b7b, type: 2}
+  - {fileID: 2100000, guid: d04cab499df4d7b4bb58a92d5fb7d5e8, type: 2}
+  - {fileID: 2100000, guid: 73945e096eb63974e8314637b6e23ea9, type: 2}
+  - {fileID: 2100000, guid: cad16c3474bf4784e8740e7288a89440, type: 2}
+  - {fileID: 2100000, guid: 4d48cd65ae9a1a54b804ada6d32faae8, type: 2}
+  - {fileID: 2100000, guid: 0406f0e1776a5234da9810cdf3434b8f, type: 2}
+  - {fileID: 2100000, guid: 8a7402702e196f34c93f5ca4086a20f4, type: 2}
+  - {fileID: 2100000, guid: ab65792327d2537439a4dc67e057385d, type: 2}
+  - {fileID: 2100000, guid: 2894aa7dded7e5f45bcee7513536eb64, type: 2}
+  - {fileID: 2100000, guid: 6b24893a932e3c54e9f18947a81965e5, type: 2}
+  - {fileID: 2100000, guid: 8bb6990b3bc167641b22e4435be6f4a3, type: 2}
+  - {fileID: 2100000, guid: dcca5f2fbb6e3f0428308a737d8bd3d1, type: 2}
+  - {fileID: 2100000, guid: f92a80a38c1aed04cbbae165e8453abf, type: 2}
+  - {fileID: 2100000, guid: ce25ec541e788f9428a98edf498dfe97, type: 2}
+  - {fileID: 2100000, guid: 44339178f0ace03419a5cf264fa99ff7, type: 2}
+  - {fileID: 2100000, guid: e95556fc8dad5b841a8843ba81028be8, type: 2}
+  - {fileID: 2100000, guid: 9d0d0a2c76c02314c9244784c4eae7dc, type: 2}
+  - {fileID: 2100000, guid: 1fb3b0e879fbc604ca3836ac629084f8, type: 2}
+  - {fileID: 2100000, guid: ab235c0b622d9c041b2c78d27e71e671, type: 2}
+  - {fileID: 2100000, guid: 00758c442e6576842bad4ac863ed16d8, type: 2}
+  - {fileID: 2100000, guid: 762c87ab9c2b3f44a8bca70ed2a7905e, type: 2}
+  - {fileID: 2100000, guid: d4783079101924243bd6b89d7a7deff3, type: 2}
+  - {fileID: 2100000, guid: 0bb65de22cbc8e44c9a0af2ce7cb7b75, type: 2}
+  - {fileID: 2100000, guid: f4975b0a9a3d1aa4b972eede7e282607, type: 2}
+  - {fileID: 2100000, guid: 775228892ca4b1b45930038f74017ccd, type: 2}
+  - {fileID: 2100000, guid: 93f99623cd933084b85be23fcba716d1, type: 2}
+  - {fileID: 2100000, guid: db28fb26e093a2e45aead52d986fbec7, type: 2}
+  - {fileID: 2100000, guid: 5ce7d418fe4f48d4b96c761f7b6b1bce, type: 2}
+  - {fileID: 2100000, guid: 1c37c61fc2096a5468f68380ed9e52f2, type: 2}
+  - {fileID: 2100000, guid: 3d337b0947cdc9a4d85c7a70ef815c3a, type: 2}
+  - {fileID: 2100000, guid: 26e80cd91b1dc7c45a9123775851fb67, type: 2}
+  clipNames:
+  - select
+  - move
+  - attack_order
+  - fire
+  - fire_heavy
+  - melee
+  - explosion
+  - build_place
+  - build_done
+  - train_done
+  - deposit
+  - error
+  - click
+  - victory
+  - defeat
+  - music
+  clips:
+  - {fileID: 8300000, guid: f439c4e1dd42db64ca361c13cf9cbc48, type: 3}
+  - {fileID: 8300000, guid: 8c3b25d7d7e91794eb9e75582a5a8215, type: 3}
+  - {fileID: 8300000, guid: c717c05d95c868c4b91515eeaafc9c75, type: 3}
+  - {fileID: 8300000, guid: f8b64151098b9034aa84fa96902acdf3, type: 3}
+  - {fileID: 8300000, guid: e397dc51744836843841b7e857a4743f, type: 3}
+  - {fileID: 8300000, guid: 5465a9757b2a8df46aecaa04c5ca78a8, type: 3}
+  - {fileID: 8300000, guid: 2ef25a969202a4f438bf3f7d9b92e99f, type: 3}
+  - {fileID: 8300000, guid: 6892db17086767d43ae17f55a5dd319c, type: 3}
+  - {fileID: 8300000, guid: d54f425fe918eb94584b8c59de5396b5, type: 3}
+  - {fileID: 8300000, guid: 7e4227126b0c4a249b4976ece235c8fb, type: 3}
+  - {fileID: 8300000, guid: ccc8f7861140c104f9f24289a01f4be0, type: 3}
+  - {fileID: 8300000, guid: 8ab96e710c34aba4fa4918cc053e2609, type: 3}
+  - {fileID: 8300000, guid: a6c6f409c84b567478c3625d562132a4, type: 3}
+  - {fileID: 8300000, guid: 80bcec40fc242364a8326c3b5a61aee2, type: 3}
+  - {fileID: 8300000, guid: f7c53117665fd7b4ebe8524e9651a71e, type: 3}
+  - {fileID: 8300000, guid: 111ac230862955b41adf7989ad66720a, type: 3}
+  visualPrefabNames:
+  - unit_worker_Player
+  - unit_worker_Enemy
+  - unit_soldier_Player
+  - unit_soldier_Enemy
+  - unit_ranged_Player
+  - unit_ranged_Enemy
+  - unit_heavy_Player
+  - unit_heavy_Enemy
+  - unit_zergling_Player
+  - unit_zergling_Enemy
+  - unit_hydralisk_Player
+  - unit_hydralisk_Enemy
+  - unit_zealot_Player
+  - unit_zealot_Enemy
+  - unit_stalker_Player
+  - unit_stalker_Enemy
+  - unit_overlord_Player
+  - unit_overlord_Enemy
+  - building_cc_Player
+  - building_cc_Enemy
+  - building_depot_Player
+  - building_depot_Enemy
+  - building_barracks_Player
+  - building_barracks_Enemy
+  - building_factory_Player
+  - building_factory_Enemy
+  - building_turret_Player
+  - building_turret_Enemy
+  visualPrefabs:
+  - {fileID: 742764171985358668, guid: 06742137d9cbaf843ba14a0f97df9e7c, type: 3}
+  - {fileID: 5668291073364117384, guid: 96a94397a4a11414aa27498a62499239, type: 3}
+  - {fileID: 780686387019441025, guid: 51e12deba4187af48bf1dfefa42edc59, type: 3}
+  - {fileID: 541407373880841668, guid: 13447f16ba880e34ab40d7d06ac38038, type: 3}
+  - {fileID: 6329734795565065644, guid: e19d26064e29c94489277981f83bbb43, type: 3}
+  - {fileID: 885539190489542920, guid: 098a67528ac0a454283491e250b0c250, type: 3}
+  - {fileID: 8263499436650795218, guid: 54cf6c3ecca7ab64da15ff85f38664e7, type: 3}
+  - {fileID: 8264982596041948779, guid: dd920604c2b153b4d944c784c8f4813b, type: 3}
+  - {fileID: 3028737321414723593, guid: 135b73a775a8ceb4aac9f627cd2da9be, type: 3}
+  - {fileID: 5573720003241845718, guid: d73d91e86984d3f4a869b70e6965c66b, type: 3}
+  - {fileID: 6936579727554588108, guid: 0321d020aa5d6b74fb91cdc5916f6219, type: 3}
+  - {fileID: 1972596610904797854, guid: 6b2fe02a1f59a754991cae34507d213a, type: 3}
+  - {fileID: 6306044893741186092, guid: c5f90374a02060d4b8587fb88960f804, type: 3}
+  - {fileID: 4734514363274837463, guid: df1895058d5ae1346bef304149bee970, type: 3}
+  - {fileID: 5791401977749821987, guid: cb78c389208c8e4409e7ca8242fc2dd8, type: 3}
+  - {fileID: 8109801971276399459, guid: ec55a469386f6724abb5c6b1c4c21cc8, type: 3}
+  - {fileID: 2503019849566483208, guid: 39cfbdf14b0dc5d49b8ddb5d0487834b, type: 3}
+  - {fileID: 897516784647580507, guid: 4f2efb2f0c15a454191731dbb9b9a61a, type: 3}
+  - {fileID: 2346470330691285722, guid: d6093ec4e8d1e1e4b8eea8c47af4afba, type: 3}
+  - {fileID: 5540891817414547462, guid: 5f196d08c31a07f4a931adfd9f3bec97, type: 3}
+  - {fileID: 8762678030039761073, guid: af457b47e49759940b0e841645298e7d, type: 3}
+  - {fileID: 2658957998072473443, guid: 8ce9d52959c67a34aab9cc939e1cf324, type: 3}
+  - {fileID: 4883286253311113619, guid: 9b071bf304d7a6c48bb7c97ee2be08b7, type: 3}
+  - {fileID: 548080523066594874, guid: 8fb2fa9e9f455cd459aa5081cbd7d66e, type: 3}
+  - {fileID: 3968602322070476558, guid: 2185b1ada1afbde4f8c5b1e2381961f4, type: 3}
+  - {fileID: 3726979364873990179, guid: ce11e6e85d0027a469744c04ccc4b8fb, type: 3}
+  - {fileID: 3464101010827457792, guid: 2dd1ec8ecbfdd4a49af49a0f0c242ed1, type: 3}
+  - {fileID: 8795221203986260576, guid: ec3e9055a919e0f4980bb2c869848ea0, type: 3}
