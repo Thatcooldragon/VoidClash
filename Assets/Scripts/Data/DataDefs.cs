@@ -104,7 +104,27 @@ namespace VoidClash
             overlord.moveSpeed = 1.9f; overlord.visionRadius = 13f;
             overlord.accentColor = new Color(1f, 0.25f, 0.5f); overlord.bodyScale = 3.1f;
 
-            return new[] { worker, soldier, ranged, heavy, zergling, hydra, zealot, stalker, overlord };
+            var bubble = ScriptableObject.CreateInstance<UnitData>();
+            bubble.id = "bubble"; bubble.displayName = "Bubble";
+            bubble.description = "Fragile soap bubble produced automatically by Bubble Springs.";
+            bubble.mineralCost = 0; bubble.supplyCost = 0; bubble.trainTime = 1f;
+            bubble.maxHP = 16; bubble.armor = 0; bubble.armorClass = ArmorClass.Light;
+            bubble.damage = 4f; bubble.damageClass = DamageClass.Normal;
+            bubble.attackRange = 1.2f; bubble.attackCooldown = 0.8f; bubble.projectileSpeed = 0f;
+            bubble.moveSpeed = 4.1f; bubble.visionRadius = 7f;
+            bubble.accentColor = new Color(0.65f, 0.95f, 1f); bubble.bodyScale = 0.72f;
+
+            var poisonBubble = ScriptableObject.CreateInstance<UnitData>();
+            poisonBubble.id = "poison_bubble"; poisonBubble.displayName = "Poison Bubble";
+            poisonBubble.description = "Fragile bubble that releases poisonous gas when popped.";
+            poisonBubble.mineralCost = 0; poisonBubble.supplyCost = 0; poisonBubble.trainTime = 1f;
+            poisonBubble.maxHP = 14; poisonBubble.armor = 0; poisonBubble.armorClass = ArmorClass.Light;
+            poisonBubble.damage = 3f; poisonBubble.damageClass = DamageClass.Normal;
+            poisonBubble.attackRange = 1.2f; poisonBubble.attackCooldown = 0.8f; poisonBubble.projectileSpeed = 0f;
+            poisonBubble.moveSpeed = 4.0f; poisonBubble.visionRadius = 7f;
+            poisonBubble.accentColor = new Color(0.35f, 1f, 0.35f); poisonBubble.bodyScale = 0.76f;
+
+            return new[] { worker, soldier, ranged, heavy, zergling, hydra, zealot, stalker, overlord, bubble, poisonBubble };
         }
 
         public static BuildingData[] CreateBuildings()
@@ -173,7 +193,25 @@ namespace VoidClash
             sensor.visionRadius = 24f;
             sensor.accentColor = new Color(0.35f, 0.95f, 1f);
 
-            return new[] { cc, depot, rax, fac, turret, sensor };
+            var bubbleSpring = ScriptableObject.CreateInstance<BuildingData>();
+            bubbleSpring.id = "bubble_spring"; bubbleSpring.displayName = "Bubble Spring";
+            bubbleSpring.description = "Produces soap bubbles nonstop when built close to minerals.";
+            bubbleSpring.hotkey = KeyCode.U;
+            bubbleSpring.mineralCost = 125; bubbleSpring.buildTime = 16f; bubbleSpring.maxHP = 360; bubbleSpring.armor = 0;
+            bubbleSpring.sizeX = 3f; bubbleSpring.sizeZ = 3f;
+            bubbleSpring.visionRadius = 10f;
+            bubbleSpring.accentColor = new Color(0.6f, 0.95f, 1f);
+
+            var poisonPool = ScriptableObject.CreateInstance<BuildingData>();
+            poisonPool.id = "poison_pool"; poisonPool.displayName = "Poison Pool";
+            poisonPool.description = "Morphs nearby basic bubbles into poison bubbles.";
+            poisonPool.hotkey = KeyCode.I;
+            poisonPool.mineralCost = 100; poisonPool.buildTime = 14f; poisonPool.maxHP = 320; poisonPool.armor = 0;
+            poisonPool.sizeX = 3f; poisonPool.sizeZ = 3f;
+            poisonPool.visionRadius = 9f;
+            poisonPool.accentColor = new Color(0.35f, 1f, 0.35f);
+
+            return new[] { cc, depot, rax, fac, turret, sensor, bubbleSpring, poisonPool };
         }
     }
 }

@@ -4,6 +4,12 @@ namespace VoidClash
 {
     public enum EnemyRace { Terran, Zerg, Protoss }
     public enum AIPersonality { Balanced, Rusher, Turtle, Expander, Tech, Swarm }
+    public enum SkirmishMode { Terran, BubbleLab }
+
+    public static class SkirmishConfig
+    {
+        public static SkirmishMode Mode = SkirmishMode.Terran;
+    }
 
     /// <summary>Everything that makes one campaign mission different from free play.</summary>
     public class MissionDef

@@ -13,7 +13,9 @@ namespace VoidClash
 
             var go = new GameObject($"{faction}_{data.id}");
             go.transform.position = position;
-            VisualFactory.BuildUnitVisual(go.transform, data.id, faction, data.bodyScale);
+            var visual = VisualFactory.BuildUnitVisual(go.transform, data.id, faction, data.bodyScale);
+            if ((data.id == "bubble" || data.id == "poison_bubble") && visual != null)
+                visual.gameObject.AddComponent<BubbleWobble>();
 
             Unit unit = data.isWorker ? go.AddComponent<WorkerUnit>() : go.AddComponent<Unit>();
             unit.Init(data, faction);

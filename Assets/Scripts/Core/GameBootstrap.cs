@@ -16,19 +16,21 @@ namespace VoidClash
             Time.timeScale = 1f;
 
             var mission = Campaign.Current; // null = free play
+            bool bubbleLab = mission == null && SkirmishConfig.Mode == SkirmishMode.BubbleLab;
             VisualFactory.EnemyBodyOverride = mission == null || mission.enemyRace == EnemyRace.Terran ? null
                 : (mission.enemyRace == EnemyRace.Zerg ? "zerg_body" : "protoss_body");
             VisualFactory.EnemyAccentOverride = mission == null || mission.enemyRace == EnemyRace.Terran ? null
                 : (mission.enemyRace == EnemyRace.Zerg ? "zerg_accent" : "protoss_accent");
 
             // banks first — buildings register supply on completion
-            G.PlayerBank = new ResourceBank(Faction.Player, mission?.playerStartMinerals ?? 50);
+            G.PlayerBank = new ResourceBank(Faction.Player, bubbleLab ? 0 : (mission?.playerStartMinerals ?? 50));
             G.EnemyBank = new ResourceBank(Faction.Enemy, mission?.enemyStartMinerals ?? 50);
 
             // managers
             G.Game = gameObject.AddComponent<GameManager>();
             G.Audio = gameObject.AddComponent<AudioManager>();
             G.Effects = gameObject.AddComponent<EffectsManager>();
+            gameObject.AddComponent<BubbleSystem>();
             G.Selection = gameObject.AddComponent<SelectionManager>();
             G.Input = gameObject.AddComponent<InputController>();
             G.Placer = gameObject.AddComponent<BuildingPlacer>();
@@ -147,23 +149,52 @@ namespace VoidClash
 
         void SpawnStartingBases()
         {
+            if (Campaign.Current == null && SkirmishConfig.Mode == SkirmishMode.BubbleLab)
+            {
+                SpawnBubbleLabStart();
+                SpawnTerranStart(Faction.Enemy, MapBuilder.EnemyBasePos);
+                return;
+            }
+
+            SpawnTerranStart(Faction.Player, MapBuilder.PlayerBasePos);
+            SpawnTerranStart(Faction.Enemy, MapBuilder.EnemyBasePos);
+        }
+
+        void SpawnTerranStart(Faction faction, Vector3 basePos)
+        {
             var ccData = G.DB.Building("cc");
             var workerData = G.DB.Unit("worker");
 
-            foreach (var faction in new[] { Faction.Player, Faction.Enemy })
-            {
-                Vector3 basePos = faction == Faction.Player ? MapBuilder.PlayerBasePos : MapBuilder.EnemyBasePos;
-                BuildingFactory.Place(ccData, faction, basePos, true);
+            BuildingFactory.Place(ccData, faction, basePos, true);
 
-                Vector3 toCenter = (Vector3.zero - basePos).normalized;
-                for (int i = 0; i < 4; i++)
-                {
-                    Vector3 offset = Quaternion.Euler(0f, -30f + i * 20f, 0f) * toCenter * 5.5f;
-                    var w = (WorkerUnit)UnitFactory.Spawn(workerData, faction, basePos + offset);
-                    G.Bank(faction).TrySpend(0, workerData.supplyCost); // starting units occupy supply
-                    var node = MineralNode.FindNearest(w.Position, 30f);
-                    if (node != null) w.CommandHarvest(node);
-                }
+            Vector3 toCenter = (Vector3.zero - basePos).normalized;
+            for (int i = 0; i < 4; i++)
+            {
+                Vector3 offset = Quaternion.Euler(0f, -30f + i * 20f, 0f) * toCenter * 5.5f;
+                var w = (WorkerUnit)UnitFactory.Spawn(workerData, faction, basePos + offset);
+                G.Bank(faction).TrySpend(0, workerData.supplyCost); // starting units occupy supply
+                var node = MineralNode.FindNearest(w.Position, 30f);
+                if (node != null) w.CommandHarvest(node);
+            }
+        }
+
+        void SpawnBubbleLabStart()
+        {
+            Vector3 basePos = MapBuilder.PlayerBasePos;
+            var spring = BuildingFactory.Place(G.DB.Building("bubble_spring"), Faction.Player,
+                basePos + new Vector3(-2.5f, 0f, -2.5f), true);
+            BuildingFactory.Place(G.DB.Building("poison_pool"), Faction.Player,
+                basePos + new Vector3(1.5f, 0f, -1.0f), true);
+
+            var bubbleData = G.DB.Unit("bubble");
+            var poisonData = G.DB.Unit("poison_bubble");
+            Vector3 rally = spring != null ? spring.Position : basePos;
+            for (int i = 0; i < 8; i++)
+            {
+                Vector3 pos = rally + Quaternion.Euler(0f, i * 45f, 0f) * Vector3.forward * (1.4f + (i % 3) * 0.45f);
+                var data = i < 3 ? poisonData : bubbleData;
+                var u = UnitFactory.Spawn(data, Faction.Player, pos);
+                if (u != null) u.CommandAttackMove(MapBuilder.EnemyBasePos);
             }
         }
     }

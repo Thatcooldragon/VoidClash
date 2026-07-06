@@ -45,6 +45,7 @@ namespace VoidClash.Tests
         {
             LogGuard.Begin();
             Campaign.Current = null; // default: free play
+            SkirmishConfig.Mode = SkirmishMode.Terran;
             SceneManager.LoadScene("Game");
             yield return null; // Awake/Start
             yield return null;
@@ -65,6 +66,7 @@ namespace VoidClash.Tests
         public IEnumerator TearDown()
         {
             Campaign.Current = null;
+            SkirmishConfig.Mode = SkirmishMode.Terran;
             Time.timeScale = 1f;
             yield return null;
         }
@@ -329,6 +331,42 @@ namespace VoidClash.Tests
                 Assert.IsFalse(string.IsNullOrEmpty(mission.storyBeatText), $"{mission.title} has story flavor");
                 Assert.AreNotEqual(AIPersonality.Balanced, mission.aiPersonality, $"{mission.title} has AI personality");
             }
+        }
+
+        [Test]
+        public void BubblePrototype_DataDefinitionsExist()
+        {
+            var db = GameDatabase.BuildTransient();
+            Assert.IsNotNull(db.Unit("bubble"), "basic bubble unit");
+            Assert.IsNotNull(db.Unit("poison_bubble"), "poison bubble unit");
+            Assert.IsNotNull(db.Building("bubble_spring"), "Bubble Spring building");
+            Assert.IsNotNull(db.Building("poison_pool"), "Poison Pool building");
+            Assert.AreEqual(0, db.Unit("bubble").supplyCost, "bubbles stream without supply");
+            Assert.Less(db.Unit("bubble").maxHP, 25, "basic bubbles should pop easily");
+        }
+
+        [UnityTest]
+        [Timeout(900000)]
+        public IEnumerator BubbleLab_StartsAsBubbleRace()
+        {
+            Campaign.Current = null;
+            SkirmishConfig.Mode = SkirmishMode.BubbleLab;
+            SceneManager.LoadScene("Game");
+            yield return null;
+            yield return null;
+            Time.timeScale = 8f;
+            G.AI.enabled = false;
+
+            Assert.AreEqual(0, Count<Building>(Faction.Player, b => b.Data.id == "cc"), "Bubble Lab should not start as Terran");
+            Assert.AreEqual(1, Count<Building>(Faction.Player, b => b.Data.id == "bubble_spring"), "Bubble Spring start");
+            Assert.AreEqual(1, Count<Building>(Faction.Player, b => b.Data.id == "poison_pool"), "Poison Pool start");
+            Assert.GreaterOrEqual(Count<Unit>(Faction.Player, u => u.Data.id == "bubble" || u.Data.id == "poison_bubble"), 8,
+                "starting bubble swarm");
+
+            yield return WaitUntil(() => Count<Unit>(Faction.Player, u => u.Data.id == "poison_bubble") >= 4,
+                25f, "Poison Pool to morph bubbles");
+
+            LogGuard.AssertClean();
         }
 
         // ------------------------------------------------------------------

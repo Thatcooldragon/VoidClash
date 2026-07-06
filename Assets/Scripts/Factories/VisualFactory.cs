@@ -235,6 +235,24 @@ namespace VoidClash
                     muzzleOv.localPosition = new Vector3(0, 1.0f * s, 1.2f * s);
                     break;
                 }
+                case "bubble":
+                {
+                    Part(visual, PrimitiveType.Sphere, "crystal", new Vector3(0, 0.75f * s, 0), Vector3.one * 0.72f * s, null, "SoapBody");
+                    Part(visual, PrimitiveType.Sphere, "rally", new Vector3(0.18f * s, 0.95f * s, 0.22f * s), Vector3.one * 0.18f * s, null, "Shine");
+                    var muzzleBubble = new GameObject("Muzzle").transform;
+                    muzzleBubble.SetParent(visual, false);
+                    muzzleBubble.localPosition = new Vector3(0, 0.75f * s, 0.6f * s);
+                    break;
+                }
+                case "poison_bubble":
+                {
+                    Part(visual, PrimitiveType.Sphere, "zerg_accent", new Vector3(0, 0.75f * s, 0), Vector3.one * 0.78f * s, null, "PoisonBody");
+                    Part(visual, PrimitiveType.Sphere, "crystal", new Vector3(-0.18f * s, 0.95f * s, 0.18f * s), Vector3.one * 0.16f * s, null, "GasPocket");
+                    var muzzlePoison = new GameObject("Muzzle").transform;
+                    muzzlePoison.SetParent(visual, false);
+                    muzzlePoison.localPosition = new Vector3(0, 0.75f * s, 0.6f * s);
+                    break;
+                }
                 case "heavy":
                 {
                     Part(visual, PrimitiveType.Cube, body, new Vector3(0, 0.5f * s, 0), new Vector3(1.3f * s, 0.55f * s, 1.6f * s), null, "Chassis");
@@ -333,6 +351,22 @@ namespace VoidClash
                     Part(visual, PrimitiveType.Cylinder, "metal_light", new Vector3(0, 2.2f, 0), new Vector3(1.25f, 0.07f, 1.25f), null, "DishRing");
                     Part(visual, PrimitiveType.Cube, accent, new Vector3(0, 2.2f, 0.75f), new Vector3(0.12f, 0.12f, 1.2f), new Vector3(0, 0, 6f), "ScannerBoom");
                     Part(visual, PrimitiveType.Cube, accent, new Vector3(0.75f, 2.2f, 0), new Vector3(1.2f, 0.12f, 0.12f), new Vector3(0, 0, -6f), "ScannerBoom");
+                    break;
+                }
+                case "bubble_spring":
+                {
+                    Part(visual, PrimitiveType.Cylinder, "crystal", new Vector3(0, 0.35f, 0), new Vector3(1.25f, 0.35f, 1.25f), null, "FoamBasin");
+                    Part(visual, PrimitiveType.Sphere, "rally", new Vector3(0, 0.95f, 0), Vector3.one * 0.7f, null, "FoamDome");
+                    Part(visual, PrimitiveType.Sphere, "crystal", new Vector3(0.55f, 1.35f, 0.15f), Vector3.one * 0.32f, null, "BubbleBud");
+                    Part(visual, PrimitiveType.Sphere, "crystal", new Vector3(-0.35f, 1.25f, -0.25f), Vector3.one * 0.24f, null, "BubbleBud");
+                    break;
+                }
+                case "poison_pool":
+                {
+                    Part(visual, PrimitiveType.Cylinder, "zerg_body", new Vector3(0, 0.22f, 0), new Vector3(1.35f, 0.22f, 1.35f), null, "PoolRim");
+                    Part(visual, PrimitiveType.Cylinder, "zerg_accent", new Vector3(0, 0.5f, 0), new Vector3(1.05f, 0.12f, 1.05f), null, "PoisonSurface");
+                    Part(visual, PrimitiveType.Sphere, "zerg_accent", new Vector3(0.35f, 1.0f, 0.2f), Vector3.one * 0.24f, null, "ToxicBubble");
+                    Part(visual, PrimitiveType.Sphere, "zerg_accent", new Vector3(-0.4f, 0.9f, -0.15f), Vector3.one * 0.18f, null, "ToxicBubble");
                     break;
                 }
             }
