@@ -375,8 +375,8 @@ namespace VoidClash.Tests
             Assert.IsNotNull(db.Building("poison_pool"), "Poison Pool");
             Assert.IsNotNull(db.Building("foam_turret"), "Foam Turret");
             Assert.AreEqual(0, db.Unit("bubble").supplyCost, "bubbles stream without supply");
-            Assert.AreEqual(1, db.Unit("bubble").maxHP, "basic bubbles should pop in one hit");
-            Assert.AreEqual(1, db.Unit("poison_bubble").maxHP, "poison bubbles should pop in one hit");
+            Assert.AreEqual(4, db.Unit("bubble").maxHP, "basic bubbles are light chaff (buffed to 4 HP)");
+            Assert.AreEqual(4, db.Unit("poison_bubble").maxHP, "poison bubbles buffed to 4 HP");
             Assert.LessOrEqual(db.Unit("bubble").damage, 1f, "basic bubble damage should stay tiny");
 
             // every bubble structure self-builds and lives in the bubble tech group
@@ -387,7 +387,7 @@ namespace VoidClash.Tests
                 Assert.IsTrue(b.selfBuild, $"{id} self-builds");
             }
             Assert.Greater(db.Building("bubble_spring").passiveMineralsPerSec, 0f, "spring earns minerals");
-            Assert.LessOrEqual(db.Building("bubble_spring").passiveMineralsPerSec, 0.75f, "spring income stays slow");
+            Assert.LessOrEqual(db.Building("bubble_spring").passiveMineralsPerSec, 1.2f, "spring income stays modest");
             Assert.Greater(db.Building("bubble_core").supplyProvided, 0, "nexus provides supply");
             Assert.IsNotNull(db.Building("aerator"), "Aerator upgrade building");
         }

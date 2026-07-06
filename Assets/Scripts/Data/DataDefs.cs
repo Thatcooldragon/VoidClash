@@ -108,7 +108,7 @@ namespace VoidClash
             bubble.id = "bubble"; bubble.displayName = "Bubble";
             bubble.description = "Fragile soap bubble blown by the Bubble Nexus. Pops in one hit and deals tiny chip damage.";
             bubble.mineralCost = 0; bubble.supplyCost = 0; bubble.trainTime = 1f;
-            bubble.maxHP = 1; bubble.armor = 0; bubble.armorClass = ArmorClass.Light;
+            bubble.maxHP = 4; bubble.armor = 0; bubble.armorClass = ArmorClass.Light;
             bubble.damage = 1f; bubble.damageClass = DamageClass.Normal;
             bubble.attackRange = 1.2f; bubble.attackCooldown = 1.15f; bubble.projectileSpeed = 0f;
             bubble.moveSpeed = 4.1f; bubble.visionRadius = 7f;
@@ -118,7 +118,7 @@ namespace VoidClash
             poisonBubble.id = "poison_bubble"; poisonBubble.displayName = "Poison Bubble";
             poisonBubble.description = "Pops in one hit and bursts into a small poison cloud. Weak alone, useful in clumps.";
             poisonBubble.mineralCost = 0; poisonBubble.supplyCost = 0; poisonBubble.trainTime = 1f;
-            poisonBubble.maxHP = 1; poisonBubble.armor = 0; poisonBubble.armorClass = ArmorClass.Light;
+            poisonBubble.maxHP = 4; poisonBubble.armor = 0; poisonBubble.armorClass = ArmorClass.Light;
             poisonBubble.damage = 0.5f; poisonBubble.damageClass = DamageClass.Normal;
             poisonBubble.attackRange = 1.2f; poisonBubble.attackCooldown = 1.3f; poisonBubble.projectileSpeed = 0f;
             poisonBubble.moveSpeed = 4.0f; poisonBubble.visionRadius = 7f;
@@ -266,7 +266,7 @@ namespace VoidClash
             bubbleSpring.mineralCost = 100; bubbleSpring.buildTime = 14f; bubbleSpring.maxHP = 360; bubbleSpring.armor = 0;
             bubbleSpring.sizeX = 3f; bubbleSpring.sizeZ = 3f;
             bubbleSpring.techGroup = "bubble"; bubbleSpring.selfBuild = true;
-            bubbleSpring.passiveMineralsPerSec = 0.6f; bubbleSpring.opensBuildMenu = true;
+            bubbleSpring.passiveMineralsPerSec = 0.9f; bubbleSpring.opensBuildMenu = true;
             bubbleSpring.visionRadius = 10f;
             bubbleSpring.accentColor = new Color(0.6f, 0.95f, 1f);
 

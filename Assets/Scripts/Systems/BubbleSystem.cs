@@ -18,9 +18,9 @@ namespace VoidClash
         float _morphTimer;
 
         // ---- upgradeable bubble production (per-faction Aerator tech) ----
-        const float BaseSpawnEvery = 7f;   // seconds between bubbles at level 0
-        const float MinSpawnEvery = 3.5f;  // fastest possible
-        const float StepPerLevel = 0.7f;   // each Aerator upgrade shaves this off
+        const float BaseSpawnEvery = 3f;   // seconds between bubbles at level 0
+        const float MinSpawnEvery = 1.2f;  // fastest possible (via Aerator upgrades)
+        const float StepPerLevel = 0.4f;   // each Aerator upgrade shaves this off
         public const int MaxProductionLevel = 5;
 
         public int ProductionLevel { get; private set; }
