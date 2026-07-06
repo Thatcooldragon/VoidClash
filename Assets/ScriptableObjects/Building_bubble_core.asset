@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: VoidClash.Runtime::VoidClash.BuildingData
   id: bubble_core
   displayName: Bubble Nexus
-  description: The foam heart. Grows itself, drips a trickle of minerals, gives 10
-    supply, and lets you shape more bubble structures.
+  description: Your home base. It automatically blows one Bubble every 7 seconds,
+    gives 10 supply, and opens the bubble build menu.
   hotkey: 113
   mineralCost: 350
   buildTime: 26
@@ -30,7 +30,7 @@ MonoBehaviour:
   trainableUnits: []
   techGroup: bubble
   selfBuild: 1
-  passiveMineralsPerSec: 1.2
+  passiveMineralsPerSec: 0.15
   opensBuildMenu: 1
   damage: 0
   damageClass: 1

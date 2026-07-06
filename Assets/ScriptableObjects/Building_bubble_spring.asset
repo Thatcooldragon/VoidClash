@@ -14,8 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: VoidClash.Runtime::VoidClash.BuildingData
   id: bubble_spring
   displayName: Bubble Spring
-  description: Built next to minerals, it drains them into a steady stream of soap
-    bubbles AND extra minerals. Grows itself.
+  description: Build it next to crystals to mine a slow mineral trickle. Grows itself.
   hotkey: 119
   mineralCost: 100
   buildTime: 14
@@ -30,7 +29,7 @@ MonoBehaviour:
   trainableUnits: []
   techGroup: bubble
   selfBuild: 1
-  passiveMineralsPerSec: 3.5
+  passiveMineralsPerSec: 0.6
   opensBuildMenu: 1
   damage: 0
   damageClass: 1

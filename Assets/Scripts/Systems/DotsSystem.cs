@@ -3,17 +3,22 @@ using UnityEngine;
 
 namespace VoidClash
 {
-    /// <summary>Dots prototype loop: a mobile Core Dot powers nearby Dot structures.
-    /// Loose Dots do not mine; Printers make them while powered. Big shapes hide the
-    /// Core Dot inside themselves, then release it again when destroyed.</summary>
+    /// <summary>Dots loop: Printers make loose Dots on their own (no power needed). Dots are
+    /// the faction's raw material — spend them at a Shape Matrix to form a Core Dot or a Dot
+    /// Giant. Core Dots trickle minerals; a slain Giant releases a Core Dot.</summary>
     public class DotsSystem : MonoBehaviour
     {
         readonly Dictionary<Building, float> _printTimers = new Dictionary<Building, float>();
-        public const float PowerRange = 12f;
-        const float PrintEvery = 5.5f;
+        public const float PowerRange = 12f;      // Core Dot power aura (visual / lore only now)
+        const float PrintEvery = 3.2f;            // faster printing
+        const int DotsPerPrint = 2;               // more dots per cycle
         const float CoreMineralsPerSec = 0.55f;
-        const int DotSoftCap = 42;
-        const int GiantDots = 20;
+        const int DotSoftCap = 80;                // room to bank dots as currency
+
+        // shape costs, paid in loose Dots
+        public const int CoreDotCost = 10;
+        public const int GiantDotCost = 25;
+
         float _mineralFraction;
 
         void OnEnable() => Entity.AnyDied += OnEntityDied;
@@ -49,17 +54,13 @@ namespace VoidClash
                 if (!(e is Building printer) || printer.IsDead || !printer.IsComplete || printer.Data.id != "dot_printer")
                     continue;
 
-                if (!IsPowered(printer.Faction, printer.Position))
-                {
-                    _printTimers[printer] = Mathf.Min(PrintEvery, GetTimer(printer));
-                    continue;
-                }
-
+                // Printers run on their own now — no Core Dot power needed.
                 float timer = GetTimer(printer) - dt;
                 if (timer <= 0f)
                 {
                     timer = PrintEvery;
-                    if (CountLooseDots(printer.Faction) < DotSoftCap) SpawnDot(printer);
+                    for (int i = 0; i < DotsPerPrint; i++)
+                        if (CountLooseDots(printer.Faction) < DotSoftCap) SpawnDot(printer);
                 }
                 _printTimers[printer] = timer;
             }
@@ -75,42 +76,61 @@ namespace VoidClash
             return FindCore(faction, pos, PowerRange) != null;
         }
 
+        /// <summary>Spend loose Dots to form a Core Dot (this is how you make more of them).</summary>
+        public bool TryFormCoreDot(List<Entity> selection, out string message)
+            => TryFormShape(selection, "dot_core", CoreDotCost, false, out message);
+
+        /// <summary>Spend more loose Dots to form a Dot Giant (needs a Shape Matrix).</summary>
         public bool TryFormGiant(List<Entity> selection, out string message)
+            => TryFormShape(selection, "dot_giant", GiantDotCost, true, out message);
+
+        bool TryFormShape(List<Entity> selection, string unitId, int dotCost, bool requireMatrix, out string message)
         {
-            var dots = SelectedLooseDots(selection);
-            if (dots.Count < GiantDots)
+            var data = G.DB.Unit(unitId);
+            if (data == null) { message = $"{unitId} data missing"; return false; }
+
+            if (requireMatrix && !HasCompleteBuilding(Faction.Player, "shape_matrix"))
             {
-                message = $"Need {GiantDots} loose Dots to form a Giant";
+                message = $"Build a Shape Matrix to form a {data.displayName}";
                 return false;
             }
 
-            Vector3 center = Average(dots, GiantDots);
-            Unit core = FindCore(Faction.Player, center, PowerRange);
-            if (core == null)
+            var loose = LooseDots(Faction.Player);
+            if (loose.Count < dotCost)
             {
-                message = "Move a Core Dot near the Dots to power the Giant";
-                return false;
-            }
-            if (!HasCompleteBuilding(Faction.Player, "shape_matrix"))
-            {
-                message = "Build a Shape Matrix to unlock Giant shapes";
+                message = $"Need {dotCost} Dots to form a {data.displayName} (have {loose.Count})";
                 return false;
             }
 
-            var data = G.DB.Unit("dot_giant");
-            if (data == null)
-            {
-                message = "Dot Giant data missing";
-                return false;
-            }
+            // form where the player's selected Dots are, else at the whole swarm's center
+            var selDots = SelectedLooseDots(selection);
+            Vector3 center = selDots.Count > 0 ? Average(selDots, selDots.Count) : Average(loose, loose.Count);
 
-            ConsumeUnits(dots, GiantDots);
-            ConsumeCore(core);
-            var giant = UnitFactory.Spawn(data, Faction.Player, center);
-            if (giant != null && G.Selection != null) G.Selection.SelectSingle(giant, false);
-            message = "Core Dot hid inside a Dot Giant";
+            ConsumeNearest(loose, center, dotCost);   // eats the Dots closest to the shape
+            var shape = UnitFactory.Spawn(data, Faction.Player, center);
+            if (shape != null && G.Selection != null) G.Selection.SelectSingle(shape, false);
+            message = $"Formed a {data.displayName} from {dotCost} Dots";
             return true;
         }
+
+        static List<Unit> LooseDots(Faction faction)
+        {
+            var list = new List<Unit>();
+            foreach (var e in Entity.All)
+                if (e is Unit u && !u.IsDead && u.gameObject.activeInHierarchy && u.Faction == faction && u.Data.id == "dot")
+                    list.Add(u);
+            return list;
+        }
+
+        static void ConsumeNearest(List<Unit> dots, Vector3 center, int count)
+        {
+            dots.Sort((a, b) => (a.Position - center).sqrMagnitude.CompareTo((b.Position - center).sqrMagnitude));
+            count = Mathf.Min(count, dots.Count);
+            for (int i = 0; i < count; i++) ConsumeSilently(dots[i]);
+        }
+
+        /// <summary>Number of loose Dots a faction currently owns (for UI + costs).</summary>
+        public int LooseDotCount(Faction faction) => LooseDots(faction).Count;
 
         static Unit FindCore(Faction faction, Vector3 pos, float range)
         {
@@ -142,18 +162,6 @@ namespace VoidClash
             count = Mathf.Min(count, dots.Count);
             for (int i = 0; i < count; i++) sum += dots[i].Position;
             return count > 0 ? sum / count : MapBuilder.PlayerBasePos;
-        }
-
-        static void ConsumeUnits(List<Unit> dots, int count)
-        {
-            count = Mathf.Min(count, dots.Count);
-            for (int i = 0; i < count; i++)
-                ConsumeSilently(dots[i]);
-        }
-
-        static void ConsumeCore(Unit core)
-        {
-            ConsumeSilently(core);
         }
 
         static void ConsumeSilently(Unit unit)

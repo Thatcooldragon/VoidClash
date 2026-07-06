@@ -10,7 +10,7 @@ namespace VoidClash
     public class HUD : MonoBehaviour
     {
         Canvas _canvas;
-        Text _mineralsText, _supplyText, _timerText, _idleWorkerText, _objectiveText;
+        Text _mineralsText, _supplyText, _timerText, _idleWorkerText, _objectiveText, _armyText;
         RawImage _minimapImage;
         RectTransform _minimapRT;
         RectTransform _selectionPanel;
@@ -68,6 +68,7 @@ namespace VoidClash
             {
                 _refreshTimer = 0.35f;
                 RefreshIdleWorkers();
+                RefreshArmyCount();
                 RefreshSelectionPanel(); // live HP / queue readout; card rebuilds only on selection change
             }
         }
@@ -106,9 +107,10 @@ namespace VoidClash
             var menuBtn = UIFactory.TextButton(bar, "menuBtn", "MENU (Esc)", 16, () => G.Game.TogglePause());
             UIFactory.SetRect((RectTransform)menuBtn.transform, new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(-12f, 0f), new Vector2(130f, 30f));
 
-            var armyBtn = UIFactory.TextButton(bar, "selectArmy", "SELECT ARMY", 16,
+            var armyBtn = UIFactory.TextButton(bar, "selectArmy", "SELECT ARMY (0)", 16,
                 () => { if (G.Selection != null) G.Selection.SelectAllArmy(); });
-            UIFactory.SetRect((RectTransform)armyBtn.transform, new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(-150f, 0f), new Vector2(150f, 30f));
+            UIFactory.SetRect((RectTransform)armyBtn.transform, new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(-150f, 0f), new Vector2(160f, 30f));
+            _armyText = armyBtn.GetComponentInChildren<Text>();
 
             _objectiveText = UIFactory.Label(_canvas.transform, "Objective", "", 19, TextAnchor.MiddleCenter, new Color(0.8f, 0.9f, 1f));
             UIFactory.SetRect(_objectiveText.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -58f), new Vector2(960f, 28f));
@@ -129,6 +131,21 @@ namespace VoidClash
             int idle = CountIdleWorkers();
             _idleWorkerText.text = $"IDLE {idle}";
             _idleWorkerText.color = idle > 0 ? new Color(1f, 0.9f, 0.45f) : UIFactory.TextColor;
+        }
+
+        void RefreshArmyCount()
+        {
+            if (_armyText == null) return;
+            _armyText.text = $"SELECT ARMY ({CountArmy()})";
+        }
+
+        /// <summary>Player combat units on the whole map (workers excluded) — used by the button + count.</summary>
+        static int CountArmy()
+        {
+            int n = 0;
+            foreach (var e in Entity.All)
+                if (e is Unit u && !u.IsDead && u.Faction == Faction.Player && !(u is WorkerUnit) && u.Data.canAttack) n++;
+            return n;
         }
 
         void RefreshObjective()
@@ -288,6 +305,11 @@ namespace VoidClash
 
         void BuildMultiSelection(List<Entity> sel)
         {
+            // count header — how many units are selected (applies to every race)
+            var countLabel = UIFactory.Label(_selectionPanel, "count", $"{sel.Count} units selected", 20,
+                TextAnchor.MiddleRight, new Color(0.85f, 0.92f, 1f));
+            UIFactory.SetRect(countLabel.rectTransform, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-14f, -12f), new Vector2(220f, 26f));
+
             int perRow = 11;
             for (int i = 0; i < sel.Count && i < 33; i++)
             {
@@ -404,9 +426,13 @@ namespace VoidClash
 
             if (hasBasicDots && G.Dots != null)
             {
-                int dots = CountSelectedDots();
-                AddCommandButton(0, "Giant Shape\n<Z>  20 dots", TryFormDotGiant, KeyCode.Z,
-                    $"Combine 20 selected Dots with a nearby Core Dot into a powerful Giant. Requires Shape Matrix. Selected: {dots}", dots >= 20);
+                int loose = G.Dots.LooseDotCount(Faction.Player);
+                AddCommandButton(0, $"Core Dot\n<C>  {DotsSystem.CoreDotCost} dots", TryFormCoreDot, KeyCode.C,
+                    $"Spend {DotsSystem.CoreDotCost} Dots to form a Core Dot (a tough droid that trickles minerals). You have {loose} Dots.",
+                    loose >= DotsSystem.CoreDotCost);
+                AddCommandButton(1, $"Dot Giant\n<Z>  {DotsSystem.GiantDotCost} dots", TryFormDotGiant, KeyCode.Z,
+                    $"Spend {DotsSystem.GiantDotCost} Dots to form a powerful Dot Giant. Needs a Shape Matrix. You have {loose} Dots.",
+                    loose >= DotsSystem.GiantDotCost);
             }
 
             if (cancelable != null)
@@ -468,23 +494,22 @@ namespace VoidClash
             }
         }
 
-        void TryFormDotGiant()
+        void TryFormCoreDot()
         {
             if (G.Dots == null) return;
-            bool ok = G.Dots.TryFormGiant(G.Selection.Selected, out string msg);
-
+            bool ok = G.Dots.TryFormCoreDot(G.Selection.Selected, out string msg);
             Notify(msg);
             if (G.Audio != null) G.Audio.Play(ok ? "build_done" : "error", ok ? 0.45f : 1f);
             if (G.Selection != null) G.Selection.RaiseChanged();
         }
 
-        int CountSelectedDots()
+        void TryFormDotGiant()
         {
-            int count = 0;
-            foreach (var e in G.Selection.Selected)
-                if (e is Unit u && u.Faction == Faction.Player && !u.IsDead && u.Data.id == "dot")
-                    count++;
-            return count;
+            if (G.Dots == null) return;
+            bool ok = G.Dots.TryFormGiant(G.Selection.Selected, out string msg);
+            Notify(msg);
+            if (G.Audio != null) G.Audio.Play(ok ? "build_done" : "error", ok ? 0.45f : 1f);
+            if (G.Selection != null) G.Selection.RaiseChanged();
         }
 
         void TryTrain(Building b, UnitData ud)

@@ -285,7 +285,7 @@ namespace VoidClash
 
             var dotPrinter = ScriptableObject.CreateInstance<BuildingData>();
             dotPrinter.id = "dot_printer"; dotPrinter.displayName = "Dot Printer";
-            dotPrinter.description = "Prints loose Dots while inside a Core Dot power field.";
+            dotPrinter.description = "Prints loose Dots on its own — no power needed. Dots are your raw material: spend them at a Shape Matrix to form Core Dots and Giants.";
             dotPrinter.hotkey = KeyCode.Q;
             dotPrinter.mineralCost = 120; dotPrinter.buildTime = 16f; dotPrinter.maxHP = 520; dotPrinter.armor = 0;
             dotPrinter.sizeX = 3f; dotPrinter.sizeZ = 3f;
@@ -295,7 +295,7 @@ namespace VoidClash
 
             var shapeMatrix = ScriptableObject.CreateInstance<BuildingData>();
             shapeMatrix.id = "shape_matrix"; shapeMatrix.displayName = "Shape Matrix";
-            shapeMatrix.description = "Dots tech building. Unlocks the Giant shape command.";
+            shapeMatrix.description = "Dots tech building. Lets you spend Dots to form Core Dots and Dot Giants.";
             shapeMatrix.hotkey = KeyCode.W;
             shapeMatrix.mineralCost = 140; shapeMatrix.buildTime = 18f; shapeMatrix.maxHP = 560; shapeMatrix.armor = 0;
             shapeMatrix.sizeX = 3f; shapeMatrix.sizeZ = 3f;

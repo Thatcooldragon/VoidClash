@@ -39,6 +39,16 @@ namespace VoidClash.Editor
             EditorApplication.isPlaying = true;
         }
 
+        /// <summary>Focused capture of the Dots Lab (dot-cluster shapes).</summary>
+        public static void RunDots()
+        {
+            SessionState.SetBool(Flag, true);
+            SessionState.SetInt(PhaseKey, 30);
+            SessionState.SetFloat(MarkKey, -1f);
+            EditorApplication.update += Tick;
+            EditorApplication.isPlaying = true;
+        }
+
         static void Advance(int phase)
         {
             SessionState.SetInt(PhaseKey, phase);
@@ -234,6 +244,48 @@ namespace VoidClash.Editor
                     break;
 
                 case 22: // flush, then quit
+                    if (Elapsed > 2.5f && !SnapPending)
+                    {
+                        SkirmishConfig.Mode = SkirmishMode.Terran;
+                        SessionState.SetBool(Flag, false);
+                        EditorApplication.Exit(0);
+                    }
+                    break;
+
+                case 30: // enter Dots Lab
+                    if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != "Game"
+                        || SkirmishConfig.Mode != SkirmishMode.DotsLab)
+                    {
+                        Campaign.Current = null;
+                        SkirmishConfig.Mode = SkirmishMode.DotsLab;
+                        UnityEngine.SceneManagement.SceneManager.LoadScene("Game");
+                        Advance(31);
+                    }
+                    break;
+
+                case 31: // let dots print, form a Core Dot + Giant, then frame the base
+                    if (Elapsed > 8f)
+                    {
+                        if (G.Dots != null)
+                        {
+                            G.PlayerBank.AddMinerals(400);
+                            G.Dots.TryFormCoreDot(new System.Collections.Generic.List<Entity>(), out _);
+                            G.Dots.TryFormGiant(new System.Collections.Generic.List<Entity>(), out _);
+                        }
+                        if (G.Cam != null) G.Cam.Focus(MapBuilder.PlayerBasePos + new Vector3(3f, 0f, 3f));
+                        Advance(32);
+                    }
+                    break;
+
+                case 32: // capture after shapes form
+                    if (Elapsed > 2.5f)
+                    {
+                        Snap("shot_dots_lab.png");
+                        Advance(33);
+                    }
+                    break;
+
+                case 33: // flush, then quit
                     if (Elapsed > 2.5f && !SnapPending)
                     {
                         SkirmishConfig.Mode = SkirmishMode.Terran;

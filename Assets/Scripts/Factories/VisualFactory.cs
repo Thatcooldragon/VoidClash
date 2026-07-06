@@ -56,6 +56,21 @@ namespace VoidClash
             Part(v, PrimitiveType.Cube, "metal_dark", new Vector3(x, 0.2f * s, z),                new Vector3(0.08f * s, 0.46f * s, 0.08f * s), new Vector3(fz * -18f, 0, side * -18f), "Claw");
         }
 
+        /// <summary>Packs many small spheres onto a ball surface (fibonacci sphere) so a shape
+        /// visibly reads as being built out of little Dots. Deterministic, so baked prefabs match.</summary>
+        static void DotBall(Transform parent, Vector3 center, float radius, float dotSize, int count, string mat)
+        {
+            float golden = Mathf.PI * (3f - Mathf.Sqrt(5f));
+            for (int i = 0; i < count; i++)
+            {
+                float y = count > 1 ? 1f - (i / (float)(count - 1)) * 2f : 0f;
+                float rr = Mathf.Sqrt(Mathf.Max(0f, 1f - y * y));
+                float theta = golden * i;
+                var dir = new Vector3(Mathf.Cos(theta) * rr, y, Mathf.Sin(theta) * rr);
+                Part(parent, PrimitiveType.Sphere, mat, center + dir * radius, Vector3.one * dotSize, null, "Dot");
+            }
+        }
+
         static string Body(Faction f) => f == Faction.Player ? "player_body"
             : (EnemyBodyOverride ?? "enemy_body");
         static string Accent(Faction f) => f == Faction.Player ? "player_accent"
@@ -255,9 +270,9 @@ namespace VoidClash
                 }
                 case "dot":
                 {
-                    Part(visual, PrimitiveType.Sphere, "rally", new Vector3(0, 0.45f * s, 0), Vector3.one * 0.38f * s, null, "DotBody");
-                    Part(visual, PrimitiveType.Sphere, "metal_light", new Vector3(0.12f * s, 0.55f * s, 0.18f * s), Vector3.one * 0.11f * s, null, "Lens");
-                    Part(visual, PrimitiveType.Cube, "metal_dark", new Vector3(0, 0.18f * s, -0.18f * s), new Vector3(0.12f * s, 0.12f * s, 0.34f * s), new Vector3(-18f, 0, 0), "Tail");
+                    // a single glowing dot with a tiny highlight
+                    Part(visual, PrimitiveType.Sphere, "rally", new Vector3(0, 0.45f * s, 0), Vector3.one * 0.42f * s, null, "DotBody");
+                    Part(visual, PrimitiveType.Sphere, "metal_light", new Vector3(0.11f * s, 0.55f * s, 0.16f * s), Vector3.one * 0.1f * s, null, "Glint");
                     var muzzleDot = new GameObject("Muzzle").transform;
                     muzzleDot.SetParent(visual, false);
                     muzzleDot.localPosition = new Vector3(0, 0.45f * s, 0.35f * s);
@@ -265,37 +280,37 @@ namespace VoidClash
                 }
                 case "dot_core":
                 {
-                    Part(visual, PrimitiveType.Sphere, "rally", new Vector3(0, 0.65f * s, 0), Vector3.one * 0.65f * s, null, "CoreBody");
-                    Part(visual, PrimitiveType.Sphere, "metal_light", new Vector3(0, 0.65f * s, 0), Vector3.one * 0.38f * s, null, "InnerCore");
-                    for (int i = 0; i < 4; i++)
-                    {
-                        float a = i * 90f + 45f;
-                        Part(visual, PrimitiveType.Cube, "rally", Quaternion.Euler(0, a, 0) * new Vector3(0, 0.65f * s, 0.55f * s),
-                            new Vector3(0.09f * s, 0.09f * s, 0.65f * s), new Vector3(0, a, 0), "PowerRail");
-                    }
+                    // a ball clearly built out of little dots, glowing inner core
+                    DotBall(visual, new Vector3(0, 0.72f * s, 0), 0.6f * s, 0.2f * s, 26, "rally");
+                    Part(visual, PrimitiveType.Sphere, "metal_light", new Vector3(0, 0.72f * s, 0), Vector3.one * 0.5f * s, null, "InnerGlow");
                     var muzzleCore = new GameObject("Muzzle").transform;
                     muzzleCore.SetParent(visual, false);
-                    muzzleCore.localPosition = new Vector3(0, 0.65f * s, 0.65f * s);
+                    muzzleCore.localPosition = new Vector3(0, 0.72f * s, 0.7f * s);
                     break;
                 }
                 case "dot_giant":
                 {
-                    Part(visual, PrimitiveType.Sphere, "rally", new Vector3(0, 1.7f * s, 0), Vector3.one * 0.75f * s, null, "CoreChest");
-                    Part(visual, PrimitiveType.Cube, "metal_light", new Vector3(0, 1.55f * s, 0), new Vector3(1.6f * s, 1.15f * s, 0.8f * s), null, "BodyFrame");
-                    Part(visual, PrimitiveType.Sphere, "rally", new Vector3(0, 2.55f * s, 0.05f * s), Vector3.one * 0.5f * s, null, "HeadCluster");
-                    Part(visual, PrimitiveType.Cube, "metal_dark", new Vector3(-0.95f * s, 1.35f * s, 0), new Vector3(0.35f * s, 1.4f * s, 0.35f * s), new Vector3(0, 0, -12f), "ArmL");
-                    Part(visual, PrimitiveType.Cube, "metal_dark", new Vector3(0.95f * s, 1.35f * s, 0), new Vector3(0.35f * s, 1.4f * s, 0.35f * s), new Vector3(0, 0, 12f), "ArmR");
-                    Part(visual, PrimitiveType.Cube, "metal_dark", new Vector3(-0.42f * s, 0.45f * s, 0), new Vector3(0.35f * s, 1.0f * s, 0.35f * s), new Vector3(6f, 0, 0), "LegL");
-                    Part(visual, PrimitiveType.Cube, "metal_dark", new Vector3(0.42f * s, 0.45f * s, 0), new Vector3(0.35f * s, 1.0f * s, 0.35f * s), new Vector3(-6f, 0, 0), "LegR");
-                    for (int i = 0; i < 10; i++)
+                    // a whole walking figure assembled from clusters of dots
+                    DotBall(visual, new Vector3(0, 1.55f * s, 0), 0.85f * s, 0.24f * s, 46, "rally");   // torso
+                    DotBall(visual, new Vector3(0, 2.55f * s, 0.05f * s), 0.5f * s, 0.2f * s, 22, "rally"); // head
+                    // arms (shoulder / mid / fist clusters)
+                    foreach (float sx in new[] { -1f, 1f })
                     {
-                        float a = i * 36f;
-                        Part(visual, PrimitiveType.Sphere, "rally", Quaternion.Euler(0, a, 0) * new Vector3(0, (1.1f + (i % 3) * 0.22f) * s, 0.78f * s),
-                            Vector3.one * 0.16f * s, null, "BodyDot");
+                        DotBall(visual, new Vector3(sx * 0.95f * s, 1.75f * s, 0), 0.34f * s, 0.17f * s, 12, "rally");
+                        DotBall(visual, new Vector3(sx * 1.05f * s, 1.15f * s, 0.05f * s), 0.3f * s, 0.16f * s, 10, "rally");
+                        DotBall(visual, new Vector3(sx * 1.05f * s, 0.62f * s, 0.1f * s), 0.28f * s, 0.16f * s, 9, "rally");
                     }
+                    // legs (thigh / foot clusters)
+                    foreach (float sx in new[] { -1f, 1f })
+                    {
+                        DotBall(visual, new Vector3(sx * 0.42f * s, 0.85f * s, 0), 0.36f * s, 0.18f * s, 12, "rally");
+                        DotBall(visual, new Vector3(sx * 0.42f * s, 0.28f * s, 0.06f * s), 0.32f * s, 0.17f * s, 10, "rally");
+                    }
+                    // glowing eye cluster
+                    Part(visual, PrimitiveType.Sphere, "metal_light", new Vector3(0, 2.55f * s, 0.48f * s), Vector3.one * 0.18f * s, null, "Eye");
                     var muzzleGiant = new GameObject("Muzzle").transform;
                     muzzleGiant.SetParent(visual, false);
-                    muzzleGiant.localPosition = new Vector3(0, 1.75f * s, 1.05f * s);
+                    muzzleGiant.localPosition = new Vector3(0, 1.75f * s, 1.1f * s);
                     break;
                 }
                 case "heavy":

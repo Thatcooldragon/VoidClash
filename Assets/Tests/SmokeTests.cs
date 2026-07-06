@@ -440,16 +440,17 @@ namespace VoidClash.Tests
                     break;
                 }
             Assert.IsNotNull(printer, "starting Dot Printer");
-            Assert.IsTrue(DotsSystem.IsPowered(Faction.Player, printer.Position), "starting Printer is powered");
 
+            // the Core Dot trickles minerals; the Printer runs on its own (no power needed)
             int startMinerals = G.PlayerBank.Minerals;
             yield return WaitUntil(() => G.PlayerBank.Minerals > startMinerals,
                 45f, "Core Dot passive mineral income");
 
             int startDots = Count<Unit>(Faction.Player, u => u.Data.id == "dot");
             yield return WaitUntil(() => Count<Unit>(Faction.Player, u => u.Data.id == "dot") > startDots,
-                30f, "Dot Printer production");
+                30f, "Dot Printer production without power");
 
+            // build a Shape Matrix (self-builds, no worker)
             var matrixData = G.DB.Building("shape_matrix");
             var spot = FindSpot(matrixData);
             Assert.IsTrue(spot.HasValue, "a spot for the Shape Matrix");
@@ -460,29 +461,40 @@ namespace VoidClash.Tests
                 matrixData.buildTime * 3f + 30f, "Shape Matrix self-builds");
             Assert.IsTrue(matrix != null && matrix.IsComplete, "Shape Matrix completed with no worker");
 
-            var formDots = new List<Entity>();
+            // pile up loose dots to spend on shapes
             var dotData = G.DB.Unit("dot");
-            Vector3 core = MapBuilder.PlayerBasePos + (Vector3.zero - MapBuilder.PlayerBasePos).normalized * 5.5f;
-            for (int i = 0; i < 22; i++)
+            Vector3 pile = MapBuilder.PlayerBasePos + (Vector3.zero - MapBuilder.PlayerBasePos).normalized * 5.5f;
+            for (int i = 0; i < 40; i++)
             {
-                Vector3 pos = core + Quaternion.Euler(0f, i * 15f, 0f) * Vector3.forward * (1f + (i % 4) * 0.35f);
-                var dot = UnitFactory.Spawn(dotData, Faction.Player, pos);
-                Assert.IsNotNull(dot, "extra Dot for form tests");
-                formDots.Add(dot);
+                Vector3 pos = pile + Quaternion.Euler(0f, i * 15f, 0f) * Vector3.forward * (1f + (i % 5) * 0.3f);
+                Assert.IsNotNull(UnitFactory.Spawn(dotData, Faction.Player, pos), "extra Dot for form tests");
             }
+            yield return null;
 
-            Assert.IsTrue(G.Dots.TryFormGiant(formDots, out _), "Dots and Core Dot form a Giant");
-            Assert.AreEqual(0, Count<Unit>(Faction.Player, u => u.Data.id == "dot_core"), "Core Dot hides inside the Giant");
+            // form a NEW Core Dot by spending dots (fixes "can't make more Core Dots")
+            int coresBefore = Count<Unit>(Faction.Player, u => u.Data.id == "dot_core");
+            Assert.IsTrue(G.Dots.TryFormCoreDot(G.Selection.Selected, out _), "spend Dots to form a Core Dot");
+            Assert.AreEqual(coresBefore + 1, Count<Unit>(Faction.Player, u => u.Data.id == "dot_core"),
+                "a new Core Dot appears");
+
+            // form a Giant by spending more dots — the Core Dot is NOT consumed anymore
+            int coresBeforeGiant = Count<Unit>(Faction.Player, u => u.Data.id == "dot_core");
+            Assert.IsTrue(G.Dots.TryFormGiant(G.Selection.Selected, out _), "spend Dots to form a Giant");
             Assert.GreaterOrEqual(Count<Unit>(Faction.Player, u => u.Data.id == "dot_giant"), 1, "Dot Giant exists");
+            Assert.AreEqual(coresBeforeGiant, Count<Unit>(Faction.Player, u => u.Data.id == "dot_core"),
+                "forming a Giant no longer eats a Core Dot");
 
+            // a slain Giant still releases a Core Dot
             Unit giant = null;
             foreach (var e in Entity.All)
                 if (e is Unit u && u.Faction == Faction.Player && u.Data.id == "dot_giant") { giant = u; break; }
             Assert.IsNotNull(giant, "Dot Giant unit");
+            int coresBeforeDeath = Count<Unit>(Faction.Player, u => u.Data.id == "dot_core");
             giant.Health.TakeDamage(9999f, DamageClass.Siege, null);
             yield return null;
             yield return null;
-            Assert.GreaterOrEqual(Count<Unit>(Faction.Player, u => u.Data.id == "dot_core"), 1, "Core Dot escapes when Giant dies");
+            Assert.Greater(Count<Unit>(Faction.Player, u => u.Data.id == "dot_core"), coresBeforeDeath,
+                "a Core Dot is released when the Giant dies");
 
             LogGuard.AssertClean();
         }

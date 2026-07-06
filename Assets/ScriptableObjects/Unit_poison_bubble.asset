@@ -14,18 +14,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: VoidClash.Runtime::VoidClash.UnitData
   id: poison_bubble
   displayName: Poison Bubble
-  description: Fragile bubble that releases poisonous gas when popped.
+  description: Pops in one hit and bursts into a small poison cloud. Weak alone,
+    useful in clumps.
   hotkey: 113
   mineralCost: 0
   supplyCost: 0
   trainTime: 1
-  maxHP: 14
+  maxHP: 1
   armor: 0
   armorClass: 0
-  damage: 3
+  damage: 0.5
   damageClass: 0
   attackRange: 1.2
-  attackCooldown: 0.8
+  attackCooldown: 1.3
   projectileSpeed: 0
   canAttack: 1
   moveSpeed: 4
