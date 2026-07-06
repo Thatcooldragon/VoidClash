@@ -184,6 +184,13 @@ namespace VoidClash
 
         void AssignSelectedWorker(Building site)
         {
+            // Bubble structures grow themselves — no worker to send.
+            if (site != null && site.Data.selfBuild)
+            {
+                if (G.Audio != null) G.Audio.Play("build_place", 0.7f);
+                return;
+            }
+
             // nearest selected worker builds; if none selected, nearest idle/harvesting worker
             WorkerUnit best = null;
             float bestD = float.MaxValue;

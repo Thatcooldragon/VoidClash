@@ -181,20 +181,35 @@ namespace VoidClash
         void SpawnBubbleLabStart()
         {
             Vector3 basePos = MapBuilder.PlayerBasePos;
-            var spring = BuildingFactory.Place(G.DB.Building("bubble_spring"), Faction.Player,
-                basePos + new Vector3(-2.5f, 0f, -2.5f), true);
-            BuildingFactory.Place(G.DB.Building("poison_pool"), Faction.Player,
-                basePos + new Vector3(1.5f, 0f, -1.0f), true);
 
+            // Bubble Nexus — the foam HQ (supply + passive minerals + build menu).
+            BuildingFactory.Place(G.DB.Building("bubble_core"), Faction.Player, basePos, true);
+
+            // A Bubble Spring seated beside the home mineral field so income + bubbles flow at once.
+            var node = MineralNode.FindNearest(basePos, 60f);
+            Vector3 springPos = node != null
+                ? node.transform.position + (basePos - node.transform.position).normalized * 3.6f
+                : basePos + new Vector3(-4.5f, 0f, -4.5f);
+            BuildingFactory.Place(G.DB.Building("bubble_spring"), Faction.Player,
+                BuildingPlacer.SnapToBuildGrid(springPos), true);
+
+            // A Poison Pool at the swarm's gather point in front of the Nexus, so arriving
+            // bubbles are morphed into poison bubbles (matches BubbleSystem.GatherPoint).
+            Vector3 toCenter = (Vector3.zero - basePos).normalized;
+            Vector3 gather = basePos + toCenter * 4f;
+            BuildingFactory.Place(G.DB.Building("poison_pool"), Faction.Player,
+                BuildingPlacer.SnapToBuildGrid(basePos + toCenter * 4.6f), true);
+
+            // Seed minerals so the commander can immediately shape more structures.
+            G.PlayerBank.AddMinerals(150);
+
+            // A starting cluster of bubbles gathering at the base, ready to be commanded.
             var bubbleData = G.DB.Unit("bubble");
-            var poisonData = G.DB.Unit("poison_bubble");
-            Vector3 rally = spring != null ? spring.Position : basePos;
-            for (int i = 0; i < 8; i++)
+            for (int i = 0; i < 6; i++)
             {
-                Vector3 pos = rally + Quaternion.Euler(0f, i * 45f, 0f) * Vector3.forward * (1.4f + (i % 3) * 0.45f);
-                var data = i < 3 ? poisonData : bubbleData;
-                var u = UnitFactory.Spawn(data, Faction.Player, pos);
-                if (u != null) u.CommandAttackMove(MapBuilder.EnemyBasePos);
+                Vector3 pos = basePos + Quaternion.Euler(0f, i * 60f, 0f) * Vector3.forward * 4f;
+                var u = UnitFactory.Spawn(bubbleData, Faction.Player, pos);
+                if (u != null) u.CommandMove(gather);
             }
         }
     }

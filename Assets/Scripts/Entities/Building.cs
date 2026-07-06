@@ -214,7 +214,13 @@ namespace VoidClash
         void Update()
         {
             if (IsDead) return;
-            if (!IsComplete) return;
+
+            // Bubble structures grow themselves — no worker required.
+            if (!IsComplete)
+            {
+                if (Data.selfBuild) Contribute(Time.deltaTime);
+                return;
+            }
 
             TickFlight();
             if (Flight == FlightState.Grounded)

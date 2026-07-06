@@ -334,20 +334,32 @@ namespace VoidClash.Tests
         }
 
         [Test]
-        public void BubblePrototype_DataDefinitionsExist()
+        public void Bubble_DataDefinitionsExist()
         {
             var db = GameDatabase.BuildTransient();
             Assert.IsNotNull(db.Unit("bubble"), "basic bubble unit");
             Assert.IsNotNull(db.Unit("poison_bubble"), "poison bubble unit");
-            Assert.IsNotNull(db.Building("bubble_spring"), "Bubble Spring building");
-            Assert.IsNotNull(db.Building("poison_pool"), "Poison Pool building");
+            Assert.IsNotNull(db.Building("bubble_core"), "Bubble Nexus");
+            Assert.IsNotNull(db.Building("bubble_spring"), "Bubble Spring");
+            Assert.IsNotNull(db.Building("poison_pool"), "Poison Pool");
+            Assert.IsNotNull(db.Building("foam_turret"), "Foam Turret");
             Assert.AreEqual(0, db.Unit("bubble").supplyCost, "bubbles stream without supply");
             Assert.Less(db.Unit("bubble").maxHP, 25, "basic bubbles should pop easily");
+
+            // every bubble structure self-builds and lives in the bubble tech group
+            foreach (var id in new[] { "bubble_core", "bubble_spring", "poison_pool", "foam_turret" })
+            {
+                var b = db.Building(id);
+                Assert.AreEqual("bubble", b.techGroup, $"{id} in bubble tech group");
+                Assert.IsTrue(b.selfBuild, $"{id} self-builds");
+            }
+            Assert.Greater(db.Building("bubble_spring").passiveMineralsPerSec, 0f, "spring earns minerals");
+            Assert.Greater(db.Building("bubble_core").supplyProvided, 0, "nexus provides supply");
         }
 
         [UnityTest]
         [Timeout(900000)]
-        public IEnumerator BubbleLab_StartsAsBubbleRace()
+        public IEnumerator BubbleLab_EconomyBuildAndMorph()
         {
             Campaign.Current = null;
             SkirmishConfig.Mode = SkirmishMode.BubbleLab;
@@ -357,14 +369,36 @@ namespace VoidClash.Tests
             Time.timeScale = 8f;
             G.AI.enabled = false;
 
-            Assert.AreEqual(0, Count<Building>(Faction.Player, b => b.Data.id == "cc"), "Bubble Lab should not start as Terran");
+            // starts as the Bubble faction, not Terran
+            Assert.AreEqual(0, Count<Building>(Faction.Player, b => b.Data.id == "cc"), "no Terran Command Center");
+            Assert.AreEqual(1, Count<Building>(Faction.Player, b => b.Data.id == "bubble_core"), "Bubble Nexus start");
             Assert.AreEqual(1, Count<Building>(Faction.Player, b => b.Data.id == "bubble_spring"), "Bubble Spring start");
             Assert.AreEqual(1, Count<Building>(Faction.Player, b => b.Data.id == "poison_pool"), "Poison Pool start");
-            Assert.GreaterOrEqual(Count<Unit>(Faction.Player, u => u.Data.id == "bubble" || u.Data.id == "poison_bubble"), 8,
-                "starting bubble swarm");
 
-            yield return WaitUntil(() => Count<Unit>(Faction.Player, u => u.Data.id == "poison_bubble") >= 4,
-                25f, "Poison Pool to morph bubbles");
+            // economy: the spring drains minerals into income
+            int startMin = G.PlayerBank.Minerals;
+            yield return WaitUntil(() => G.PlayerBank.Minerals > startMin, 40f, "spring mineral income");
+
+            // production: bubbles keep streaming out of the spring
+            yield return WaitUntil(
+                () => Count<Unit>(Faction.Player, u => u.Data.id == "bubble" || u.Data.id == "poison_bubble") >= 10,
+                40f, "spring bubble production");
+
+            // self-build: a placed Foam Turret finishes with no worker present
+            var turretData = G.DB.Building("foam_turret");
+            var spot = FindSpot(turretData);
+            Assert.IsTrue(spot.HasValue, "a spot for the Foam Turret");
+            G.PlayerBank.AddMinerals(turretData.mineralCost);
+            Assert.IsTrue(G.PlayerBank.TrySpend(turretData.mineralCost), "afford Foam Turret");
+            var turret = G.Placer.PlaceAt(turretData, Faction.Player, spot.Value);
+            Assert.AreEqual(0, Count<WorkerUnit>(Faction.Player), "no workers exist in Bubble Lab");
+            yield return WaitUntil(() => turret == null || turret.IsComplete,
+                turretData.buildTime * 3f + 30f, "Foam Turret self-builds");
+            Assert.IsTrue(turret != null && turret.IsComplete, "Foam Turret completed with no worker");
+
+            // morph: the Poison Pool converts nearby bubbles into poison bubbles
+            yield return WaitUntil(() => Count<Unit>(Faction.Player, u => u.Data.id == "poison_bubble") >= 3,
+                40f, "Poison Pool morphing");
 
             LogGuard.AssertClean();
         }

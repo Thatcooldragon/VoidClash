@@ -3,13 +3,20 @@ using UnityEngine;
 
 namespace VoidClash
 {
+    /// <summary>Drives the Bubble faction: structure-driven economy (springs drain nearby
+    /// minerals into income + a stream of soap bubbles), a passive Nexus trickle, Poison Pool
+    /// morphing, and poison-gas bursts. Bubbles are free chaff that gather at their spring's
+    /// rally point (or idle for the player to command); enemy-owned bubbles still push out.</summary>
     public class BubbleSystem : MonoBehaviour
     {
         readonly Dictionary<Building, float> _spawnTimers = new Dictionary<Building, float>();
-        const float MineralLinkRange = 8f;
-        const float SpawnEvery = 3.5f;
-        const float PoolMorphRange = 6f;
-        const int BubbleSoftCap = 55;
+        readonly Dictionary<int, float> _mineralFraction = new Dictionary<int, float>();
+        const float MineralLinkRange = 9f;
+        const float SpawnEvery = 2.6f;
+        const float PoolMorphRange = 7f;
+        const float MorphEvery = 1.6f;
+        const int BubbleSoftCap = 60;
+        float _morphTimer;
 
         void OnEnable() => Entity.AnyDied += OnEntityDied;
         void OnDisable() => Entity.AnyDied -= OnEntityDied;
@@ -17,36 +24,71 @@ namespace VoidClash
         void Update()
         {
             if (G.Game == null || G.Game.IsPaused || G.Game.IsOver || G.DB == null) return;
-            TickSprings();
+            TickEconomyAndSprings();
             TickPoisonPools();
         }
 
-        void TickSprings()
+        // ---- economy + bubble production ----
+
+        void TickEconomyAndSprings()
         {
+            float dt = Time.deltaTime;
             var snapshot = new List<Entity>(Entity.All);
             foreach (var e in snapshot)
             {
-                if (!(e is Building b) || b.IsDead || !b.IsComplete || b.Data.id != "bubble_spring") continue;
-                if (!LinkedToMinerals(b.Position)) continue;
+                if (!(e is Building b) || b.IsDead || !b.IsComplete) continue;
+                if (b.Data.passiveMineralsPerSec <= 0f) continue;
 
-                _spawnTimers.TryGetValue(b, out float timer);
-                timer -= Time.deltaTime;
-                if (timer <= 0f)
+                if (b.Data.id == "bubble_spring")
                 {
-                    timer = SpawnEvery;
-                    if (CountBubbles(b.Faction) < BubbleSoftCap)
-                        SpawnBubble(b);
+                    var node = NearestLiveNode(b.Position, MineralLinkRange);
+                    if (node == null) continue; // a spring only works while linked to minerals
+                    Accrue(b.Faction, b.Data.passiveMineralsPerSec * dt, node);
+
+                    _spawnTimers.TryGetValue(b, out float timer);
+                    timer -= dt;
+                    if (timer <= 0f)
+                    {
+                        timer = SpawnEvery;
+                        if (CountBubbles(b.Faction) < BubbleSoftCap) SpawnBubble(b);
+                    }
+                    _spawnTimers[b] = timer;
                 }
-                _spawnTimers[b] = timer;
+                else
+                {
+                    // Bubble Nexus and other structures: flat trickle, no node needed
+                    Accrue(b.Faction, b.Data.passiveMineralsPerSec * dt, null);
+                }
             }
         }
 
-        bool LinkedToMinerals(Vector3 pos)
+        /// <summary>Adds fractional minerals to a faction, draining a node when one is given.</summary>
+        void Accrue(Faction f, float amount, MineralNode drainFrom)
         {
+            int key = (int)f;
+            _mineralFraction.TryGetValue(key, out float frac);
+            frac += amount;
+            int whole = Mathf.FloorToInt(frac);
+            if (whole > 0)
+            {
+                frac -= whole;
+                if (drainFrom != null) whole = drainFrom.Harvest(whole); // deplete the crystals
+                if (whole > 0) G.Bank(f).AddMinerals(whole);
+            }
+            _mineralFraction[key] = frac;
+        }
+
+        static MineralNode NearestLiveNode(Vector3 pos, float range)
+        {
+            MineralNode best = null;
+            float bestD = range * range;
             foreach (var node in MineralNode.All)
-                if (node != null && !node.Depleted && Vector3.Distance(node.transform.position, pos) <= MineralLinkRange)
-                    return true;
-            return false;
+            {
+                if (node == null || node.Depleted) continue;
+                float d = (node.transform.position - pos).sqrMagnitude;
+                if (d <= bestD) { bestD = d; best = node; }
+            }
+            return best;
         }
 
         void SpawnBubble(Building spring)
@@ -56,12 +98,37 @@ namespace VoidClash
             pos.y = 0f;
             var bubble = UnitFactory.Spawn(data, spring.Faction, pos);
             if (bubble == null) return;
-            bubble.CommandAttackMove(spring.Faction == Faction.Player ? MapBuilder.EnemyBasePos : MapBuilder.PlayerBasePos);
-            if (spring.Faction == Faction.Player && G.Audio != null) G.Audio.Play("deposit", 0.25f);
+            SendNewBubble(bubble, spring);
+            if (spring.Faction == Faction.Player && G.Audio != null) G.Audio.Play("deposit", 0.2f);
         }
+
+        /// <summary>Fresh bubbles follow the structure's rally point if set; an enemy AI pushes
+        /// toward the player; otherwise a player bubble rallies home to the Bubble Nexus, where
+        /// the swarm collects (and a Poison Pool can morph it) ready for you to command.</summary>
+        static void SendNewBubble(Unit bubble, Building source)
+        {
+            if (source.RallyPoint.HasValue) { bubble.CommandAttackMove(source.RallyPoint.Value); return; }
+            if (source.Faction == Faction.Enemy) { bubble.CommandAttackMove(MapBuilder.PlayerBasePos); return; }
+            bubble.CommandMove(GatherPoint(source.Faction));
+        }
+
+        /// <summary>Where a faction's ownerless bubbles collect: just in front of its Bubble Nexus.</summary>
+        static Vector3 GatherPoint(Faction f)
+        {
+            foreach (var e in Entity.All)
+                if (e is Building b && !b.IsDead && b.Faction == f && b.Data.id == "bubble_core")
+                    return b.Position + (Vector3.zero - b.Position).normalized * 4f;
+            return f == Faction.Player ? MapBuilder.PlayerBasePos : MapBuilder.EnemyBasePos;
+        }
+
+        // ---- poison morphing ----
 
         void TickPoisonPools()
         {
+            _morphTimer -= Time.deltaTime;
+            if (_morphTimer > 0f) return;
+            _morphTimer = MorphEvery;
+
             var snapshot = new List<Entity>(Entity.All);
             foreach (var e in snapshot)
             {
@@ -73,23 +140,19 @@ namespace VoidClash
         void MorphNearbyBubble(Building pool)
         {
             Unit target = null;
+            float range2 = PoolMorphRange * PoolMorphRange;
             foreach (var e in Entity.All)
             {
                 if (!(e is Unit u) || u.IsDead || u.Faction != pool.Faction || u.Data.id != "bubble") continue;
-                if (Vector3.Distance(u.Position, pool.Position) <= PoolMorphRange)
-                {
-                    target = u;
-                    break;
-                }
+                if ((u.Position - pool.Position).sqrMagnitude <= range2) { target = u; break; }
             }
             if (target == null) return;
 
             Vector3 pos = target.Position;
             Destroy(target.gameObject);
             var poison = UnitFactory.Spawn(G.DB.Unit("poison_bubble"), pool.Faction, pos);
-            if (poison != null)
-                poison.CommandAttackMove(pool.Faction == Faction.Player ? MapBuilder.EnemyBasePos : MapBuilder.PlayerBasePos);
-            if (pool.Faction == Faction.Player && G.Hud != null) G.Hud.Notify("Bubble filled with poison gas");
+            if (poison != null) SendNewBubble(poison, pool);
+            if (pool.Faction == Faction.Player && G.Audio != null) G.Audio.Play("deposit", 0.18f);
         }
 
         int CountBubbles(Faction faction)

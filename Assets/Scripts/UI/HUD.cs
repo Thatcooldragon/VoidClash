@@ -333,6 +333,7 @@ namespace VoidClash
             Building trainer = null;
             Building liftable = null;
             Building cancelable = null;
+            Building bubbleBuilder = null;
             foreach (var e in sel)
             {
                 if (e is WorkerUnit && e.Faction == Faction.Player) hasWorker = true;
@@ -343,21 +344,18 @@ namespace VoidClash
                 {
                     if (b.Data.CanTrain && !b.IsAirborne && trainer == null) trainer = b;
                     if (b.CanLift && liftable == null) liftable = b;
+                    if (b.Data.opensBuildMenu && bubbleBuilder == null) bubbleBuilder = b;
                 }
             }
 
             int slot = 0;
             if (hasWorker)
             {
-                for (int i = 0; i < G.DB.buildings.Count; i++)
-                {
-                    var bd = G.DB.buildings[i];
-                    var key = bd.hotkey;
-                    AddCommandButton(slot++, $"{bd.displayName}\n<{KeyLabel(key)}>  {bd.mineralCost}m",
-                        () => G.Input.BeginPlacement(bd), key,
-                        $"{bd.displayName} — {bd.mineralCost} minerals, {bd.buildTime:0}s\n{bd.description}",
-                        G.PlayerBank.CanAfford(bd.mineralCost));
-                }
+                BuildHotbar("terran", ref slot);
+            }
+            else if (bubbleBuilder != null)
+            {
+                BuildHotbar("bubble", ref slot);
             }
             else if (trainer != null)
             {
@@ -399,6 +397,22 @@ namespace VoidClash
                     "Attack-move: units engage everything on the way", hasCombat);
                 AddCommandButton(7, "Stop\n<S>", () => IssueSimple(u => u.CommandStop()), KeyCode.None, "Stop all actions", true);
                 AddCommandButton(8, "Hold\n<H>", () => IssueSimple(u => u.CommandHold()), KeyCode.None, "Hold position", true);
+            }
+        }
+
+        /// <summary>Fills the command card with the build buttons for one tech group
+        /// ("terran" or "bubble"), so races never see each other's structures.</summary>
+        void BuildHotbar(string techGroup, ref int slot)
+        {
+            for (int i = 0; i < G.DB.buildings.Count; i++)
+            {
+                var bd = G.DB.buildings[i];
+                if (bd.techGroup != techGroup) continue;
+                var key = bd.hotkey;
+                AddCommandButton(slot++, $"{bd.displayName}\n<{KeyLabel(key)}>  {bd.mineralCost}m",
+                    () => G.Input.BeginPlacement(bd), key,
+                    $"{bd.displayName} — {bd.mineralCost} minerals, {bd.buildTime:0}s\n{bd.description}",
+                    G.PlayerBank.CanAfford(bd.mineralCost));
             }
         }
 

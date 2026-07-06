@@ -29,6 +29,16 @@ namespace VoidClash.Editor
             EditorApplication.isPlaying = true;
         }
 
+        /// <summary>Focused capture of the Bubble Lab foam base.</summary>
+        public static void RunBubble()
+        {
+            SessionState.SetBool(Flag, true);
+            SessionState.SetInt(PhaseKey, 20);
+            SessionState.SetFloat(MarkKey, -1f);
+            EditorApplication.update += Tick;
+            EditorApplication.isPlaying = true;
+        }
+
         static void Advance(int phase)
         {
             SessionState.SetInt(PhaseKey, phase);
@@ -198,6 +208,35 @@ namespace VoidClash.Editor
                     if (Elapsed > 3f)
                     {
                         Campaign.Current = null;
+                        SessionState.SetBool(Flag, false);
+                        EditorApplication.Exit(0);
+                    }
+                    break;
+
+                case 20: // enter Bubble Lab
+                    if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != "Game"
+                        || SkirmishConfig.Mode != SkirmishMode.BubbleLab)
+                    {
+                        Campaign.Current = null;
+                        SkirmishConfig.Mode = SkirmishMode.BubbleLab;
+                        UnityEngine.SceneManagement.SceneManager.LoadScene("Game");
+                        Advance(21);
+                    }
+                    break;
+
+                case 21: // let bubbles stream, then frame the foam base
+                    if (Elapsed > 7f)
+                    {
+                        if (G.Cam != null) G.Cam.Focus(MapBuilder.PlayerBasePos + new Vector3(2f, 0f, 2f));
+                        Snap("shot_bubble_lab.png");
+                        Advance(22);
+                    }
+                    break;
+
+                case 22: // flush, then quit
+                    if (Elapsed > 2.5f && !SnapPending)
+                    {
+                        SkirmishConfig.Mode = SkirmishMode.Terran;
                         SessionState.SetBool(Flag, false);
                         EditorApplication.Exit(0);
                     }

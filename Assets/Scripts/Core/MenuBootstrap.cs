@@ -162,7 +162,7 @@ namespace VoidClash
 
             BuildEpisodeCard(_mainPanel, -500f, "EPISODE I", "TERRAN FRONT", "Progress saved locally", "PLAY CAMPAIGN",
                 new Color(0.25f, 0.62f, 1f), () => ShowCampaign(true), true);
-            BuildEpisodeCard(_mainPanel, 0f, "PROTOTYPE", "BUBBLE TIDE", "Auto-spawn bubbles, poison morphs", "FREE PLAY LAB",
+            BuildEpisodeCard(_mainPanel, 0f, "NEW RACE", "BUBBLE TIDE", "Foam economy: self-building, morph & swarm", "PLAY BUBBLE TIDE",
                 new Color(0.35f, 1f, 0.85f), () => { Campaign.Current = null; SkirmishConfig.Mode = SkirmishMode.BubbleLab; SceneManager.LoadScene("Game"); }, true);
             BuildEpisodeCard(_mainPanel, 500f, "CONCEPT", "CORE SWARM", "Shape droids and power cores", "COMING SOON",
                 new Color(1f, 0.45f, 0.3f), null, false);

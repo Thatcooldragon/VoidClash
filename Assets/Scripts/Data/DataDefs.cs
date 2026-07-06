@@ -193,25 +193,55 @@ namespace VoidClash
             sensor.visionRadius = 24f;
             sensor.accentColor = new Color(0.35f, 0.95f, 1f);
 
+            // ---- Bubble faction (structure-driven economy, no workers) ----
+
+            var bubbleCore = ScriptableObject.CreateInstance<BuildingData>();
+            bubbleCore.id = "bubble_core"; bubbleCore.displayName = "Bubble Nexus";
+            bubbleCore.description = "The foam heart. Grows itself, drips a trickle of minerals, gives 10 supply, and lets you shape more bubble structures.";
+            bubbleCore.hotkey = KeyCode.Q;
+            bubbleCore.mineralCost = 350; bubbleCore.buildTime = 26f; bubbleCore.maxHP = 1400; bubbleCore.armor = 1;
+            bubbleCore.sizeX = 5f; bubbleCore.sizeZ = 5f;
+            bubbleCore.supplyProvided = 10;
+            bubbleCore.techGroup = "bubble"; bubbleCore.selfBuild = true;
+            bubbleCore.passiveMineralsPerSec = 1.2f; bubbleCore.opensBuildMenu = true;
+            bubbleCore.visionRadius = 13f;
+            bubbleCore.accentColor = new Color(0.55f, 0.95f, 1f);
+
             var bubbleSpring = ScriptableObject.CreateInstance<BuildingData>();
             bubbleSpring.id = "bubble_spring"; bubbleSpring.displayName = "Bubble Spring";
-            bubbleSpring.description = "Produces soap bubbles nonstop when built close to minerals.";
-            bubbleSpring.hotkey = KeyCode.U;
-            bubbleSpring.mineralCost = 125; bubbleSpring.buildTime = 16f; bubbleSpring.maxHP = 360; bubbleSpring.armor = 0;
+            bubbleSpring.description = "Built next to minerals, it drains them into a steady stream of soap bubbles AND extra minerals. Grows itself.";
+            bubbleSpring.hotkey = KeyCode.W;
+            bubbleSpring.mineralCost = 100; bubbleSpring.buildTime = 14f; bubbleSpring.maxHP = 360; bubbleSpring.armor = 0;
             bubbleSpring.sizeX = 3f; bubbleSpring.sizeZ = 3f;
+            bubbleSpring.techGroup = "bubble"; bubbleSpring.selfBuild = true;
+            bubbleSpring.passiveMineralsPerSec = 3.5f; bubbleSpring.opensBuildMenu = true;
             bubbleSpring.visionRadius = 10f;
             bubbleSpring.accentColor = new Color(0.6f, 0.95f, 1f);
 
             var poisonPool = ScriptableObject.CreateInstance<BuildingData>();
             poisonPool.id = "poison_pool"; poisonPool.displayName = "Poison Pool";
-            poisonPool.description = "Morphs nearby basic bubbles into poison bubbles.";
-            poisonPool.hotkey = KeyCode.I;
+            poisonPool.description = "Morphs nearby soap bubbles into poison bubbles that burst into toxic gas. Grows itself.";
+            poisonPool.hotkey = KeyCode.E;
             poisonPool.mineralCost = 100; poisonPool.buildTime = 14f; poisonPool.maxHP = 320; poisonPool.armor = 0;
             poisonPool.sizeX = 3f; poisonPool.sizeZ = 3f;
+            poisonPool.techGroup = "bubble"; poisonPool.selfBuild = true;
+            poisonPool.opensBuildMenu = true;
             poisonPool.visionRadius = 9f;
             poisonPool.accentColor = new Color(0.35f, 1f, 0.35f);
 
-            return new[] { cc, depot, rax, fac, turret, sensor, bubbleSpring, poisonPool };
+            var foamTurret = ScriptableObject.CreateInstance<BuildingData>();
+            foamTurret.id = "foam_turret"; foamTurret.displayName = "Foam Turret";
+            foamTurret.description = "Bubble defense. Spits sticky foam globs at attackers. Grows itself.";
+            foamTurret.hotkey = KeyCode.R;
+            foamTurret.mineralCost = 100; foamTurret.buildTime = 13f; foamTurret.maxHP = 600; foamTurret.armor = 0;
+            foamTurret.sizeX = 2f; foamTurret.sizeZ = 2f;
+            foamTurret.techGroup = "bubble"; foamTurret.selfBuild = true;
+            foamTurret.damage = 12f; foamTurret.damageClass = DamageClass.Normal;
+            foamTurret.attackRange = 9f; foamTurret.attackCooldown = 1.0f; foamTurret.projectileSpeed = 26f;
+            foamTurret.visionRadius = 11f;
+            foamTurret.accentColor = new Color(0.6f, 0.95f, 1f);
+
+            return new[] { cc, depot, rax, fac, turret, sensor, bubbleCore, bubbleSpring, poisonPool, foamTurret };
         }
     }
 }

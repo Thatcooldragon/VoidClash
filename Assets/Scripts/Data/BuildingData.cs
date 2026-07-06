@@ -30,6 +30,18 @@ namespace VoidClash
         public bool isDropoff = false;
         public string[] trainableUnits = new string[0];
 
+        [Header("Faction / Bubble economy")]
+        /// <summary>Which build hotbar this belongs to ("terran" or "bubble"). Filters what
+        /// a selected builder can construct so races don't cross-build.</summary>
+        public string techGroup = "terran";
+        /// <summary>Bubble structures grow themselves — no worker needed to complete them.</summary>
+        public bool selfBuild = false;
+        /// <summary>Passive minerals per second while complete (Bubble structure-driven economy).
+        /// Springs also require a nearby mineral node; see BubbleSystem.</summary>
+        public float passiveMineralsPerSec = 0f;
+        /// <summary>Selecting a completed structure with this set opens the bubble build menu.</summary>
+        public bool opensBuildMenu = false;
+
         [Header("Turret (0 damage = no attack)")]
         public float damage = 0f;
         public DamageClass damageClass = DamageClass.Piercing;

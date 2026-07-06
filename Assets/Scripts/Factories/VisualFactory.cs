@@ -369,6 +369,30 @@ namespace VoidClash
                     Part(visual, PrimitiveType.Sphere, "zerg_accent", new Vector3(-0.4f, 0.9f, -0.15f), Vector3.one * 0.18f, null, "ToxicBubble");
                     break;
                 }
+                case "bubble_core":
+                {
+                    Part(visual, PrimitiveType.Cylinder, "crystal", new Vector3(0, 0.4f, 0), new Vector3(2.4f, 0.4f, 2.4f), null, "FoamBasin");
+                    Part(visual, PrimitiveType.Sphere, "rally", new Vector3(0, 1.5f, 0), Vector3.one * 2.0f, null, "MainDome");
+                    Part(visual, PrimitiveType.Sphere, "crystal", new Vector3(1.1f, 1.1f, 0.6f), Vector3.one * 0.9f, null, "SideDome");
+                    Part(visual, PrimitiveType.Sphere, "crystal", new Vector3(-0.9f, 1.0f, -0.7f), Vector3.one * 0.75f, null, "SideDome");
+                    Part(visual, PrimitiveType.Sphere, "crystal", new Vector3(0.2f, 1.2f, -1.1f), Vector3.one * 0.6f, null, "SideDome");
+                    Part(visual, PrimitiveType.Sphere, "rally", new Vector3(0, 2.75f, 0), Vector3.one * 0.5f, null, "Crown");
+                    break;
+                }
+                case "foam_turret":
+                {
+                    Part(visual, PrimitiveType.Cylinder, "crystal", new Vector3(0, 0.35f, 0), new Vector3(1.2f, 0.35f, 1.2f), null, "FoamBase");
+                    var head = new GameObject("Head").transform;
+                    head.SetParent(visual, false);
+                    head.localPosition = new Vector3(0, 1.1f, 0);
+                    Part(head, PrimitiveType.Sphere, "rally", Vector3.zero, Vector3.one * 0.7f, null, "FoamHead");
+                    Part(head, PrimitiveType.Cylinder, "crystal", new Vector3(0, 0.05f, 0.5f), new Vector3(0.22f, 0.4f, 0.22f), new Vector3(90f, 0, 0), "Nozzle");
+                    Part(head, PrimitiveType.Sphere, "zerg_accent", new Vector3(0, 0.1f, 0.58f), Vector3.one * 0.18f, null, "Charge");
+                    var muzzle = new GameObject("Muzzle").transform;
+                    muzzle.SetParent(head, false);
+                    muzzle.localPosition = new Vector3(0, 0.05f, 0.78f);
+                    break;
+                }
             }
             return visual;
         }
