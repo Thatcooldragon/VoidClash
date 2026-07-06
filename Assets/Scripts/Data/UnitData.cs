@@ -35,6 +35,9 @@ namespace VoidClash
 
         [Header("Role")]
         public bool isWorker = false;
+        /// <summary>Flying units hover above the ground and pass over ground units.</summary>
+        public bool flying = false;
+        public float hoverHeight = 2.6f;
 
         [Header("Visuals")]
         public Color accentColor = new Color(0.2f, 0.9f, 1f);

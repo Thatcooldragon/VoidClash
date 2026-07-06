@@ -430,8 +430,14 @@ namespace VoidClash
                 AddCommandButton(0, $"Core Dot\n<C>  {DotsSystem.CoreDotCost} dots", TryFormCoreDot, KeyCode.C,
                     $"Spend {DotsSystem.CoreDotCost} Dots to form a Core Dot (a tough droid that trickles minerals). You have {loose} Dots.",
                     loose >= DotsSystem.CoreDotCost);
-                AddCommandButton(1, $"Dot Giant\n<Z>  {DotsSystem.GiantDotCost} dots", TryFormDotGiant, KeyCode.Z,
-                    $"Spend {DotsSystem.GiantDotCost} Dots to form a powerful Dot Giant. Needs a Shape Matrix. You have {loose} Dots.",
+                AddCommandButton(1, $"Dot Kite\n<V>  {DotsSystem.KiteDotCost} dots", TryFormKite, KeyCode.V,
+                    $"Spend {DotsSystem.KiteDotCost} Dots to form a FLYING Dot Kite that pelts from range. You have {loose} Dots.",
+                    loose >= DotsSystem.KiteDotCost);
+                AddCommandButton(2, $"Dot Spike\n<B>  {DotsSystem.SpikeDotCost} dots", TryFormSpike, KeyCode.B,
+                    $"Spend {DotsSystem.SpikeDotCost} Dots to form a long-range Dot Spike. Fragile. You have {loose} Dots.",
+                    loose >= DotsSystem.SpikeDotCost);
+                AddCommandButton(3, $"Dot Giant\n<Z>  {DotsSystem.GiantDotCost} dots", TryFormDotGiant, KeyCode.Z,
+                    $"Spend {DotsSystem.GiantDotCost} Dots AND a Core Dot to form a powerful Dot Giant. Needs a Shape Matrix. You have {loose} Dots.",
                     loose >= DotsSystem.GiantDotCost);
             }
 
@@ -498,6 +504,24 @@ namespace VoidClash
         {
             if (G.Dots == null) return;
             bool ok = G.Dots.TryFormCoreDot(G.Selection.Selected, out string msg);
+            Notify(msg);
+            if (G.Audio != null) G.Audio.Play(ok ? "build_done" : "error", ok ? 0.45f : 1f);
+            if (G.Selection != null) G.Selection.RaiseChanged();
+        }
+
+        void TryFormKite()
+        {
+            if (G.Dots == null) return;
+            bool ok = G.Dots.TryFormKite(G.Selection.Selected, out string msg);
+            Notify(msg);
+            if (G.Audio != null) G.Audio.Play(ok ? "build_done" : "error", ok ? 0.45f : 1f);
+            if (G.Selection != null) G.Selection.RaiseChanged();
+        }
+
+        void TryFormSpike()
+        {
+            if (G.Dots == null) return;
+            bool ok = G.Dots.TryFormSpike(G.Selection.Selected, out string msg);
             Notify(msg);
             if (G.Audio != null) G.Audio.Play(ok ? "build_done" : "error", ok ? 0.45f : 1f);
             if (G.Selection != null) G.Selection.RaiseChanged();

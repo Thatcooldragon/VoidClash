@@ -313,6 +313,39 @@ namespace VoidClash
                     muzzleGiant.localPosition = new Vector3(0, 1.75f * s, 1.1f * s);
                     break;
                 }
+                case "dot_kite":
+                {
+                    // a flying disc of dots with dot-cluster wings (hover is handled by the agent)
+                    DotBall(visual, new Vector3(0, 0.5f * s, 0), 0.42f * s, 0.16f * s, 16, "rally");
+                    foreach (float sx in new[] { -1f, 1f })
+                    {
+                        DotBall(visual, new Vector3(sx * 0.6f * s, 0.5f * s, -0.05f * s), 0.28f * s, 0.13f * s, 9, "rally");
+                        DotBall(visual, new Vector3(sx * 1.0f * s, 0.5f * s, -0.12f * s), 0.2f * s, 0.12f * s, 6, "rally");
+                    }
+                    Part(visual, PrimitiveType.Sphere, "metal_light", new Vector3(0, 0.55f * s, 0.38f * s), Vector3.one * 0.13f * s, null, "Eye");
+                    var muzzleKite = new GameObject("Muzzle").transform;
+                    muzzleKite.SetParent(visual, false);
+                    muzzleKite.localPosition = new Vector3(0, 0.5f * s, 0.55f * s);
+                    break;
+                }
+                case "dot_spike":
+                {
+                    // a ball of dots bristling with needles tipped by dots
+                    DotBall(visual, new Vector3(0, 0.5f * s, 0), 0.42f * s, 0.16f * s, 16, "rally");
+                    for (int i = 0; i < 6; i++)
+                    {
+                        float a = i * 60f;
+                        Vector3 dir = Quaternion.Euler(0, a, 0) * Vector3.forward;
+                        Part(visual, PrimitiveType.Cube, "metal_light", new Vector3(0, 0.5f * s, 0) + dir * 0.5f * s,
+                            new Vector3(0.05f * s, 0.05f * s, 0.5f * s), new Vector3(0, a, 0), "Needle");
+                        Part(visual, PrimitiveType.Sphere, "rally", new Vector3(0, 0.5f * s, 0) + dir * 0.82f * s,
+                            Vector3.one * 0.1f * s, null, "Tip");
+                    }
+                    var muzzleSpike = new GameObject("Muzzle").transform;
+                    muzzleSpike.SetParent(visual, false);
+                    muzzleSpike.localPosition = new Vector3(0, 0.55f * s, 0.82f * s);
+                    break;
+                }
                 case "heavy":
                 {
                     Part(visual, PrimitiveType.Cube, body, new Vector3(0, 0.5f * s, 0), new Vector3(1.3f * s, 0.55f * s, 1.6f * s), null, "Chassis");

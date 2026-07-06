@@ -17,6 +17,8 @@ namespace VoidClash
 
         // shape costs, paid in loose Dots
         public const int CoreDotCost = 10;
+        public const int KiteDotCost = 12;
+        public const int SpikeDotCost = 8;
         public const int GiantDotCost = 25;
 
         float _mineralFraction;
@@ -80,9 +82,45 @@ namespace VoidClash
         public bool TryFormCoreDot(List<Entity> selection, out string message)
             => TryFormShape(selection, "dot_core", CoreDotCost, false, out message);
 
-        /// <summary>Spend more loose Dots to form a Dot Giant (needs a Shape Matrix).</summary>
+        /// <summary>Spend loose Dots to form a flying Dot Kite.</summary>
+        public bool TryFormKite(List<Entity> selection, out string message)
+            => TryFormShape(selection, "dot_kite", KiteDotCost, false, out message);
+
+        /// <summary>Spend loose Dots to form a long-range Dot Spike.</summary>
+        public bool TryFormSpike(List<Entity> selection, out string message)
+            => TryFormShape(selection, "dot_spike", SpikeDotCost, false, out message);
+
+        /// <summary>Form a Dot Giant: spend Dots AND swallow a Core Dot (released when it dies).</summary>
         public bool TryFormGiant(List<Entity> selection, out string message)
-            => TryFormShape(selection, "dot_giant", GiantDotCost, true, out message);
+        {
+            var data = G.DB.Unit("dot_giant");
+            if (data == null) { message = "dot_giant data missing"; return false; }
+            if (!HasCompleteBuilding(Faction.Player, "shape_matrix"))
+            {
+                message = "Build a Shape Matrix to form a Giant";
+                return false;
+            }
+            var loose = LooseDots(Faction.Player);
+            if (loose.Count < GiantDotCost)
+            {
+                message = $"Need {GiantDotCost} Dots to form a Giant (have {loose.Count})";
+                return false;
+            }
+            var selDots = SelectedLooseDots(selection);
+            Vector3 center = selDots.Count > 0 ? Average(selDots, selDots.Count) : Average(loose, loose.Count);
+            Unit core = FindCore(Faction.Player, center, 9999f);
+            if (core == null)
+            {
+                message = "A Giant needs a Core Dot to hide inside — form one from Dots first";
+                return false;
+            }
+            ConsumeNearest(loose, center, GiantDotCost);
+            ConsumeSilently(core);
+            var giant = UnitFactory.Spawn(data, Faction.Player, center);
+            if (giant != null && G.Selection != null) G.Selection.SelectSingle(giant, false);
+            message = $"A Core Dot hid inside a Dot Giant ({GiantDotCost} Dots)";
+            return true;
+        }
 
         bool TryFormShape(List<Entity> selection, string unitId, int dotCost, bool requireMatrix, out string message)
         {

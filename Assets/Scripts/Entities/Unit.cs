@@ -52,6 +52,15 @@ namespace VoidClash
             Agent.avoidancePriority = Random.Range(30, 70);
             Agent.stoppingDistance = 0.3f;
 
+            // Flyers hover above the field and don't jostle with ground units.
+            if (data.flying)
+            {
+                Agent.baseOffset = data.hoverHeight;
+                Agent.obstacleAvoidanceType = ObstacleAvoidanceType.NoObstacleAvoidance;
+                Agent.avoidancePriority = 5;
+                if (col != null) col.center = new Vector3(0f, 0.8f * data.bodyScale + data.hoverHeight, 0f);
+            }
+
             SetupHealth(data.maxHP, data.armor, data.armorClass);
 
             Weapon = gameObject.GetComponent<Weapon>();

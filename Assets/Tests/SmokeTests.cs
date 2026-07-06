@@ -413,6 +413,13 @@ namespace VoidClash.Tests
             Assert.Greater(db.Unit("dot_core").maxHP, db.Unit("dot").maxHP, "Core Dot is larger and tougher");
             Assert.Greater(db.Unit("dot_giant").damage, db.Unit("dot").damage * 10f, "Giant shape is very powerful");
             Assert.Greater(db.Unit("dot_giant").maxHP, db.Unit("dot_core").maxHP, "Giant hides and protects the Core Dot");
+
+            // new shapes: a flying Kite and a long-range Spike
+            Assert.IsNotNull(db.Unit("dot_kite"), "Dot Kite shape");
+            Assert.IsTrue(db.Unit("dot_kite").flying, "Dot Kite flies");
+            var spike = db.Unit("dot_spike");
+            Assert.IsNotNull(spike, "Dot Spike shape");
+            Assert.Greater(spike.attackRange, db.Unit("dot").attackRange, "Dot Spike out-ranges a basic Dot");
         }
 
         [UnityTest]
@@ -464,9 +471,9 @@ namespace VoidClash.Tests
             // pile up loose dots to spend on shapes
             var dotData = G.DB.Unit("dot");
             Vector3 pile = MapBuilder.PlayerBasePos + (Vector3.zero - MapBuilder.PlayerBasePos).normalized * 5.5f;
-            for (int i = 0; i < 40; i++)
+            for (int i = 0; i < 60; i++)
             {
-                Vector3 pos = pile + Quaternion.Euler(0f, i * 15f, 0f) * Vector3.forward * (1f + (i % 5) * 0.3f);
+                Vector3 pos = pile + Quaternion.Euler(0f, i * 12f, 0f) * Vector3.forward * (1f + (i % 6) * 0.3f);
                 Assert.IsNotNull(UnitFactory.Spawn(dotData, Faction.Player, pos), "extra Dot for form tests");
             }
             yield return null;
@@ -477,14 +484,18 @@ namespace VoidClash.Tests
             Assert.AreEqual(coresBefore + 1, Count<Unit>(Faction.Player, u => u.Data.id == "dot_core"),
                 "a new Core Dot appears");
 
-            // form a Giant by spending more dots — the Core Dot is NOT consumed anymore
-            int coresBeforeGiant = Count<Unit>(Faction.Player, u => u.Data.id == "dot_core");
-            Assert.IsTrue(G.Dots.TryFormGiant(G.Selection.Selected, out _), "spend Dots to form a Giant");
-            Assert.GreaterOrEqual(Count<Unit>(Faction.Player, u => u.Data.id == "dot_giant"), 1, "Dot Giant exists");
-            Assert.AreEqual(coresBeforeGiant, Count<Unit>(Faction.Player, u => u.Data.id == "dot_core"),
-                "forming a Giant no longer eats a Core Dot");
+            // form a flying Dot Kite from dots
+            Assert.IsTrue(G.Dots.TryFormKite(G.Selection.Selected, out _), "spend Dots to form a Kite");
+            Assert.GreaterOrEqual(Count<Unit>(Faction.Player, u => u.Data.id == "dot_kite"), 1, "flying Dot Kite exists");
 
-            // a slain Giant still releases a Core Dot
+            // form a Giant — it spends dots AND swallows a Core Dot
+            int coresBeforeGiant = Count<Unit>(Faction.Player, u => u.Data.id == "dot_core");
+            Assert.IsTrue(G.Dots.TryFormGiant(G.Selection.Selected, out _), "spend Dots + Core Dot to form a Giant");
+            Assert.GreaterOrEqual(Count<Unit>(Faction.Player, u => u.Data.id == "dot_giant"), 1, "Dot Giant exists");
+            Assert.AreEqual(coresBeforeGiant - 1, Count<Unit>(Faction.Player, u => u.Data.id == "dot_core"),
+                "forming a Giant consumes a Core Dot");
+
+            // a slain Giant releases the Core Dot again
             Unit giant = null;
             foreach (var e in Entity.All)
                 if (e is Unit u && u.Faction == Faction.Player && u.Data.id == "dot_giant") { giant = u; break; }

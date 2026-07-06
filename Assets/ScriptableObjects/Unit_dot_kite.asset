@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f079027594f08514fa92f88e65cf65fe, type: 3}
+  m_Name: Unit_dot_kite
+  m_EditorClassIdentifier: VoidClash.Runtime::VoidClash.UnitData
+  id: dot_kite
+  displayName: Dot Kite
+  description: A flying shape made of Dots. Hovers over the battlefield and pelts
+    targets from range.
+  hotkey: 113
+  mineralCost: 0
+  supplyCost: 0
+  trainTime: 1
+  maxHP: 55
+  armor: 0
+  armorClass: 0
+  damage: 9
+  damageClass: 1
+  attackRange: 8.5
+  attackCooldown: 1.15
+  projectileSpeed: 30
+  canAttack: 1
+  moveSpeed: 4.6
+  visionRadius: 12
+  isWorker: 0
+  flying: 1
+  hoverHeight: 2.8
+  accentColor: {r: 0.6, g: 0.9, b: 1, a: 1}
+  bodyScale: 0.9

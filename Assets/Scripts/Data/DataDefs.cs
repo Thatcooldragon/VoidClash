@@ -154,7 +154,29 @@ namespace VoidClash
             dotGiant.moveSpeed = 2.25f; dotGiant.visionRadius = 12f;
             dotGiant.accentColor = new Color(1f, 0.5f, 0.16f); dotGiant.bodyScale = 2.45f;
 
-            return new[] { worker, soldier, ranged, heavy, zergling, hydra, zealot, stalker, overlord, bubble, poisonBubble, dot, coreDot, dotGiant };
+            var dotKite = ScriptableObject.CreateInstance<UnitData>();
+            dotKite.id = "dot_kite"; dotKite.displayName = "Dot Kite";
+            dotKite.description = "A flying shape made of Dots. Hovers over the battlefield and pelts targets from range.";
+            dotKite.mineralCost = 0; dotKite.supplyCost = 0; dotKite.trainTime = 1f;
+            dotKite.maxHP = 55; dotKite.armor = 0; dotKite.armorClass = ArmorClass.Light;
+            dotKite.damage = 9f; dotKite.damageClass = DamageClass.Piercing;
+            dotKite.attackRange = 8.5f; dotKite.attackCooldown = 1.15f; dotKite.projectileSpeed = 30f;
+            dotKite.moveSpeed = 4.6f; dotKite.visionRadius = 12f;
+            dotKite.flying = true; dotKite.hoverHeight = 2.8f;
+            dotKite.accentColor = new Color(0.6f, 0.9f, 1f); dotKite.bodyScale = 0.9f;
+
+            var dotSpike = ScriptableObject.CreateInstance<UnitData>();
+            dotSpike.id = "dot_spike"; dotSpike.displayName = "Dot Spike";
+            dotSpike.description = "A ground shape of Dots bristling with needles. Long range, but fragile.";
+            dotSpike.mineralCost = 0; dotSpike.supplyCost = 0; dotSpike.trainTime = 1f;
+            dotSpike.maxHP = 45; dotSpike.armor = 0; dotSpike.armorClass = ArmorClass.Light;
+            dotSpike.damage = 13f; dotSpike.damageClass = DamageClass.Piercing;
+            dotSpike.attackRange = 10f; dotSpike.attackCooldown = 1.4f; dotSpike.projectileSpeed = 32f;
+            dotSpike.moveSpeed = 3.2f; dotSpike.visionRadius = 12f;
+            dotSpike.accentColor = new Color(1f, 0.75f, 0.35f); dotSpike.bodyScale = 0.95f;
+
+            return new[] { worker, soldier, ranged, heavy, zergling, hydra, zealot, stalker, overlord, bubble, poisonBubble,
+                dot, coreDot, dotGiant, dotKite, dotSpike };
         }
 
         public static BuildingData[] CreateBuildings()
