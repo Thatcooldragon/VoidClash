@@ -25,6 +25,37 @@ namespace VoidClash
         public static string EnemyBodyOverride;
         public static string EnemyAccentOverride;
 
+        // ---- shared limb helpers (give each race a distinct leg silhouette) ----
+
+        /// <summary>Terran armored biped leg: thigh, shin, boot. side = +1 right / -1 left.</summary>
+        static void LegTerran(Transform v, float side, string body, float s)
+        {
+            float x = 0.2f * s * side;
+            Part(v, PrimitiveType.Cube, "metal_dark", new Vector3(x, 0.52f * s, 0f),       new Vector3(0.24f * s, 0.46f * s, 0.28f * s), null, "Thigh");
+            Part(v, PrimitiveType.Cube, body,         new Vector3(x, 0.20f * s, 0.02f * s), new Vector3(0.22f * s, 0.42f * s, 0.26f * s), null, "Shin");
+            Part(v, PrimitiveType.Cube, "metal_dark", new Vector3(x, 0.04f * s, 0.10f * s), new Vector3(0.26f * s, 0.14f * s, 0.42f * s), null, "Boot");
+        }
+
+        /// <summary>Protoss digitigrade (reverse-jointed) leg — sleek, glowing knee.</summary>
+        static void LegProtoss(Transform v, float side, string body, string accent, float s)
+        {
+            float x = 0.24f * s * side;
+            Part(v, PrimitiveType.Cube,   "metal_light", new Vector3(x, 0.66f * s, 0.06f * s), new Vector3(0.15f * s, 0.5f * s, 0.17f * s), new Vector3(28f, 0, 0),  "Thigh");
+            Part(v, PrimitiveType.Cube,   body,          new Vector3(x, 0.30f * s, -0.06f * s), new Vector3(0.12f * s, 0.5f * s, 0.14f * s), new Vector3(-34f, 0, 0), "Shin");
+            Part(v, PrimitiveType.Cube,   "metal_light", new Vector3(x, 0.04f * s, 0.13f * s), new Vector3(0.13f * s, 0.1f * s, 0.42f * s), null, "Talon");
+            Part(v, PrimitiveType.Sphere, accent,        new Vector3(x, 0.52f * s, 0.18f * s), Vector3.one * 0.09f * s, null, "Knee");
+        }
+
+        /// <summary>Zerg splayed beast leg: raised bug-haunch down to a chitin point.
+        /// side = +1 right / -1 left, fz = +1 front / -1 rear.</summary>
+        static void LegZerg(Transform v, float side, float fz, string body, float s)
+        {
+            float x = 0.3f * s * side;
+            float z = fz * 0.4f * s;
+            Part(v, PrimitiveType.Cube, body,         new Vector3(x * 0.7f, 0.55f * s, z * 0.6f), new Vector3(0.11f * s, 0.4f * s, 0.11f * s),  new Vector3(0, 0, side * 52f),          "Haunch");
+            Part(v, PrimitiveType.Cube, "metal_dark", new Vector3(x, 0.2f * s, z),                new Vector3(0.08f * s, 0.46f * s, 0.08f * s), new Vector3(fz * -18f, 0, side * -18f), "Claw");
+        }
+
         static string Body(Faction f) => f == Faction.Player ? "player_body"
             : (EnemyBodyOverride ?? "enemy_body");
         static string Accent(Faction f) => f == Faction.Player ? "player_accent"
@@ -62,91 +93,120 @@ namespace VoidClash
             {
                 case "worker":
                 {
-                    Part(visual, PrimitiveType.Capsule, body, new Vector3(0, 0.7f * s, 0), new Vector3(0.7f * s, 0.6f * s, 0.7f * s));
-                    Part(visual, PrimitiveType.Cube, "metal_dark", new Vector3(0, 0.85f * s, -0.28f * s), new Vector3(0.5f * s, 0.5f * s, 0.25f * s));
-                    Part(visual, PrimitiveType.Sphere, accent, new Vector3(0, 1.1f * s, 0.25f * s), Vector3.one * 0.22f * s);
-                    Part(visual, PrimitiveType.Cube, "metal_light", new Vector3(0.32f * s, 0.55f * s, 0.2f * s), new Vector3(0.16f * s, 0.5f * s, 0.16f * s), new Vector3(20, 0, 0));
+                    LegTerran(visual, 1f, body, s); LegTerran(visual, -1f, body, s);
+                    Part(visual, PrimitiveType.Cube,   "metal_dark",  new Vector3(0, 0.78f * s, 0),          new Vector3(0.5f * s, 0.2f * s, 0.34f * s), null, "Pelvis");
+                    Part(visual, PrimitiveType.Cube,   body,          new Vector3(0, 1.06f * s, 0),          new Vector3(0.62f * s, 0.56f * s, 0.5f * s), null, "Torso");
+                    Part(visual, PrimitiveType.Cube,   "metal_dark",  new Vector3(0, 1.06f * s, -0.32f * s), new Vector3(0.46f * s, 0.5f * s, 0.22f * s), null, "Pack");
+                    Part(visual, PrimitiveType.Sphere, "metal_light", new Vector3(0, 1.5f * s, 0.02f * s),   Vector3.one * 0.34f * s, null, "Head");
+                    Part(visual, PrimitiveType.Cube,   accent,        new Vector3(0, 1.5f * s, 0.18f * s),   new Vector3(0.26f * s, 0.1f * s, 0.08f * s), null, "Visor");
+                    Part(visual, PrimitiveType.Cube,   "metal_dark",  new Vector3(0.34f * s, 1.0f * s, 0.28f * s), new Vector3(0.14f * s, 0.14f * s, 0.66f * s), new Vector3(18, 0, 0), "ToolArm");
+                    Part(visual, PrimitiveType.Sphere, accent,        new Vector3(0.34f * s, 0.98f * s, 0.62f * s), Vector3.one * 0.13f * s, null, "Welder");
                     var muzzleW = new GameObject("Muzzle").transform;
                     muzzleW.SetParent(visual, false);
-                    muzzleW.localPosition = new Vector3(0.32f * s, 0.8f * s, 0.4f * s);
+                    muzzleW.localPosition = new Vector3(0.34f * s, 0.98f * s, 0.72f * s);
                     break;
                 }
                 case "soldier":
                 {
-                    Part(visual, PrimitiveType.Capsule, body, new Vector3(0, 0.8f * s, 0), new Vector3(0.75f * s, 0.7f * s, 0.75f * s));
-                    Part(visual, PrimitiveType.Sphere, "metal_light", new Vector3(0, 1.5f * s, 0), Vector3.one * 0.4f * s);
-                    Part(visual, PrimitiveType.Cube, accent, new Vector3(0, 1.52f * s, 0.17f * s), new Vector3(0.3f * s, 0.1f * s, 0.1f * s));
-                    Part(visual, PrimitiveType.Cube, "metal_dark", new Vector3(0.3f * s, 0.9f * s, 0.3f * s), new Vector3(0.14f * s, 0.14f * s, 0.8f * s), null, "Gun");
+                    LegTerran(visual, 1f, body, s); LegTerran(visual, -1f, body, s);
+                    Part(visual, PrimitiveType.Cube,   "metal_dark",  new Vector3(0, 0.8f * s, 0),           new Vector3(0.56f * s, 0.22f * s, 0.36f * s), null, "Pelvis");
+                    Part(visual, PrimitiveType.Cube,   body,          new Vector3(0, 1.1f * s, 0),           new Vector3(0.7f * s, 0.6f * s, 0.54f * s), null, "Torso");
+                    Part(visual, PrimitiveType.Cube,   accent,        new Vector3(0, 1.18f * s, 0.28f * s),  new Vector3(0.3f * s, 0.14f * s, 0.06f * s), null, "Chestlight");
+                    Part(visual, PrimitiveType.Sphere, "metal_light", new Vector3(0.42f * s, 1.32f * s, 0),  Vector3.one * 0.32f * s, null, "PauldronR");
+                    Part(visual, PrimitiveType.Sphere, "metal_light", new Vector3(-0.42f * s, 1.32f * s, 0), Vector3.one * 0.32f * s, null, "PauldronL");
+                    Part(visual, PrimitiveType.Sphere, "metal_light", new Vector3(0, 1.56f * s, 0.02f * s),  Vector3.one * 0.34f * s, null, "Helmet");
+                    Part(visual, PrimitiveType.Cube,   accent,        new Vector3(0, 1.56f * s, 0.2f * s),   new Vector3(0.26f * s, 0.09f * s, 0.08f * s), null, "Visor");
+                    Part(visual, PrimitiveType.Cube,   "metal_dark",  new Vector3(0.34f * s, 1.02f * s, 0.5f * s),  new Vector3(0.16f * s, 0.16f * s, 0.9f * s), null, "Gun");
+                    Part(visual, PrimitiveType.Sphere, accent,        new Vector3(0.34f * s, 1.08f * s, 0.42f * s), Vector3.one * 0.1f * s, null, "GunSight");
                     var muzzle = new GameObject("Muzzle").transform;
                     muzzle.SetParent(visual, false);
-                    muzzle.localPosition = new Vector3(0.3f * s, 0.9f * s, 0.75f * s);
+                    muzzle.localPosition = new Vector3(0.34f * s, 1.02f * s, 1.0f * s);
                     break;
                 }
                 case "ranged":
                 {
-                    Part(visual, PrimitiveType.Capsule, body, new Vector3(0, 0.78f * s, 0), new Vector3(0.6f * s, 0.72f * s, 0.6f * s));
-                    Part(visual, PrimitiveType.Sphere, accent, new Vector3(0, 1.45f * s, 0.1f * s), Vector3.one * 0.28f * s);
-                    Part(visual, PrimitiveType.Cube, "metal_dark", new Vector3(0.22f * s, 1.0f * s, 0.35f * s), new Vector3(0.1f * s, 0.1f * s, 1.2f * s), null, "Rifle");
-                    Part(visual, PrimitiveType.Sphere, accent, new Vector3(0.22f * s, 1.0f * s, 0.95f * s), Vector3.one * 0.14f * s);
+                    LegTerran(visual, 1f, body, s * 0.9f); LegTerran(visual, -1f, body, s * 0.9f);
+                    Part(visual, PrimitiveType.Cube,   "metal_dark",  new Vector3(0, 0.76f * s, 0),          new Vector3(0.42f * s, 0.2f * s, 0.3f * s), null, "Pelvis");
+                    Part(visual, PrimitiveType.Cube,   body,          new Vector3(0, 1.04f * s, 0),          new Vector3(0.5f * s, 0.56f * s, 0.42f * s), null, "Torso");
+                    Part(visual, PrimitiveType.Sphere, "metal_light", new Vector3(0, 1.46f * s, 0.02f * s),  Vector3.one * 0.3f * s, null, "Head");
+                    Part(visual, PrimitiveType.Cube,   accent,        new Vector3(0, 1.46f * s, 0.16f * s),  new Vector3(0.22f * s, 0.08f * s, 0.08f * s), null, "Visor");
+                    Part(visual, PrimitiveType.Cube,   accent,        new Vector3(-0.12f * s, 1.72f * s, -0.05f * s), new Vector3(0.04f * s, 0.3f * s, 0.04f * s), new Vector3(0, 0, 10f), "Antenna");
+                    Part(visual, PrimitiveType.Cube,   "metal_dark",  new Vector3(0.22f * s, 1.02f * s, 0.4f * s), new Vector3(0.1f * s, 0.1f * s, 1.3f * s), null, "Rifle");
+                    Part(visual, PrimitiveType.Sphere, accent,        new Vector3(0.22f * s, 1.1f * s, 0.3f * s), Vector3.one * 0.1f * s, null, "Scope");
                     var muzzle2 = new GameObject("Muzzle").transform;
                     muzzle2.SetParent(visual, false);
-                    muzzle2.localPosition = new Vector3(0.22f * s, 1.0f * s, 1.0f * s);
+                    muzzle2.localPosition = new Vector3(0.22f * s, 1.02f * s, 1.05f * s);
                     break;
                 }
                 case "zergling":
                 {
-                    Part(visual, PrimitiveType.Sphere, body, new Vector3(0, 0.45f * s, 0), new Vector3(0.85f * s, 0.6f * s, 1.1f * s));
-                    Part(visual, PrimitiveType.Sphere, body, new Vector3(0, 0.6f * s, 0.5f * s), Vector3.one * 0.5f * s, null, "Head");
-                    Part(visual, PrimitiveType.Sphere, accent, new Vector3(0.12f * s, 0.68f * s, 0.7f * s), Vector3.one * 0.12f * s);
-                    Part(visual, PrimitiveType.Sphere, accent, new Vector3(-0.12f * s, 0.68f * s, 0.7f * s), Vector3.one * 0.12f * s);
-                    Part(visual, PrimitiveType.Cube, "metal_dark", new Vector3(0.35f * s, 0.75f * s, 0.1f * s), new Vector3(0.1f * s, 0.6f * s, 0.1f * s), new Vector3(0, 0, -35f), "ClawR");
-                    Part(visual, PrimitiveType.Cube, "metal_dark", new Vector3(-0.35f * s, 0.75f * s, 0.1f * s), new Vector3(0.1f * s, 0.6f * s, 0.1f * s), new Vector3(0, 0, 35f), "ClawL");
+                    Part(visual, PrimitiveType.Sphere, body,   new Vector3(0, 0.5f * s, 0),          new Vector3(0.8f * s, 0.5f * s, 1.05f * s), null, "Carapace");
+                    Part(visual, PrimitiveType.Sphere, body,   new Vector3(0, 0.55f * s, 0.55f * s), new Vector3(0.5f * s, 0.45f * s, 0.55f * s), null, "Head");
+                    Part(visual, PrimitiveType.Sphere, accent, new Vector3(0.13f * s, 0.62f * s, 0.75f * s),  Vector3.one * 0.1f * s, null, "EyeR");
+                    Part(visual, PrimitiveType.Sphere, accent, new Vector3(-0.13f * s, 0.62f * s, 0.75f * s), Vector3.one * 0.1f * s, null, "EyeL");
+                    LegZerg(visual, 1f, 1f, body, s);  LegZerg(visual, -1f, 1f, body, s);
+                    LegZerg(visual, 1f, -1f, body, s); LegZerg(visual, -1f, -1f, body, s);
+                    Part(visual, PrimitiveType.Cube, "metal_dark", new Vector3(0.28f * s, 0.95f * s, 0.05f * s),  new Vector3(0.08f * s, 0.7f * s, 0.12f * s), new Vector3(30f, 0, -28f), "ScytheR");
+                    Part(visual, PrimitiveType.Cube, "metal_dark", new Vector3(-0.28f * s, 0.95f * s, 0.05f * s), new Vector3(0.08f * s, 0.7f * s, 0.12f * s), new Vector3(30f, 0, 28f), "ScytheL");
                     var muzzleZ = new GameObject("Muzzle").transform;
                     muzzleZ.SetParent(visual, false);
-                    muzzleZ.localPosition = new Vector3(0, 0.6f * s, 0.7f * s);
+                    muzzleZ.localPosition = new Vector3(0, 0.6f * s, 0.8f * s);
                     break;
                 }
                 case "hydralisk":
                 {
-                    Part(visual, PrimitiveType.Capsule, body, new Vector3(0, 0.75f * s, 0), new Vector3(0.6f * s, 0.75f * s, 0.6f * s), new Vector3(18f, 0, 0));
-                    Part(visual, PrimitiveType.Sphere, body, new Vector3(0, 1.45f * s, 0.25f * s), new Vector3(0.5f * s, 0.6f * s, 0.6f * s), null, "Hood");
-                    Part(visual, PrimitiveType.Sphere, accent, new Vector3(0, 1.5f * s, 0.5f * s), Vector3.one * 0.2f * s);
+                    Part(visual, PrimitiveType.Sphere, body, new Vector3(0, 0.5f * s, -0.1f * s), new Vector3(0.75f * s, 0.6f * s, 0.9f * s), null, "Base");
+                    LegZerg(visual, 1f, 1f, body, s); LegZerg(visual, -1f, 1f, body, s);
+                    Part(visual, PrimitiveType.Capsule, body,   new Vector3(0, 1.15f * s, 0.15f * s), new Vector3(0.5f * s, 0.6f * s, 0.5f * s), new Vector3(18f, 0, 0), "Torso");
+                    Part(visual, PrimitiveType.Sphere,  body,   new Vector3(0, 1.7f * s, 0.32f * s),  new Vector3(0.55f * s, 0.52f * s, 0.55f * s), null, "Hood");
+                    Part(visual, PrimitiveType.Sphere,  accent, new Vector3(0, 1.72f * s, 0.55f * s), Vector3.one * 0.16f * s, null, "Face");
                     for (int i = 0; i < 3; i++)
-                        Part(visual, PrimitiveType.Cube, "metal_dark", new Vector3((i - 1) * 0.18f * s, 1.7f * s, -0.05f * s),
-                            new Vector3(0.07f * s, 0.5f * s, 0.07f * s), new Vector3(-20f + i * 8f, 0, (i - 1) * 18f), "Spine");
+                        Part(visual, PrimitiveType.Cube, "metal_dark", new Vector3((i - 1) * 0.2f * s, 1.55f * s, -0.15f * s),
+                            new Vector3(0.06f * s, 0.55f * s, 0.06f * s), new Vector3(-28f + i * 6f, 0, (i - 1) * 16f), "Spine");
+                    Part(visual, PrimitiveType.Cube, "metal_dark", new Vector3(0.3f * s, 1.2f * s, 0.3f * s),  new Vector3(0.09f * s, 0.09f * s, 0.5f * s), new Vector3(20f, 0, 0), "ArmR");
+                    Part(visual, PrimitiveType.Cube, "metal_dark", new Vector3(-0.3f * s, 1.2f * s, 0.3f * s), new Vector3(0.09f * s, 0.09f * s, 0.5f * s), new Vector3(20f, 0, 0), "ArmL");
                     var muzzleH = new GameObject("Muzzle").transform;
                     muzzleH.SetParent(visual, false);
-                    muzzleH.localPosition = new Vector3(0, 1.5f * s, 0.55f * s);
+                    muzzleH.localPosition = new Vector3(0, 1.6f * s, 0.6f * s);
                     break;
                 }
                 case "zealot":
                 {
-                    Part(visual, PrimitiveType.Capsule, body, new Vector3(0, 0.85f * s, 0), new Vector3(0.8f * s, 0.75f * s, 0.8f * s));
-                    Part(visual, PrimitiveType.Sphere, "metal_light", new Vector3(0, 1.6f * s, 0), Vector3.one * 0.42f * s);
-                    Part(visual, PrimitiveType.Cube, accent, new Vector3(0, 1.62f * s, 0.18f * s), new Vector3(0.32f * s, 0.08f * s, 0.1f * s), null, "Visor");
-                    Part(visual, PrimitiveType.Cube, accent, new Vector3(0.42f * s, 0.95f * s, 0.35f * s), new Vector3(0.09f * s, 0.09f * s, 0.9f * s), null, "BladeR");
-                    Part(visual, PrimitiveType.Cube, accent, new Vector3(-0.42f * s, 0.95f * s, 0.35f * s), new Vector3(0.09f * s, 0.09f * s, 0.9f * s), null, "BladeL");
-                    Part(visual, PrimitiveType.Cube, body, new Vector3(0, 1.35f * s, -0.3f * s), new Vector3(0.9f * s, 0.15f * s, 0.15f * s), new Vector3(0, 0, 12f), "PauldronBar");
+                    LegProtoss(visual, 1f, body, accent, s); LegProtoss(visual, -1f, body, accent, s);
+                    Part(visual, PrimitiveType.Cube,   "metal_light", new Vector3(0, 0.84f * s, 0),          new Vector3(0.4f * s, 0.22f * s, 0.32f * s), null, "Pelvis");
+                    Part(visual, PrimitiveType.Cube,   body,          new Vector3(0, 1.16f * s, 0),          new Vector3(0.56f * s, 0.62f * s, 0.44f * s), null, "Torso");
+                    Part(visual, PrimitiveType.Cube,   accent,        new Vector3(0, 1.22f * s, 0.23f * s),  new Vector3(0.22f * s, 0.3f * s, 0.05f * s), null, "Chestplate");
+                    Part(visual, PrimitiveType.Cube,   "metal_light", new Vector3(0.44f * s, 1.42f * s, 0),  new Vector3(0.22f * s, 0.2f * s, 0.34f * s), new Vector3(0, 0, -18f), "GuardR");
+                    Part(visual, PrimitiveType.Cube,   "metal_light", new Vector3(-0.44f * s, 1.42f * s, 0), new Vector3(0.22f * s, 0.2f * s, 0.34f * s), new Vector3(0, 0, 18f),  "GuardL");
+                    Part(visual, PrimitiveType.Sphere, "metal_light", new Vector3(0, 1.68f * s, 0.02f * s),  Vector3.one * 0.32f * s, null, "Head");
+                    Part(visual, PrimitiveType.Cube,   accent,        new Vector3(0, 1.68f * s, 0.18f * s),  new Vector3(0.24f * s, 0.08f * s, 0.08f * s), null, "Visor");
+                    Part(visual, PrimitiveType.Cube,   "metal_light", new Vector3(0.12f * s, 1.9f * s, -0.08f * s),  new Vector3(0.05f * s, 0.32f * s, 0.12f * s), new Vector3(-18f, 0, -12f), "CrestR");
+                    Part(visual, PrimitiveType.Cube,   "metal_light", new Vector3(-0.12f * s, 1.9f * s, -0.08f * s), new Vector3(0.05f * s, 0.32f * s, 0.12f * s), new Vector3(-18f, 0, 12f),  "CrestL");
+                    Part(visual, PrimitiveType.Cube,   "metal_light", new Vector3(0.42f * s, 1.1f * s, 0.12f * s),  new Vector3(0.12f * s, 0.12f * s, 0.4f * s), null, "ForearmR");
+                    Part(visual, PrimitiveType.Cube,   accent,        new Vector3(0.42f * s, 1.05f * s, 0.55f * s), new Vector3(0.07f * s, 0.16f * s, 0.7f * s), null, "BladeR");
+                    Part(visual, PrimitiveType.Cube,   "metal_light", new Vector3(-0.42f * s, 1.1f * s, 0.12f * s), new Vector3(0.12f * s, 0.12f * s, 0.4f * s), null, "ForearmL");
+                    Part(visual, PrimitiveType.Cube,   accent,        new Vector3(-0.42f * s, 1.05f * s, 0.55f * s), new Vector3(0.07f * s, 0.16f * s, 0.7f * s), null, "BladeL");
                     var muzzleZe = new GameObject("Muzzle").transform;
                     muzzleZe.SetParent(visual, false);
-                    muzzleZe.localPosition = new Vector3(0.42f * s, 0.95f * s, 0.8f * s);
+                    muzzleZe.localPosition = new Vector3(0.42f * s, 1.05f * s, 0.9f * s);
                     break;
                 }
                 case "stalker":
                 {
-                    Part(visual, PrimitiveType.Sphere, body, new Vector3(0, 1.15f * s, 0), new Vector3(0.75f * s, 0.55f * s, 0.95f * s), null, "Hull");
+                    Part(visual, PrimitiveType.Sphere, body,          new Vector3(0, 1.2f * s, 0),          new Vector3(0.75f * s, 0.5f * s, 0.95f * s), null, "Hull");
+                    Part(visual, PrimitiveType.Sphere, "metal_light", new Vector3(0, 1.3f * s, -0.15f * s), new Vector3(0.5f * s, 0.4f * s, 0.5f * s), null, "Carapace");
+                    Part(visual, PrimitiveType.Sphere, accent,        new Vector3(0, 1.22f * s, 0.42f * s), Vector3.one * 0.22f * s, null, "Eye");
+                    Part(visual, PrimitiveType.Cube,   accent,        new Vector3(0, 1.1f * s, 0.6f * s),   new Vector3(0.09f * s, 0.09f * s, 0.5f * s), null, "Cannon");
                     for (int i = 0; i < 4; i++)
                     {
                         float sx = (i % 2 == 0) ? 1f : -1f;
                         float sz = (i < 2) ? 1f : -1f;
-                        Part(visual, PrimitiveType.Cube, "metal_dark", new Vector3(sx * 0.45f * s, 0.6f * s, sz * 0.4f * s),
-                            new Vector3(0.1f * s, 1.15f * s, 0.1f * s), new Vector3(sz * 22f, 0, sx * -28f), "Leg");
+                        Part(visual, PrimitiveType.Cube, "metal_light", new Vector3(sx * 0.4f * s, 1.15f * s, sz * 0.35f * s),  new Vector3(0.09f * s, 0.1f * s, 0.55f * s), new Vector3(sz * 55f, 0, sx * -30f), "Thigh");
+                        Part(visual, PrimitiveType.Cube, "metal_dark",  new Vector3(sx * 0.66f * s, 0.55f * s, sz * 0.6f * s), new Vector3(0.07f * s, 0.85f * s, 0.07f * s), new Vector3(sz * -18f, 0, sx * -14f), "Shin");
                     }
-                    Part(visual, PrimitiveType.Sphere, accent, new Vector3(0, 1.35f * s, 0.3f * s), Vector3.one * 0.25f * s, null, "Eye");
-                    Part(visual, PrimitiveType.Cube, accent, new Vector3(0, 1.2f * s, 0.65f * s), new Vector3(0.1f * s, 0.1f * s, 0.5f * s), null, "Cannon");
                     var muzzleSt = new GameObject("Muzzle").transform;
                     muzzleSt.SetParent(visual, false);
-                    muzzleSt.localPosition = new Vector3(0, 1.2f * s, 0.95f * s);
+                    muzzleSt.localPosition = new Vector3(0, 1.1f * s, 0.9f * s);
                     break;
                 }
                 case "overlord":
