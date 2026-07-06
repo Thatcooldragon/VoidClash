@@ -16,6 +16,8 @@ namespace VoidClash
         readonly List<Renderer> _footprintRenderers = new List<Renderer>();
         bool _valid;
         int _blockMask;
+        string _invalidReason = "Cannot build there";
+        public string InvalidReason => _invalidReason;
 
         void Start()
         {
@@ -79,7 +81,7 @@ namespace VoidClash
             {
                 if (!_valid)
                 {
-                    if (G.Hud != null) G.Hud.Notify("Cannot build there");
+                    if (G.Hud != null) G.Hud.Notify(_invalidReason);
                     if (G.Audio != null) G.Audio.Play("error");
                     return;
                 }
@@ -142,13 +144,20 @@ namespace VoidClash
 
         public bool IsValidAt(BuildingData data, Vector3 pos)
         {
+            _invalidReason = "Cannot build there";
             if (G.Map == null || !G.Map.InBounds(pos, Mathf.Max(data.sizeX, data.sizeZ) * 0.5f + 1f))
+            {
+                _invalidReason = "Build site is outside the map";
                 return false;
+            }
 
             // overlap vs units, buildings, minerals, cliffs/rocks
             var half = new Vector3(data.sizeX * 0.5f + 0.4f, 1.2f, data.sizeZ * 0.5f + 0.4f);
             if (Physics.CheckBox(pos + Vector3.up * 1.2f, half, Quaternion.identity, _blockMask))
+            {
+                _invalidReason = "Build site is blocked";
                 return false;
+            }
 
             // corners + center must be on the navmesh (i.e., open buildable ground)
             for (int i = 0; i < 5; i++)
@@ -158,7 +167,11 @@ namespace VoidClash
                 else if (i == 2) probe += new Vector3(-half.x, 0, half.z);
                 else if (i == 3) probe += new Vector3(half.x, 0, -half.z);
                 else if (i == 4) probe += new Vector3(-half.x, 0, -half.z);
-                if (!NavMesh.SamplePosition(probe, out _, 1.0f, NavMesh.AllAreas)) return false;
+                if (!NavMesh.SamplePosition(probe, out _, 1.0f, NavMesh.AllAreas))
+                {
+                    _invalidReason = "Build site needs clear ground";
+                    return false;
+                }
             }
             return true;
         }

@@ -113,7 +113,7 @@ namespace VoidClash
                                     any = true;
                                     break; // one pad per click
                                 }
-                                if (G.Hud != null) G.Hud.Notify("Cannot land there");
+                                if (G.Hud != null) G.Hud.Notify(G.Placer != null ? G.Placer.InvalidReason : "Cannot land there");
                                 if (G.Audio != null) G.Audio.Play("error");
                                 any = true;
                                 break;
@@ -381,6 +381,12 @@ namespace VoidClash
                     _lastGroupTapped = n;
                     _lastGroupTapTime = Time.unscaledTime;
                 }
+            }
+
+            if (Input.GetKeyDown(KeyCode.F1) && G.Hud != null)
+            {
+                G.Hud.SelectIdleWorker();
+                return;
             }
 
             if (G.Selection.HasCombatUnitsSelected && Input.GetKeyDown(KeyCode.A))

@@ -10,6 +10,9 @@ namespace VoidClash
         public int index;
         public string title;
         public string menuBlurb;
+        public string objective;
+        public string victoryText;
+        public string defeatText;
         public string briefing;
         public EnemyRace enemyRace;
         public string[] armyMix;          // weighted list of unit ids the AI trains
@@ -40,6 +43,9 @@ namespace VoidClash
                 index = 0,
                 title = "Mission 1 - First Contact",
                 menuBlurb = "Burn out the Zerg infestation.",
+                objective = "Destroy every Zerg structure.",
+                victoryText = "The first brood is burned out. Terran foothold secured.",
+                defeatText = "The infestation overran the landing zone.",
                 briefing = "Commander, a Zerg brood has infested this sector.\n" +
                            "Their swarms are fast, cheap and endless - but fragile.\n" +
                            "Establish your economy, wall up with Turrets, and burn out\n" +
@@ -52,16 +58,19 @@ namespace VoidClash
                 aiWorkerCap = 10,
                 aiBuildsFactory = false,
                 aiTurrets = 1,
-                firstWaveTime = 170f,
-                waveInterval = 85f,
-                firstWaveSize = 6,
-                waveSizeGrowth = 4,
+                firstWaveTime = 185f,
+                waveInterval = 95f,
+                firstWaveSize = 5,
+                waveSizeGrowth = 3,
             },
             new MissionDef
             {
                 index = 1,
                 title = "Mission 2 - The Golden Armada",
                 menuBlurb = "Break the Protoss armada.",
+                objective = "Destroy every Protoss structure.",
+                victoryText = "The Protoss plateau is broken. Their armada retreats.",
+                defeatText = "The Golden Armada crushed our forward base.",
                 briefing = "Protoss forces have claimed the far plateau.\n" +
                            "Their warriors are few but terrifyingly strong, and their\n" +
                            "Zealots cut through light infantry like plasma through ice.\n" +
@@ -74,16 +83,19 @@ namespace VoidClash
                 aiWorkerCap = 12,
                 aiBuildsFactory = true,
                 aiTurrets = 3,
-                firstWaveTime = 240f,
+                firstWaveTime = 235f,
                 waveInterval = 120f,
-                firstWaveSize = 8,
-                waveSizeGrowth = 6,
+                firstWaveSize = 7,
+                waveSizeGrowth = 5,
             },
             new MissionDef
             {
                 index = 2,
                 title = "Mission 3 - The Overmind",
                 menuBlurb = "Slay the Overlord. [BOSS]",
+                objective = "Kill the Overlord boss.",
+                victoryText = "The Overlord is dead. The swarm collapses without its brood mind.",
+                defeatText = "The Overlord reached our base and drowned it in chitin.",
                 briefing = "This is it, Commander. The brood mother itself - the OVERLORD -\n" +
                            "nests in the enemy base, regenerating behind an endless swarm.\n" +
                            "It WILL come for you when the swarm senses blood.\n" +
@@ -96,18 +108,21 @@ namespace VoidClash
                 aiWorkerCap = 13,
                 aiBuildsFactory = false,
                 aiTurrets = 2,
-                firstWaveTime = 150f,
-                waveInterval = 90f,
+                firstWaveTime = 165f,
+                waveInterval = 95f,
                 firstWaveSize = 7,
-                waveSizeGrowth = 6,
+                waveSizeGrowth = 5,
                 bossUnitId = "overlord",
-                bossAttackTime = 420f,
+                bossAttackTime = 430f,
             },
             new MissionDef
             {
                 index = 3,
                 title = "Mission 4 - Steel Mirror",
                 menuBlurb = "Outbuild a rival Terran commander.",
+                objective = "Destroy the rebel Terran command.",
+                victoryText = "The rebel commander is offline. Their factories now answer to you.",
+                defeatText = "The rebel siege line broke our command network.",
                 briefing = "A breakaway Terran commander has fortified the opposite ridge.\n" +
                            "Expect the same tools you command: workers, Barracks, Factories,\n" +
                            "Turrets, and lifting production buildings.\n" +
@@ -122,9 +137,9 @@ namespace VoidClash
                 aiWorkerCap = 14,
                 aiBuildsFactory = true,
                 aiTurrets = 3,
-                firstWaveTime = 205f,
-                waveInterval = 105f,
-                firstWaveSize = 9,
+                firstWaveTime = 195f,
+                waveInterval = 100f,
+                firstWaveSize = 8,
                 waveSizeGrowth = 5,
             },
             new MissionDef
@@ -132,6 +147,9 @@ namespace VoidClash
                 index = 4,
                 title = "Mission 5 - Shattered Gate",
                 menuBlurb = "Hold the center against Protoss pressure.",
+                objective = "Control the center and destroy every Protoss structure.",
+                victoryText = "The shattered gate is sealed. The center crystals are ours.",
+                defeatText = "Protoss pressure split the center and cut off our base.",
                 briefing = "Protoss raiders have opened a gate near the center crystals.\n" +
                            "Their first attacks arrive late, but every wave grows sharper.\n" +
                            "Claim the middle, anchor it with Turrets, then roll forward with\n" +
@@ -144,16 +162,19 @@ namespace VoidClash
                 aiWorkerCap = 15,
                 aiBuildsFactory = true,
                 aiTurrets = 4,
-                firstWaveTime = 260f,
-                waveInterval = 95f,
-                firstWaveSize = 10,
-                waveSizeGrowth = 7,
+                firstWaveTime = 245f,
+                waveInterval = 105f,
+                firstWaveSize = 9,
+                waveSizeGrowth = 6,
             },
             new MissionDef
             {
                 index = 5,
                 title = "Mission 6 - Brood Eclipse",
                 menuBlurb = "End the final Zerg hive. [BOSS]",
+                objective = "Kill the final Overlord before the swarm overwhelms you.",
+                victoryText = "The eclipse brood is finished. The sector is finally quiet.",
+                defeatText = "The final brood swallowed the sector under the eclipse line.",
                 briefing = "The last brood has tunneled beneath the eclipse line.\n" +
                            "They attack sooner, rebuild faster, and hide their Overlord behind\n" +
                            "layers of cheap bodies. Build clean walls, keep Rangers alive, and\n" +
@@ -166,12 +187,12 @@ namespace VoidClash
                 aiWorkerCap = 16,
                 aiBuildsFactory = false,
                 aiTurrets = 3,
-                firstWaveTime = 120f,
-                waveInterval = 75f,
+                firstWaveTime = 135f,
+                waveInterval = 85f,
                 firstWaveSize = 9,
-                waveSizeGrowth = 7,
+                waveSizeGrowth = 6,
                 bossUnitId = "overlord",
-                bossAttackTime = 360f,
+                bossAttackTime = 390f,
             },
         };
 

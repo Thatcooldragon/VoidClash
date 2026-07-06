@@ -127,6 +127,21 @@ namespace VoidClash
 
         void LateUpdate() => _contributedThisFrame = false;
 
+        public bool CancelConstruction(float refundFraction = 0.75f)
+        {
+            if (IsComplete || IsDead || Data == null) return false;
+            int refund = Mathf.RoundToInt(Data.mineralCost * Mathf.Clamp01(refundFraction));
+            if (refund > 0) G.Bank(Faction).Refund(refund);
+            if (_dust != null) { Destroy(_dust.gameObject); _dust = null; }
+            if (Faction == Faction.Player)
+            {
+                if (G.Hud != null) G.Hud.Notify($"{Data.displayName} canceled (+{refund} minerals)");
+                if (G.Audio != null) G.Audio.Play("click", 0.55f);
+            }
+            RetireSilently();
+            return true;
+        }
+
         void CompleteConstruction(bool silent)
         {
             if (IsComplete) return;

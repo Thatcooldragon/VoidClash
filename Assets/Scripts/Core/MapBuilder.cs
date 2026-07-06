@@ -13,10 +13,13 @@ namespace VoidClash
 
         public static readonly Vector3 PlayerBasePos = new Vector3(-26f, 0f, -26f);
         public static readonly Vector3 EnemyBasePos = new Vector3(26f, 0f, 26f);
+        public static readonly Vector3 PlayerExpansionPos = new Vector3(-21f, 0f, 12f);
+        public static readonly Vector3 EnemyExpansionPos = new Vector3(21f, 0f, -12f);
 
         /// <summary>Cliff/rock footprints (x, z, width, depth in world units) for minimap painting.</summary>
         public readonly List<Rect> BlockedRects = new List<Rect>();
         public readonly List<Vector3> MineralSpots = new List<Vector3>();
+        public readonly List<Vector3> ExpansionSites = new List<Vector3>();
 
         Transform _root;
         NavMeshSurface _surface;
@@ -31,6 +34,7 @@ namespace VoidClash
             BuildRidges();
             BuildRocks();
             BuildMinerals();
+            BuildExpansionMarkers();
             BakeNavMesh();
         }
 
@@ -247,6 +251,46 @@ namespace VoidClash
             // two contested center fields
             SpawnCluster(new Vector3(-24f, 0f, 16f), 180f, 6);
             SpawnCluster(new Vector3(24f, 0f, -16f), 0f, 6);
+            ExpansionSites.Add(PlayerExpansionPos);
+            ExpansionSites.Add(EnemyExpansionPos);
+        }
+
+        void BuildExpansionMarkers()
+        {
+            foreach (var site in new[] { PlayerExpansionPos, EnemyExpansionPos })
+            {
+                var pad = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                pad.name = "ExpansionMarker";
+                DestroyImmediate(pad.GetComponent<Collider>());
+                pad.transform.SetParent(_root, false);
+                pad.transform.position = site + Vector3.up * 0.045f;
+                pad.transform.localScale = new Vector3(4.8f, 0.035f, 4.8f);
+                pad.GetComponent<Renderer>().sharedMaterial = MaterialLibrary.Get("rally");
+                pad.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+
+                var core = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                core.name = "ExpansionCore";
+                DestroyImmediate(core.GetComponent<Collider>());
+                core.transform.SetParent(_root, false);
+                core.transform.position = site + Vector3.up * 0.06f;
+                core.transform.localScale = new Vector3(1.1f, 0.04f, 1.1f);
+                core.GetComponent<Renderer>().sharedMaterial = MaterialLibrary.Get("metal_light");
+                core.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+
+                for (int i = 0; i < 4; i++)
+                {
+                    var marker = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    marker.name = "ExpansionPylon";
+                    DestroyImmediate(marker.GetComponent<Collider>());
+                    marker.transform.SetParent(_root, false);
+                    Vector3 offset = Quaternion.Euler(0f, i * 90f + 45f, 0f) * Vector3.forward * 3.8f;
+                    marker.transform.position = site + offset + Vector3.up * 0.55f;
+                    marker.transform.rotation = Quaternion.Euler(0f, i * 90f + 45f, 12f);
+                    marker.transform.localScale = new Vector3(0.28f, 1.1f, 0.28f);
+                    marker.GetComponent<Renderer>().sharedMaterial = MaterialLibrary.Get("crystal");
+                    marker.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                }
+            }
         }
 
         void SpawnCluster(Vector3 center, float facingDeg, int count)

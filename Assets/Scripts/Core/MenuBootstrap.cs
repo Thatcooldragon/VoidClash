@@ -172,6 +172,9 @@ namespace VoidClash
             UIFactory.SetRect(title.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -36f), new Vector2(600f, 44f));
 
             int unlocked = Campaign.UnlockedCount;
+            int cleared = Mathf.Clamp(unlocked - 1, 0, Campaign.Missions.Length);
+            var progress = UIFactory.Label(_campaignPanel, "progress", $"Progress: {cleared}/{Campaign.Missions.Length} missions cleared", 16, TextAnchor.MiddleCenter, new Color(0.62f, 0.72f, 0.86f));
+            UIFactory.SetRect(progress.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -68f), new Vector2(540f, 24f));
             for (int i = 0; i < Campaign.Missions.Length; i++)
             {
                 var m = Campaign.Missions[i];
@@ -185,7 +188,7 @@ namespace VoidClash
                     isUnlocked ? UIFactory.PanelLight : new Color(0.07f, 0.09f, 0.12f, 0.95f));
                 btn.interactable = isUnlocked;
                 UIFactory.SetRect((RectTransform)btn.transform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
-                    new Vector2(0f, -92f - i * 74f), new Vector2(620f, 62f));
+                    new Vector2(0f, -104f - i * 74f), new Vector2(620f, 62f));
             }
 
             var back = UIFactory.TextButton(_campaignPanel, "back", "Back", 22, () => ShowCampaign(false));

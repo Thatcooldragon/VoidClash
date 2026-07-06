@@ -190,6 +190,38 @@ namespace VoidClash.Tests
         }
 
         // ------------------------------------------------------------------
+        // v0.3 core loop hardening: workers should keep cycling resources,
+        // and construction cancel should cleanly refund without a death blast.
+        // ------------------------------------------------------------------
+        [UnityTest]
+        [Timeout(900000)]
+        public IEnumerator WorkerReliability_ContinuesHarvestingAndCancelRefunds()
+        {
+            Time.timeScale = 8f;
+            G.AI.enabled = false;
+
+            int start = G.PlayerBank.Minerals;
+            yield return WaitUntil(() => G.PlayerBank.Minerals >= start + 40, 120f, "workers to complete repeated harvest cycles");
+
+            G.PlayerBank.AddMinerals(500);
+            var data = G.DB.Building("depot");
+            Vector3? spot = FindSpot(data);
+            Assert.IsTrue(spot.HasValue, "valid placement spot for cancel test");
+            Assert.IsTrue(G.PlayerBank.TrySpend(data.mineralCost), "spend depot cost");
+            int afterSpend = G.PlayerBank.Minerals;
+            var site = G.Placer.PlaceAt(data, Faction.Player, spot.Value);
+            Assert.IsFalse(site.IsComplete, "new depot starts as construction site");
+
+            Assert.IsTrue(site.CancelConstruction(), "cancel unfinished construction");
+            Assert.AreEqual(afterSpend + Mathf.RoundToInt(data.mineralCost * 0.75f),
+                G.PlayerBank.Minerals, "cancel refunds 75 percent of build cost");
+            yield return null;
+            Assert.IsTrue(site == null || site.IsDead, "canceled construction site is retired");
+
+            LogGuard.AssertClean();
+        }
+
+        // ------------------------------------------------------------------
         // Campaign: mission 3 spawns the Zerg boss, lift-off works,
         // and killing the boss wins the mission.
         // ------------------------------------------------------------------
@@ -231,6 +263,47 @@ namespace VoidClash.Tests
             boss.Health.TakeDamage(999999f, DamageClass.Siege, null);
             yield return WaitUntil(() => G.Game.IsOver, 20f, "match end after boss kill");
             Assert.AreEqual(MatchState.Victory, G.Game.State, "boss kill = mission victory");
+
+            LogGuard.AssertClean();
+        }
+
+        [UnityTest]
+        [Timeout(900000)]
+        public IEnumerator Campaign_AllMissionsLoadObjectivesAndRaceSetup()
+        {
+            Time.timeScale = 8f;
+
+            for (int i = 0; i < Campaign.Missions.Length; i++)
+            {
+                var mission = Campaign.Missions[i];
+                Assert.IsFalse(string.IsNullOrEmpty(mission.objective), $"mission {i + 1} objective");
+                Assert.IsFalse(string.IsNullOrEmpty(mission.victoryText), $"mission {i + 1} victory text");
+                Assert.IsFalse(string.IsNullOrEmpty(mission.defeatText), $"mission {i + 1} defeat text");
+
+                Campaign.Current = mission;
+                SceneManager.LoadScene("Game");
+                yield return null;
+                yield return null;
+
+                string expectedBody = mission.enemyRace == EnemyRace.Zerg ? "zerg_body"
+                    : (mission.enemyRace == EnemyRace.Protoss ? "protoss_body" : null);
+                Assert.AreEqual(expectedBody, VisualFactory.EnemyBodyOverride, $"mission {i + 1} race body override");
+
+                int enemyBuildings = Count<Building>(Faction.Enemy);
+                Assert.Greater(enemyBuildings, 0, $"mission {i + 1} enemy base spawned");
+
+                if (!string.IsNullOrEmpty(mission.bossUnitId))
+                {
+                    bool foundBoss = false;
+                    foreach (var e in Entity.All)
+                        if (e is Unit u && u.Faction == Faction.Enemy && u.Data.id == mission.bossUnitId)
+                        {
+                            foundBoss = true;
+                            break;
+                        }
+                    Assert.IsTrue(foundBoss, $"mission {i + 1} boss spawned");
+                }
+            }
 
             LogGuard.AssertClean();
         }

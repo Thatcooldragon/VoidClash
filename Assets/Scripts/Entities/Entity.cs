@@ -75,6 +75,15 @@ namespace VoidClash
             Destroy(gameObject);
         }
 
+        protected void RetireSilently()
+        {
+            if (IsDead) return;
+            IsDead = true;
+            AnyDied?.Invoke(this);
+            if (G.Selection != null) G.Selection.NotifyDied(this);
+            Destroy(gameObject);
+        }
+
         /// <summary>Fog of war visibility for enemy entities.</summary>
         public void SetVisibleToPlayer(bool visible)
         {

@@ -26,6 +26,11 @@ namespace VoidClash
         Unit _boss;
         float _bossAttackTime = float.MaxValue;
         bool _bossSent;
+        bool _bossEscortSent;
+        bool _bossWarningSent;
+        float _warnedWaveTime = -1f;
+        const float WaveWarningLead = 25f;
+        const float BossWarningLead = 45f;
 
         readonly List<Unit> _army = new List<Unit>();
         readonly List<Unit> _waveOut = new List<Unit>();
@@ -35,6 +40,7 @@ namespace VoidClash
 
         int _turretsBuilt;
         int _raxCount;
+        int _ccCount;
         bool _hasFactory;
 
         public void Init(Vector3 basePos)
@@ -52,6 +58,8 @@ namespace VoidClash
             _armyMixLight = m.armyMix;
             _armyMixHeavy = m.armyMix;
             _bossAttackTime = m.bossAttackTime;
+            _bossWarningSent = false;
+            _warnedWaveTime = -1f;
         }
 
         /// <summary>Mission 3: the boss unit this AI escorts and eventually unleashes.</summary>
@@ -80,11 +88,12 @@ namespace VoidClash
 
         void RefreshCounts()
         {
-            _raxCount = 0; _hasFactory = false; _turretsBuilt = 0;
+            _raxCount = 0; _ccCount = 0; _hasFactory = false; _turretsBuilt = 0;
             foreach (var e in Entity.All)
             {
                 if (!(e is Building b) || b.Faction != Faction.Enemy || b.IsDead) continue;
-                if (b.Data.id == "barracks") _raxCount++;
+                if (b.Data.id == "cc") _ccCount++;
+                else if (b.Data.id == "barracks") _raxCount++;
                 else if (b.Data.id == "factory") _hasFactory = true;
                 else if (b.Data.id == "turret") _turretsBuilt++;
             }
@@ -110,7 +119,8 @@ namespace VoidClash
                 cc.TryQueue(G.DB.Unit("worker"));
 
             // supply
-            if (Bank.SupplyLeft < 5 && !IsConstructing("depot") && Bank.CanAfford(100))
+            var depot = G.DB.Building("depot");
+            if (depot != null && Bank.SupplyLeft < 7 && !IsConstructing("depot") && Bank.CanAfford(depot.mineralCost))
                 TryBuild("depot");
         }
 
@@ -145,6 +155,9 @@ namespace VoidClash
             if (_turretsBuilt < _turretTarget && _matchTime > 200f && Bank.CanAfford(250) && !IsConstructing("turret"))
             { TryBuild("turret"); return; }
 
+            if (_ccCount < 2 && workers >= _workerTarget && _matchTime > 360f && Bank.CanAfford(400) && !IsConstructing("cc"))
+            { TryBuild("cc"); return; }
+
             // army production from the mission's unit mix
             foreach (var e in Entity.All)
             {
@@ -153,6 +166,7 @@ namespace VoidClash
                 {
                     var pick = G.DB.Unit(_armyMixLight[Random.Range(0, _armyMixLight.Length)]);
                     if (pick != null && b.CanQueue(pick)) b.TryQueue(pick);
+                    else TryEmergencyDepotFor(pick);
                 }
                 else if (b.Data.id == "factory" && b.Queue.Count == 0)
                 {
@@ -160,6 +174,7 @@ namespace VoidClash
                         ? G.DB.Unit("heavy")
                         : G.DB.Unit(_armyMixHeavy[Random.Range(0, _armyMixHeavy.Length)]);
                     if (pick != null && b.CanQueue(pick)) b.TryQueue(pick);
+                    else TryEmergencyDepotFor(pick);
                 }
                 if (b.Data.CanTrain && !b.RallyPoint.HasValue && b.Data.id != "cc")
                     b.SetRally(_basePos + (Vector3.zero - _basePos).normalized * 10f);
@@ -211,10 +226,14 @@ namespace VoidClash
             Vector3 anchor = _basePos;
             if (data.id == "turret")
                 anchor = _basePos + (Vector3.zero - _basePos).normalized * 9f;
+            else if (data.id == "cc" && _ccCount > 0)
+                anchor = _basePos.x > 0f ? MapBuilder.EnemyExpansionPos : MapBuilder.PlayerExpansionPos;
 
-            for (int ring = 1; ring <= 4; ring++)
+            int maxRing = data.id == "cc" && _ccCount > 0 ? 3 : 4;
+            float startDist = data.id == "cc" && _ccCount > 0 ? 0f : 6f;
+            for (int ring = 1; ring <= maxRing; ring++)
             {
-                float dist = 6f + ring * 4.5f;
+                float dist = startDist + ring * 4.5f;
                 for (int i = 0; i < 12; i++)
                 {
                     float ang = i * 30f + ring * 15f;
@@ -230,13 +249,24 @@ namespace VoidClash
         {
             WorkerUnit best = null;
             float bestD = float.MaxValue;
+            WorkerUnit fallback = null;
+            float fallbackD = float.MaxValue;
             foreach (var e in Entity.All)
                 if (e is WorkerUnit w && w.Faction == Faction.Enemy && !w.IsDead)
                 {
                     float d = (w.Position - near).sqrMagnitude;
+                    if (d < fallbackD) { fallbackD = d; fallback = w; }
+                    if (w.State == UnitState.Build) continue;
                     if (d < bestD) { bestD = d; best = w; }
                 }
-            return best;
+            return best != null ? best : fallback;
+        }
+
+        void TryEmergencyDepotFor(UnitData unit)
+        {
+            if (unit == null || Bank.SupplyLeft >= unit.supplyCost || IsConstructing("depot")) return;
+            var depot = G.DB.Building("depot");
+            if (depot != null && Bank.CanAfford(depot.mineralCost)) TryBuild("depot");
         }
 
         // ---------- Army control ----------
@@ -261,27 +291,46 @@ namespace VoidClash
                 }
             }
 
+            int readyArmySupply = ArmySupply(_army);
+            if (_nextWaveTime - _matchTime <= WaveWarningLead
+                && readyArmySupply >= Mathf.Max(1, _waveSize / 2)
+                && Mathf.Abs(_warnedWaveTime - _nextWaveTime) > 0.1f)
+            {
+                _warnedWaveTime = _nextWaveTime;
+                NotifyAttackWarning("Enemy attack force gathering near their base.");
+            }
+
             // launch a wave?
-            if (_matchTime >= _nextWaveTime && ArmySupply(_army) >= _waveSize)
+            if (_matchTime >= _nextWaveTime && readyArmySupply >= _waveSize)
             {
                 var wave = new List<Unit>(_army);
                 _army.Clear();
                 _waveOut.AddRange(wave);
                 Vector3 target = FindPlayerTarget();
                 foreach (var u in wave) u.CommandAttackMove(target);
+                NotifyAttackWarning("Enemy attack wave incoming!");
                 _nextWaveTime = _matchTime + _waveInterval * Random.Range(0.9f, 1.15f);
                 _waveSize = Mathf.Min(_waveSize + _waveGrowth, 34);
             }
 
             // boss: guards home until its hour comes, then marches on the player
+            if (_boss != null && !_boss.IsDead && !_bossSent && !_bossWarningSent
+                && _bossAttackTime - _matchTime <= BossWarningLead)
+            {
+                _bossWarningSent = true;
+                NotifyAttackWarning("Warning: the Overlord is stirring.");
+            }
             if (_boss != null && !_boss.IsDead && !_bossSent && _matchTime >= _bossAttackTime)
             {
                 _bossSent = true;
                 _boss.CommandAttackMove(FindPlayerTarget());
-                if (G.Hud != null) G.Hud.Notify("The ground trembles... the OVERLORD is coming!");
+                SendBossEscort();
+                NotifyAttackWarning("The ground trembles... the OVERLORD is coming!");
             }
             if (_boss != null && !_boss.IsDead && _bossSent && _boss.State == UnitState.Idle)
                 _boss.CommandAttackMove(FindPlayerTarget());
+            if (_boss != null && !_boss.IsDead && _bossSent)
+                KeepBossEscortMoving();
 
             // idle wave units push on toward the player base
             foreach (var u in _waveOut)
@@ -293,6 +342,43 @@ namespace VoidClash
             foreach (var u in _army)
                 if (u.State == UnitState.Idle && Vector3.Distance(u.Position, guard) > 8f)
                     u.CommandAttackMove(guard);
+        }
+
+        void SendBossEscort()
+        {
+            if (_bossEscortSent) return;
+            _bossEscortSent = true;
+            var escort = new List<Unit>();
+            int escortSupply = 0;
+            int targetSupply = Mathf.Max(8, _waveSize / 2);
+            for (int i = _army.Count - 1; i >= 0 && escortSupply < targetSupply; i--)
+            {
+                var u = _army[i];
+                if (u == null || u.IsDead) continue;
+                escort.Add(u);
+                escortSupply += u.Data.supplyCost;
+                _army.RemoveAt(i);
+            }
+            _waveOut.AddRange(escort);
+            Vector3 target = FindPlayerTarget();
+            foreach (var u in escort) u.CommandAttackMove(target);
+        }
+
+        void KeepBossEscortMoving()
+        {
+            Vector3 target = FindPlayerTarget();
+            foreach (var u in _waveOut)
+            {
+                if (u == null || u.IsDead || u == _boss) continue;
+                if (Vector3.Distance(u.Position, _boss.Position) < 16f && u.State == UnitState.Idle)
+                    u.CommandAttackMove(target);
+            }
+        }
+
+        void NotifyAttackWarning(string message)
+        {
+            if (G.Hud != null) G.Hud.Notify(message);
+            if (G.Audio != null) G.Audio.Play("error", 0.5f);
         }
 
         Vector3 FindPlayerTarget()

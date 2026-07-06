@@ -10,7 +10,7 @@ namespace VoidClash
     public class HUD : MonoBehaviour
     {
         Canvas _canvas;
-        Text _mineralsText, _supplyText, _timerText;
+        Text _mineralsText, _supplyText, _timerText, _idleWorkerText, _objectiveText;
         RawImage _minimapImage;
         RectTransform _minimapRT;
         RectTransform _selectionPanel;
@@ -20,6 +20,7 @@ namespace VoidClash
         Image _dragRect;
         RectTransform _pausePanel, _endPanel;
         Text _endTitle;
+        Text _endBody;
         Text _tooltipText;
         RectTransform _tooltip;
         float _underAttackCooldown;
@@ -45,6 +46,7 @@ namespace VoidClash
             G.Game.PauseChanged += OnPauseChanged;
             G.Game.StateChanged += OnMatchEnded;
             RefreshResources();
+            RefreshIdleWorkers();
             OnSelectionChanged();
         }
 
@@ -65,6 +67,7 @@ namespace VoidClash
             if (_refreshTimer <= 0f)
             {
                 _refreshTimer = 0.35f;
+                RefreshIdleWorkers();
                 RefreshSelectionPanel(); // live HP / queue readout; card rebuilds only on selection change
             }
         }
@@ -93,11 +96,19 @@ namespace VoidClash
             _supplyText = UIFactory.Label(bar, "supply", "6/10", 24);
             UIFactory.SetRect(_supplyText.rectTransform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(200f, 0f), new Vector2(140f, 30f));
 
+            var idleBtn = UIFactory.TextButton(bar, "idleWorkers", "IDLE 0", 16, SelectIdleWorker);
+            UIFactory.SetRect((RectTransform)idleBtn.transform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(350f, 0f), new Vector2(110f, 30f));
+            _idleWorkerText = idleBtn.GetComponentInChildren<Text>();
+
             _timerText = UIFactory.Label(bar, "timer", "00:00", 22, TextAnchor.MiddleCenter);
             UIFactory.SetRect(_timerText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(120f, 30f));
 
             var menuBtn = UIFactory.TextButton(bar, "menuBtn", "MENU (Esc)", 16, () => G.Game.TogglePause());
             UIFactory.SetRect((RectTransform)menuBtn.transform, new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(-12f, 0f), new Vector2(130f, 30f));
+
+            _objectiveText = UIFactory.Label(_canvas.transform, "Objective", "", 19, TextAnchor.MiddleCenter, new Color(0.8f, 0.9f, 1f));
+            UIFactory.SetRect(_objectiveText.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -58f), new Vector2(960f, 28f));
+            RefreshObjective();
         }
 
         void RefreshResources()
@@ -106,6 +117,55 @@ namespace VoidClash
             _mineralsText.text = G.PlayerBank.Minerals.ToString();
             _supplyText.text = $"{G.PlayerBank.SupplyUsed}/{G.PlayerBank.SupplyCap}";
             _supplyText.color = G.PlayerBank.SupplyLeft <= 0 ? new Color(1f, 0.4f, 0.35f) : UIFactory.TextColor;
+        }
+
+        void RefreshIdleWorkers()
+        {
+            if (_idleWorkerText == null) return;
+            int idle = CountIdleWorkers();
+            _idleWorkerText.text = $"IDLE {idle}";
+            _idleWorkerText.color = idle > 0 ? new Color(1f, 0.9f, 0.45f) : UIFactory.TextColor;
+        }
+
+        void RefreshObjective()
+        {
+            if (_objectiveText == null) return;
+            if (!Campaign.IsCampaign || Campaign.Current == null || string.IsNullOrEmpty(Campaign.Current.objective))
+            {
+                _objectiveText.gameObject.SetActive(false);
+                return;
+            }
+            _objectiveText.gameObject.SetActive(true);
+            _objectiveText.text = $"Objective: {Campaign.Current.objective}";
+        }
+
+        int CountIdleWorkers()
+        {
+            int count = 0;
+            foreach (var e in Entity.All)
+                if (e is WorkerUnit w && w.Faction == Faction.Player && !w.IsDead && w.IsIdleForWork)
+                    count++;
+            return count;
+        }
+
+        public void SelectIdleWorker()
+        {
+            WorkerUnit best = null;
+            foreach (var e in Entity.All)
+                if (e is WorkerUnit w && w.Faction == Faction.Player && !w.IsDead && w.IsIdleForWork)
+                {
+                    best = w;
+                    break;
+                }
+            if (best == null)
+            {
+                Notify("No idle workers");
+                if (G.Audio != null) G.Audio.Play("click", 0.35f);
+                return;
+            }
+            G.Selection.SelectSingle(best, false);
+            if (G.Cam != null) G.Cam.Focus(best.Position);
+            if (G.Audio != null) G.Audio.Play("select", 0.5f);
         }
 
         // ---------- Minimap ----------
@@ -188,7 +248,9 @@ namespace VoidClash
 
             string statLine = "";
             if (e is Unit u)
-                statLine = u.Data.canAttack ? $"DMG {u.Data.damage}  ({u.Data.damageClass})   RNG {u.Data.attackRange}" : "";
+                statLine = e is WorkerUnit worker
+                    ? worker.WorkStatus
+                    : (u.Data.canAttack ? $"DMG {u.Data.damage}  ({u.Data.damageClass})   RNG {u.Data.attackRange}" : "");
             else if (e is Building b)
             {
                 if (!b.IsComplete) statLine = $"Constructing…  {(int)(b.BuildProgress * 100f)}%";
@@ -270,10 +332,13 @@ namespace VoidClash
             bool hasWorker = false, hasCombat = false;
             Building trainer = null;
             Building liftable = null;
+            Building cancelable = null;
             foreach (var e in sel)
             {
                 if (e is WorkerUnit && e.Faction == Faction.Player) hasWorker = true;
                 else if (e is Unit u && u.Faction == Faction.Player && u.Data.canAttack) hasCombat = true;
+                if (e is Building cb && cb.Faction == Faction.Player && !cb.IsComplete && cancelable == null)
+                    cancelable = cb;
                 if (e is Building b && b.Faction == Faction.Player && b.IsComplete)
                 {
                     if (b.Data.CanTrain && !b.IsAirborne && trainer == null) trainer = b;
@@ -308,6 +373,13 @@ namespace VoidClash
                         $"{ud.displayName} — {ud.mineralCost} minerals, {ud.supplyCost} supply, {ud.trainTime:0}s\n{ud.description}",
                         captured.CanQueue(ud));
                 }
+            }
+
+            if (cancelable != null)
+            {
+                var captured = cancelable;
+                AddCommandButton(5, "Cancel\n<X>", () => captured.CancelConstruction(), KeyCode.X,
+                    "Cancel construction and refund most of the minerals", true);
             }
 
             if (liftable != null)
@@ -360,6 +432,9 @@ namespace VoidClash
 
         void AddCommandButton(int slot, string label, System.Action onClick, KeyCode hotkey, string tooltip, bool enabled)
         {
+            if (!enabled && !tooltip.Contains("Blocked:"))
+                tooltip += "\nBlocked: " + DisabledReason(label);
+
             int row = slot / 3, col = slot % 3;
             var btn = UIFactory.TextButton(_commandCard, $"cmd{slot}", label, 15, () =>
             {
@@ -380,6 +455,31 @@ namespace VoidClash
             var exit = new EventTrigger.Entry { eventID = EventTriggerType.PointerExit };
             exit.callback.AddListener(_ => HideTooltip());
             trigger.triggers.Add(exit);
+        }
+
+        static string DisabledReason(string label)
+        {
+            int minerals = ParseCostBefore(label, 'm');
+            int supply = ParseCostBefore(label, 's');
+            if (minerals > 0 && G.PlayerBank.Minerals < minerals)
+                return $"need {minerals - G.PlayerBank.Minerals} more minerals.";
+            if (supply > 0 && G.PlayerBank.SupplyLeft < supply)
+                return "build a Supply Depot.";
+            if (label.StartsWith("Attack")) return "no selected unit can attack.";
+            return "queue is full or selected unit cannot use this command.";
+        }
+
+        static int ParseCostBefore(string text, char suffix)
+        {
+            int suffixIndex = text.IndexOf(suffix);
+            if (suffixIndex < 0) return 0;
+            int end = suffixIndex - 1;
+            while (end >= 0 && char.IsWhiteSpace(text[end])) end--;
+            int start = end;
+            while (start >= 0 && char.IsDigit(text[start])) start--;
+            if (end < 0 || start == end) return 0;
+            string raw = text.Substring(start + 1, end - start);
+            return int.TryParse(raw, out var value) ? value : 0;
         }
 
         /// <summary>Called by InputController every frame (build/train hotkeys).</summary>
@@ -512,6 +612,9 @@ namespace VoidClash
             _endTitle = UIFactory.Label(box, "title", "VICTORY", 52, TextAnchor.MiddleCenter);
             UIFactory.SetRect(_endTitle.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -60f), new Vector2(420f, 70f));
 
+            _endBody = UIFactory.Label(box, "body", "", 19, TextAnchor.MiddleCenter, new Color(0.76f, 0.84f, 0.95f));
+            UIFactory.SetRect(_endBody.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -132f), new Vector2(390f, 52f));
+
             _nextMissionBtn = UIFactory.TextButton(box, "next", "Next Mission", 22, () => G.Game.LoadNextMission());
             UIFactory.SetRect((RectTransform)_nextMissionBtn.transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 154f), new Vector2(280f, 54f));
             var restart = UIFactory.TextButton(box, "restart", "Restart", 22, () => G.Game.Restart());
@@ -529,6 +632,13 @@ namespace VoidClash
             bool victory = state == MatchState.Victory;
             _endTitle.text = victory ? "VICTORY" : "DEFEAT";
             _endTitle.color = victory ? new Color(0.4f, 1f, 0.55f) : new Color(1f, 0.35f, 0.3f);
+            if (_endBody != null)
+            {
+                var m = Campaign.Current;
+                _endBody.text = m == null
+                    ? (victory ? "Enemy base destroyed." : "Your command was destroyed.")
+                    : (victory ? m.victoryText : m.defeatText);
+            }
             _nextMissionBtn.gameObject.SetActive(victory && Campaign.HasNextMission);
         }
 
