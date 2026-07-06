@@ -3,8 +3,9 @@ using UnityEngine;
 namespace VoidClash
 {
     public enum EnemyRace { Terran, Zerg, Protoss }
+    public enum PlayerRace { Terran, Bubble, Dots }
     public enum AIPersonality { Balanced, Rusher, Turtle, Expander, Tech, Swarm }
-    public enum SkirmishMode { Terran, BubbleLab }
+    public enum SkirmishMode { Terran, BubbleLab, DotsLab }
 
     public static class SkirmishConfig
     {
@@ -23,6 +24,7 @@ namespace VoidClash
         public string storyBeatText;
         public float storyBeatTime = 180f;
         public string briefing;
+        public PlayerRace playerRace = PlayerRace.Terran;
         public EnemyRace enemyRace;
         public AIPersonality aiPersonality = AIPersonality.Balanced;
         public string[] armyMix;          // weighted list of unit ids the AI trains
@@ -221,6 +223,65 @@ namespace VoidClash
                 waveSizeGrowth = 6,
                 bossUnitId = "overlord",
                 bossAttackTime = 390f,
+            },
+            new MissionDef
+            {
+                index = 6,
+                title = "Bubble 1 - First Foam",
+                menuBlurb = "Learn the Bubble Nexus.",
+                objective = "Destroy the Terran test outpost with bubbles.",
+                victoryText = "The first foam tide held together. The Nexus is alive.",
+                defeatText = "The outpost burst the whole swarm before it could grow.",
+                storyBeatText = "The Nexus is breathing steadily. Protect the Spring and let the swarm collect.",
+                storyBeatTime = 115f,
+                briefing = "This is the Bubble front. You do not train workers.\n" +
+                           "Your Bubble Nexus automatically blows fragile bubbles, and\n" +
+                           "your Bubble Spring mines slowly when linked to crystals.\n" +
+                           "Select the Nexus or Spring to grow more Bubble structures.\n\n" +
+                           "VICTORY: destroy the Terran outpost. Bubbles pop in one hit,\n" +
+                           "so attack as a wave, not as single units.",
+                playerRace = PlayerRace.Bubble,
+                enemyRace = EnemyRace.Terran,
+                aiPersonality = AIPersonality.Turtle,
+                armyMix = new[] { "soldier", "soldier", "ranged" },
+                playerStartMinerals = 110,
+                enemyStartMinerals = 40,
+                aiWorkerCap = 7,
+                aiBuildsFactory = false,
+                aiTurrets = 0,
+                firstWaveTime = 260f,
+                waveInterval = 120f,
+                firstWaveSize = 4,
+                waveSizeGrowth = 2,
+            },
+            new MissionDef
+            {
+                index = 7,
+                title = "Bubble 2 - Toxic Pop",
+                menuBlurb = "Introduce Poison Pools.",
+                objective = "Use poison bubbles to crack the Terran infantry line.",
+                victoryText = "The gas clouds broke the formation. Bubble tactics are evolving.",
+                defeatText = "The Terran line held and the foam collapsed.",
+                storyBeatText = "Grouped infantry hate poison clouds. Build a Poison Pool near the gather point.",
+                storyBeatTime = 125f,
+                briefing = "The Terrans are bunching their infantry into tighter patrols.\n" +
+                           "Build a Poison Pool near your bubble gather point to morph\n" +
+                           "some basic bubbles into poison bubbles. Their direct damage\n" +
+                           "is tiny, but their burst clouds punish clumps.\n\n" +
+                           "VICTORY: destroy the Terran base after learning the poison morph.",
+                playerRace = PlayerRace.Bubble,
+                enemyRace = EnemyRace.Terran,
+                aiPersonality = AIPersonality.Rusher,
+                armyMix = new[] { "soldier", "soldier", "soldier", "ranged" },
+                playerStartMinerals = 150,
+                enemyStartMinerals = 80,
+                aiWorkerCap = 9,
+                aiBuildsFactory = false,
+                aiTurrets = 1,
+                firstWaveTime = 210f,
+                waveInterval = 95f,
+                firstWaveSize = 5,
+                waveSizeGrowth = 3,
             },
         };
 

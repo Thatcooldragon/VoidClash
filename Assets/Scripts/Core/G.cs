@@ -20,6 +20,7 @@ namespace VoidClash
         public static Minimap Minimap;
         public static EnemyAI AI;
         public static BubbleSystem Bubble;
+        public static DotsSystem Dots;
         public static GameDatabase DB;
 
         public static ResourceBank Bank(Faction f) => f == Faction.Player ? PlayerBank : EnemyBank;
@@ -28,7 +29,7 @@ namespace VoidClash
         {
             Game = null; PlayerBank = null; EnemyBank = null; Fog = null; Selection = null;
             Input = null; Placer = null; Hud = null; Audio = null; Effects = null;
-            Map = null; Cam = null; Minimap = null; AI = null; Bubble = null;
+            Map = null; Cam = null; Minimap = null; AI = null; Bubble = null; Dots = null;
             Entity.ClearRegistry();
             MineralNode.ClearRegistry();
         }

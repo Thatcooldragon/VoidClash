@@ -16,6 +16,8 @@ namespace VoidClash
             var visual = VisualFactory.BuildUnitVisual(go.transform, data.id, faction, data.bodyScale);
             if ((data.id == "bubble" || data.id == "poison_bubble") && visual != null)
                 visual.gameObject.AddComponent<BubbleWobble>();
+            if ((data.id == "dot" || data.id == "dot_core" || data.id == "dot_giant") && visual != null)
+                visual.gameObject.AddComponent<DotPulse>();
 
             Unit unit = data.isWorker ? go.AddComponent<WorkerUnit>() : go.AddComponent<Unit>();
             unit.Init(data, faction);

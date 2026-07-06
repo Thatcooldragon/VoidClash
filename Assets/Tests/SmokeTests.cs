@@ -334,6 +334,22 @@ namespace VoidClash.Tests
         }
 
         [Test]
+        public void BubbleCampaign_MissionsExist()
+        {
+            int bubbleMissions = 0;
+            foreach (var mission in Campaign.Missions)
+            {
+                if (mission.playerRace != PlayerRace.Bubble) continue;
+                bubbleMissions++;
+                Assert.IsFalse(string.IsNullOrEmpty(mission.briefing), $"{mission.title} has briefing");
+                Assert.IsTrue(mission.objective.Contains("Terran") || mission.objective.Contains("poison"),
+                    $"{mission.title} explains a Bubble-facing objective");
+                Assert.AreEqual(EnemyRace.Terran, mission.enemyRace, $"{mission.title} starts against Terran for balance");
+            }
+            Assert.GreaterOrEqual(bubbleMissions, 2, "starter Bubble campaign missions");
+        }
+
+        [Test]
         public void Bubble_DataDefinitionsExist()
         {
             var db = GameDatabase.BuildTransient();
@@ -359,6 +375,101 @@ namespace VoidClash.Tests
             Assert.LessOrEqual(db.Building("bubble_spring").passiveMineralsPerSec, 0.75f, "spring income stays slow");
             Assert.Greater(db.Building("bubble_core").supplyProvided, 0, "nexus provides supply");
             Assert.IsNotNull(db.Building("aerator"), "Aerator upgrade building");
+        }
+
+        [Test]
+        public void DotsPrototype_DataDefinitionsExist()
+        {
+            var db = GameDatabase.BuildTransient();
+            Assert.IsNotNull(db.Unit("dot"), "basic Dot unit");
+            Assert.IsNotNull(db.Unit("dot_core"), "mobile Core Dot unit");
+            Assert.IsNotNull(db.Unit("dot_giant"), "Dot Giant shape");
+            Assert.AreEqual(0, db.Unit("dot").supplyCost, "prototype Dots gather in groups");
+            Assert.IsFalse(db.buildings.Exists(b => b.id == "power_core"), "Power Core is a mobile unit, not a building");
+
+            foreach (var id in new[] { "dot_printer", "shape_matrix" })
+            {
+                var b = db.Building(id);
+                Assert.IsNotNull(b, $"{id} building exists");
+                Assert.AreEqual("dots", b.techGroup, $"{id} in Dots tech group");
+                Assert.IsTrue(b.selfBuild, $"{id} self-builds like shape-droid structures");
+                Assert.IsTrue(b.opensBuildMenu, $"{id} opens the Dots build menu");
+            }
+            Assert.Greater(db.Unit("dot_core").maxHP, db.Unit("dot").maxHP, "Core Dot is larger and tougher");
+            Assert.Greater(db.Unit("dot_giant").damage, db.Unit("dot").damage * 10f, "Giant shape is very powerful");
+            Assert.Greater(db.Unit("dot_giant").maxHP, db.Unit("dot_core").maxHP, "Giant hides and protects the Core Dot");
+        }
+
+        [UnityTest]
+        [Timeout(900000)]
+        public IEnumerator DotsLab_StartsPoweredAndPrintsDots()
+        {
+            Campaign.Current = null;
+            SkirmishConfig.Mode = SkirmishMode.DotsLab;
+            SceneManager.LoadScene("Game");
+            yield return null;
+            yield return null;
+            Time.timeScale = 8f;
+            G.AI.enabled = false;
+
+            Assert.AreEqual(0, Count<Building>(Faction.Player, b => b.Data.id == "cc"), "no Terran Command Center");
+            Assert.AreEqual(1, Count<Unit>(Faction.Player, u => u.Data.id == "dot_core"), "Core Dot start");
+            Assert.AreEqual(1, Count<Building>(Faction.Player, b => b.Data.id == "dot_printer"), "Dot Printer start");
+            Assert.GreaterOrEqual(Count<Unit>(Faction.Player, u => u.Data.id == "dot"), 6, "starter dots");
+
+            Building printer = null;
+            foreach (var e in Entity.All)
+                if (e is Building b && b.Faction == Faction.Player && b.Data.id == "dot_printer")
+                {
+                    printer = b;
+                    break;
+                }
+            Assert.IsNotNull(printer, "starting Dot Printer");
+            Assert.IsTrue(DotsSystem.IsPowered(Faction.Player, printer.Position), "starting Printer is powered");
+
+            int startMinerals = G.PlayerBank.Minerals;
+            yield return WaitUntil(() => G.PlayerBank.Minerals > startMinerals,
+                45f, "Core Dot passive mineral income");
+
+            int startDots = Count<Unit>(Faction.Player, u => u.Data.id == "dot");
+            yield return WaitUntil(() => Count<Unit>(Faction.Player, u => u.Data.id == "dot") > startDots,
+                30f, "Dot Printer production");
+
+            var matrixData = G.DB.Building("shape_matrix");
+            var spot = FindSpot(matrixData);
+            Assert.IsTrue(spot.HasValue, "a spot for the Shape Matrix");
+            G.PlayerBank.AddMinerals(matrixData.mineralCost);
+            G.PlayerBank.TrySpend(matrixData.mineralCost);
+            var matrix = G.Placer.PlaceAt(matrixData, Faction.Player, spot.Value);
+            yield return WaitUntil(() => matrix == null || matrix.IsComplete,
+                matrixData.buildTime * 3f + 30f, "Shape Matrix self-builds");
+            Assert.IsTrue(matrix != null && matrix.IsComplete, "Shape Matrix completed with no worker");
+
+            var formDots = new List<Entity>();
+            var dotData = G.DB.Unit("dot");
+            Vector3 core = MapBuilder.PlayerBasePos + (Vector3.zero - MapBuilder.PlayerBasePos).normalized * 5.5f;
+            for (int i = 0; i < 22; i++)
+            {
+                Vector3 pos = core + Quaternion.Euler(0f, i * 15f, 0f) * Vector3.forward * (1f + (i % 4) * 0.35f);
+                var dot = UnitFactory.Spawn(dotData, Faction.Player, pos);
+                Assert.IsNotNull(dot, "extra Dot for form tests");
+                formDots.Add(dot);
+            }
+
+            Assert.IsTrue(G.Dots.TryFormGiant(formDots, out _), "Dots and Core Dot form a Giant");
+            Assert.AreEqual(0, Count<Unit>(Faction.Player, u => u.Data.id == "dot_core"), "Core Dot hides inside the Giant");
+            Assert.GreaterOrEqual(Count<Unit>(Faction.Player, u => u.Data.id == "dot_giant"), 1, "Dot Giant exists");
+
+            Unit giant = null;
+            foreach (var e in Entity.All)
+                if (e is Unit u && u.Faction == Faction.Player && u.Data.id == "dot_giant") { giant = u; break; }
+            Assert.IsNotNull(giant, "Dot Giant unit");
+            giant.Health.TakeDamage(9999f, DamageClass.Siege, null);
+            yield return null;
+            yield return null;
+            Assert.GreaterOrEqual(Count<Unit>(Faction.Player, u => u.Data.id == "dot_core"), 1, "Core Dot escapes when Giant dies");
+
+            LogGuard.AssertClean();
         }
 
         [UnityTest]

@@ -17,13 +17,16 @@ namespace VoidClash
 
             var mission = Campaign.Current; // null = free play
             bool bubbleLab = mission == null && SkirmishConfig.Mode == SkirmishMode.BubbleLab;
+            bool dotsLab = mission == null && SkirmishConfig.Mode == SkirmishMode.DotsLab;
+            bool bubblePlayer = bubbleLab || mission?.playerRace == PlayerRace.Bubble;
+            bool dotsPlayer = dotsLab || mission?.playerRace == PlayerRace.Dots;
             VisualFactory.EnemyBodyOverride = mission == null || mission.enemyRace == EnemyRace.Terran ? null
                 : (mission.enemyRace == EnemyRace.Zerg ? "zerg_body" : "protoss_body");
             VisualFactory.EnemyAccentOverride = mission == null || mission.enemyRace == EnemyRace.Terran ? null
                 : (mission.enemyRace == EnemyRace.Zerg ? "zerg_accent" : "protoss_accent");
 
             // banks first — buildings register supply on completion
-            G.PlayerBank = new ResourceBank(Faction.Player, bubbleLab ? 0 : (mission?.playerStartMinerals ?? 50));
+            G.PlayerBank = new ResourceBank(Faction.Player, (bubblePlayer || dotsPlayer) ? 0 : (mission?.playerStartMinerals ?? 50));
             G.EnemyBank = new ResourceBank(Faction.Enemy, mission?.enemyStartMinerals ?? 50);
 
             // managers
@@ -31,6 +34,7 @@ namespace VoidClash
             G.Audio = gameObject.AddComponent<AudioManager>();
             G.Effects = gameObject.AddComponent<EffectsManager>();
             G.Bubble = gameObject.AddComponent<BubbleSystem>();
+            G.Dots = gameObject.AddComponent<DotsSystem>();
             G.Selection = gameObject.AddComponent<SelectionManager>();
             G.Input = gameObject.AddComponent<InputController>();
             G.Placer = gameObject.AddComponent<BuildingPlacer>();
@@ -49,7 +53,8 @@ namespace VoidClash
             G.Fog.Init();
             G.Minimap.Init();
             G.Hud.Build();
-            if (bubbleLab) ShowBubbleLabIntro();
+            if (bubblePlayer) ShowBubbleLabIntro();
+            if (dotsPlayer) ShowDotsLabIntro();
             G.AI.Init(MapBuilder.EnemyBasePos);
             G.Game.StartMatch();
 
@@ -150,9 +155,23 @@ namespace VoidClash
 
         void SpawnStartingBases()
         {
+            if (Campaign.Current?.playerRace == PlayerRace.Bubble)
+            {
+                SpawnBubbleLabStart(Campaign.Current.playerStartMinerals);
+                SpawnTerranStart(Faction.Enemy, MapBuilder.EnemyBasePos);
+                return;
+            }
+
             if (Campaign.Current == null && SkirmishConfig.Mode == SkirmishMode.BubbleLab)
             {
                 SpawnBubbleLabStart();
+                SpawnTerranStart(Faction.Enemy, MapBuilder.EnemyBasePos);
+                return;
+            }
+
+            if (Campaign.Current == null && SkirmishConfig.Mode == SkirmishMode.DotsLab)
+            {
+                SpawnDotsLabStart();
                 SpawnTerranStart(Faction.Enemy, MapBuilder.EnemyBasePos);
                 return;
             }
@@ -179,7 +198,7 @@ namespace VoidClash
             }
         }
 
-        void SpawnBubbleLabStart()
+        void SpawnBubbleLabStart(int startMinerals = 75)
         {
             Vector3 basePos = MapBuilder.PlayerBasePos;
 
@@ -196,7 +215,7 @@ namespace VoidClash
 
             // Seed a small amount of minerals to shape your first extra structures.
             // (Poison Pool, Aerator, Foam Turret are yours to build when you want them.)
-            G.PlayerBank.AddMinerals(75);
+            G.PlayerBank.AddMinerals(startMinerals);
 
             // A small starting cluster of bubbles gathering at the base, ready to command.
             Vector3 toCenter = (Vector3.zero - basePos).normalized;
@@ -206,6 +225,28 @@ namespace VoidClash
             {
                 Vector3 pos = basePos + Quaternion.Euler(0f, i * 120f, 0f) * Vector3.forward * 4f;
                 var u = UnitFactory.Spawn(bubbleData, Faction.Player, pos);
+                if (u != null) u.CommandMove(gather);
+            }
+        }
+
+        void SpawnDotsLabStart(int startMinerals = 160)
+        {
+            Vector3 basePos = MapBuilder.PlayerBasePos;
+
+            UnitFactory.Spawn(G.DB.Unit("dot_core"), Faction.Player, basePos);
+
+            Vector3 toCenter = (Vector3.zero - basePos).normalized;
+            Vector3 printerPos = BuildingPlacer.SnapToBuildGrid(basePos + toCenter * 4.2f + Vector3.right * 1.5f);
+            BuildingFactory.Place(G.DB.Building("dot_printer"), Faction.Player, printerPos, true);
+
+            G.PlayerBank.AddMinerals(startMinerals);
+
+            var dotData = G.DB.Unit("dot");
+            Vector3 gather = basePos + toCenter * 4f;
+            for (int i = 0; i < 6; i++)
+            {
+                Vector3 pos = basePos + Quaternion.Euler(0f, i * 60f, 0f) * Vector3.forward * 3.4f;
+                var u = UnitFactory.Spawn(dotData, Faction.Player, pos);
                 if (u != null) u.CommandMove(gather);
             }
         }
@@ -223,6 +264,21 @@ namespace VoidClash
             }
             if (G.Hud != null)
                 G.Hud.Notify("Bubble Nexus selected: it auto-makes bubbles every 7s. Build Aerators to speed it up.");
+        }
+
+        void ShowDotsLabIntro()
+        {
+            foreach (var e in Entity.All)
+            {
+                if (e is Unit u && u.Faction == Faction.Player && u.Data.id == "dot_core")
+                {
+                    G.Selection.SelectSingle(u, false);
+                    if (G.Cam != null) G.Cam.Focus(u.Position);
+                    break;
+                }
+            }
+            if (G.Hud != null)
+                G.Hud.Notify("Core Dot selected: it moves, builds Dot structures, and hides inside Giant shapes.");
         }
     }
 }

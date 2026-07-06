@@ -131,11 +131,20 @@ namespace VoidClash
             VisualFactory.BuildUnitVisual(bubble, "poison_bubble", Faction.Player, 2.35f);
             bubble.gameObject.AddComponent<SlowFloat>();
 
-            var core = new GameObject("CoreChampion").transform;
+            var core = new GameObject("DotsChampion").transform;
             core.SetParent(stage, false);
-            core.localPosition = new Vector3(4.8f, 0.2f, -0.4f);
+            core.localPosition = new Vector3(4.8f, 0.1f, -0.35f);
             core.localRotation = Quaternion.Euler(0f, -20f, 0f);
-            VisualFactory.BuildUnitVisual(core, "heavy", Faction.Enemy, 1.65f);
+            VisualFactory.BuildUnitVisual(core, "dot_core", Faction.Player, 1.35f);
+            for (int i = 0; i < 6; i++)
+            {
+                var dot = new GameObject($"MenuDot{i}").transform;
+                dot.SetParent(stage, false);
+                dot.localPosition = new Vector3(4.8f, 0.55f, -0.35f) +
+                    Quaternion.Euler(0f, i * 60f, 0f) * Vector3.forward * 1.25f;
+                VisualFactory.BuildUnitVisual(dot, "dot", Faction.Player, 0.75f);
+                dot.gameObject.AddComponent<SlowFloat>();
+            }
         }
 
         void BuildPlatform(Transform parent, Vector3 pos, string accent)
@@ -164,8 +173,8 @@ namespace VoidClash
                 new Color(0.25f, 0.62f, 1f), () => ShowCampaign(true), true);
             BuildEpisodeCard(_mainPanel, 0f, "NEW RACE", "BUBBLE TIDE", "Foam economy: self-building, morph & swarm", "PLAY BUBBLE TIDE",
                 new Color(0.35f, 1f, 0.85f), () => { Campaign.Current = null; SkirmishConfig.Mode = SkirmishMode.BubbleLab; SceneManager.LoadScene("Game"); }, true);
-            BuildEpisodeCard(_mainPanel, 500f, "CONCEPT", "CORE SWARM", "Shape droids and power cores", "COMING SOON",
-                new Color(1f, 0.45f, 0.3f), null, false);
+            BuildEpisodeCard(_mainPanel, 500f, "NEW RACE", "DOTS LAB", "Shape droids powered by cores", "PLAY DOTS LAB",
+                new Color(1f, 0.58f, 0.28f), () => { Campaign.Current = null; SkirmishConfig.Mode = SkirmishMode.DotsLab; SceneManager.LoadScene("Game"); }, true);
 
             BuildOptions(canvas);
             BuildCampaignPanel(canvas);
@@ -173,7 +182,7 @@ namespace VoidClash
             var status = UIFactory.Panel(canvas.transform, "BottomStatus", new Color(0.02f, 0.04f, 0.08f, 0.82f));
             UIFactory.SetRect(status, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 18f), new Vector2(900f, 54f));
             var hint = UIFactory.Label(status, "hint",
-                "v0.4.0 pre-alpha  |  build, scout, morph bubbles, and survive the first waves",
+                "v0.7 prototype  |  Bubble missions, Dots lab, build, scout, and survive the first waves",
                 18, TextAnchor.MiddleCenter, new Color(0.6f, 0.75f, 0.9f));
             UIFactory.Stretch(hint.rectTransform, 8f);
         }
@@ -271,7 +280,9 @@ namespace VoidClash
         void BuildCampaignPanel(Canvas canvas)
         {
             _campaignPanel = UIFactory.Panel(canvas.transform, "CampaignPanel", UIFactory.PanelColor);
-            float panelHeight = Mathf.Clamp(200f + Campaign.Missions.Length * 74f, 470f, 650f);
+            float rowStep = Campaign.Missions.Length > 6 ? 58f : 74f;
+            float rowHeight = Campaign.Missions.Length > 6 ? 50f : 62f;
+            float panelHeight = Mathf.Clamp(200f + Campaign.Missions.Length * rowStep, 470f, 700f);
             UIFactory.SetRect(_campaignPanel, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -60f), new Vector2(680f, panelHeight));
 
             var title = UIFactory.Label(_campaignPanel, "title", "CAMPAIGN - Terran Front", 30, TextAnchor.MiddleCenter);
@@ -294,7 +305,7 @@ namespace VoidClash
                     isUnlocked ? UIFactory.PanelLight : new Color(0.07f, 0.09f, 0.12f, 0.95f));
                 btn.interactable = isUnlocked;
                 UIFactory.SetRect((RectTransform)btn.transform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
-                    new Vector2(0f, -104f - i * 74f), new Vector2(620f, 62f));
+                    new Vector2(0f, -104f - i * rowStep), new Vector2(620f, rowHeight));
             }
 
             var back = UIFactory.TextButton(_campaignPanel, "back", "Back", 22, () => ShowCampaign(false));

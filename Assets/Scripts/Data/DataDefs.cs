@@ -124,7 +124,37 @@ namespace VoidClash
             poisonBubble.moveSpeed = 4.0f; poisonBubble.visionRadius = 7f;
             poisonBubble.accentColor = new Color(0.35f, 1f, 0.35f); poisonBubble.bodyScale = 0.76f;
 
-            return new[] { worker, soldier, ranged, heavy, zergling, hydra, zealot, stalker, overlord, bubble, poisonBubble };
+            var dot = ScriptableObject.CreateInstance<UnitData>();
+            dot.id = "dot"; dot.displayName = "Dot";
+            dot.description = "A tiny shape-droid. Weak alone, meant to gather into powered forms later.";
+            dot.mineralCost = 0; dot.supplyCost = 0; dot.trainTime = 1f;
+            dot.maxHP = 8; dot.armor = 0; dot.armorClass = ArmorClass.Light;
+            dot.damage = 1.5f; dot.damageClass = DamageClass.Normal;
+            dot.attackRange = 1.2f; dot.attackCooldown = 1.1f; dot.projectileSpeed = 0f;
+            dot.moveSpeed = 4.3f; dot.visionRadius = 7f;
+            dot.accentColor = new Color(1f, 0.65f, 0.25f); dot.bodyScale = 0.55f;
+
+            var coreDot = ScriptableObject.CreateInstance<UnitData>();
+            coreDot.id = "dot_core"; coreDot.displayName = "Core Dot";
+            coreDot.description = "A larger power droid. It moves with the swarm, powers nearby Dot structures, and hides inside large shapes.";
+            coreDot.mineralCost = 0; coreDot.supplyCost = 0; coreDot.trainTime = 1f;
+            coreDot.maxHP = 220; coreDot.armor = 2; coreDot.armorClass = ArmorClass.Armored;
+            coreDot.damage = 4f; coreDot.damageClass = DamageClass.Normal;
+            coreDot.attackRange = 1.4f; coreDot.attackCooldown = 1.25f; coreDot.projectileSpeed = 0f;
+            coreDot.moveSpeed = 3.1f; coreDot.visionRadius = 11f;
+            coreDot.accentColor = new Color(1f, 0.78f, 0.25f); coreDot.bodyScale = 1.25f;
+
+            var dotGiant = ScriptableObject.CreateInstance<UnitData>();
+            dotGiant.id = "dot_giant"; dotGiant.displayName = "Dot Giant";
+            dotGiant.description = "A powerful walking shape made from many Dots with the Core Dot hidden inside.";
+            dotGiant.mineralCost = 0; dotGiant.supplyCost = 0; dotGiant.trainTime = 1f;
+            dotGiant.maxHP = 720; dotGiant.armor = 3; dotGiant.armorClass = ArmorClass.Armored;
+            dotGiant.damage = 42f; dotGiant.damageClass = DamageClass.Siege;
+            dotGiant.attackRange = 2.0f; dotGiant.attackCooldown = 1.35f; dotGiant.projectileSpeed = 0f;
+            dotGiant.moveSpeed = 2.25f; dotGiant.visionRadius = 12f;
+            dotGiant.accentColor = new Color(1f, 0.5f, 0.16f); dotGiant.bodyScale = 2.45f;
+
+            return new[] { worker, soldier, ranged, heavy, zergling, hydra, zealot, stalker, overlord, bubble, poisonBubble, dot, coreDot, dotGiant };
         }
 
         public static BuildingData[] CreateBuildings()
@@ -251,7 +281,30 @@ namespace VoidClash
             aerator.visionRadius = 8f;
             aerator.accentColor = new Color(0.7f, 0.9f, 1f);
 
-            return new[] { cc, depot, rax, fac, turret, sensor, bubbleCore, bubbleSpring, poisonPool, foamTurret, aerator };
+            // ---- Dots prototype (shape-droid faction) ----
+
+            var dotPrinter = ScriptableObject.CreateInstance<BuildingData>();
+            dotPrinter.id = "dot_printer"; dotPrinter.displayName = "Dot Printer";
+            dotPrinter.description = "Prints loose Dots while inside a Core Dot power field.";
+            dotPrinter.hotkey = KeyCode.Q;
+            dotPrinter.mineralCost = 120; dotPrinter.buildTime = 16f; dotPrinter.maxHP = 520; dotPrinter.armor = 0;
+            dotPrinter.sizeX = 3f; dotPrinter.sizeZ = 3f;
+            dotPrinter.techGroup = "dots"; dotPrinter.selfBuild = true; dotPrinter.opensBuildMenu = true;
+            dotPrinter.visionRadius = 9f;
+            dotPrinter.accentColor = new Color(1f, 0.72f, 0.35f);
+
+            var shapeMatrix = ScriptableObject.CreateInstance<BuildingData>();
+            shapeMatrix.id = "shape_matrix"; shapeMatrix.displayName = "Shape Matrix";
+            shapeMatrix.description = "Dots tech building. Unlocks the Giant shape command.";
+            shapeMatrix.hotkey = KeyCode.W;
+            shapeMatrix.mineralCost = 140; shapeMatrix.buildTime = 18f; shapeMatrix.maxHP = 560; shapeMatrix.armor = 0;
+            shapeMatrix.sizeX = 3f; shapeMatrix.sizeZ = 3f;
+            shapeMatrix.techGroup = "dots"; shapeMatrix.selfBuild = true; shapeMatrix.opensBuildMenu = true;
+            shapeMatrix.visionRadius = 9f;
+            shapeMatrix.accentColor = new Color(1f, 0.55f, 0.2f);
+
+            return new[] { cc, depot, rax, fac, turret, sensor, bubbleCore, bubbleSpring, poisonPool, foamTurret, aerator,
+                dotPrinter, shapeMatrix };
         }
     }
 }

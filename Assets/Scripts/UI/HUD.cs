@@ -333,23 +333,28 @@ namespace VoidClash
             _commandCard.gameObject.SetActive(sel.Count > 0);
             if (sel.Count == 0) return;
 
-            bool hasWorker = false, hasCombat = false;
+            bool hasWorker = false, hasCombat = false, hasBasicDots = false, hasCoreDot = false;
             Building trainer = null;
             Building liftable = null;
             Building cancelable = null;
-            Building bubbleBuilder = null;
+            string buildMenuGroup = null;
             Building aerator = null;
             foreach (var e in sel)
             {
                 if (e is WorkerUnit && e.Faction == Faction.Player) hasWorker = true;
-                else if (e is Unit u && u.Faction == Faction.Player && u.Data.canAttack) hasCombat = true;
+                else if (e is Unit u && u.Faction == Faction.Player && u.Data.canAttack)
+                {
+                    hasCombat = true;
+                    if (u.Data.id == "dot") hasBasicDots = true;
+                    if (u.Data.id == "dot_core") hasCoreDot = true;
+                }
                 if (e is Building cb && cb.Faction == Faction.Player && !cb.IsComplete && cancelable == null)
                     cancelable = cb;
                 if (e is Building b && b.Faction == Faction.Player && b.IsComplete)
                 {
                     if (b.Data.CanTrain && !b.IsAirborne && trainer == null) trainer = b;
                     if (b.CanLift && liftable == null) liftable = b;
-                    if (b.Data.opensBuildMenu && bubbleBuilder == null) bubbleBuilder = b;
+                    if (b.Data.opensBuildMenu && buildMenuGroup == null) buildMenuGroup = b.Data.techGroup;
                     if (b.Data.id == "aerator" && aerator == null) aerator = b;
                 }
             }
@@ -359,9 +364,13 @@ namespace VoidClash
             {
                 BuildHotbar("terran", ref slot);
             }
-            else if (bubbleBuilder != null)
+            else if (hasCoreDot)
             {
-                BuildHotbar("bubble", ref slot);
+                BuildHotbar("dots", ref slot);
+            }
+            else if (!string.IsNullOrEmpty(buildMenuGroup))
+            {
+                BuildHotbar(buildMenuGroup, ref slot);
             }
             else if (trainer != null)
             {
@@ -391,6 +400,13 @@ namespace VoidClash
                 AddCommandButton(slot, label, TryUpgradeBubbles, KeyCode.G, tip, !maxed);
             }
 
+            if (hasBasicDots && G.Dots != null)
+            {
+                int dots = CountSelectedDots();
+                AddCommandButton(0, "Giant Shape\n<Z>  20 dots", TryFormDotGiant, KeyCode.Z,
+                    $"Combine 20 selected Dots with a nearby Core Dot into a powerful Giant. Requires Shape Matrix. Selected: {dots}", dots >= 20);
+            }
+
             if (cancelable != null)
             {
                 var captured = cancelable;
@@ -418,8 +434,8 @@ namespace VoidClash
             }
         }
 
-        /// <summary>Fills the command card with the build buttons for one tech group
-        /// ("terran" or "bubble"), so races never see each other's structures.</summary>
+        /// <summary>Fills the command card with the build buttons for one tech group,
+        /// so races never see each other's structures.</summary>
         void BuildHotbar(string techGroup, ref int slot)
         {
             for (int i = 0; i < G.DB.buildings.Count; i++)
@@ -448,6 +464,25 @@ namespace VoidClash
                 Notify(msg);
                 if (G.Audio != null) G.Audio.Play("error");
             }
+        }
+
+        void TryFormDotGiant()
+        {
+            if (G.Dots == null) return;
+            bool ok = G.Dots.TryFormGiant(G.Selection.Selected, out string msg);
+
+            Notify(msg);
+            if (G.Audio != null) G.Audio.Play(ok ? "build_done" : "error", ok ? 0.45f : 1f);
+            if (G.Selection != null) G.Selection.RaiseChanged();
+        }
+
+        int CountSelectedDots()
+        {
+            int count = 0;
+            foreach (var e in G.Selection.Selected)
+                if (e is Unit u && u.Faction == Faction.Player && !u.IsDead && u.Data.id == "dot")
+                    count++;
+            return count;
         }
 
         void TryTrain(Building b, UnitData ud)

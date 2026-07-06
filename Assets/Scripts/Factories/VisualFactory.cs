@@ -253,6 +253,81 @@ namespace VoidClash
                     muzzlePoison.localPosition = new Vector3(0, 0.75f * s, 0.6f * s);
                     break;
                 }
+                case "dot":
+                {
+                    Part(visual, PrimitiveType.Sphere, "rally", new Vector3(0, 0.45f * s, 0), Vector3.one * 0.38f * s, null, "DotBody");
+                    Part(visual, PrimitiveType.Sphere, "metal_light", new Vector3(0.12f * s, 0.55f * s, 0.18f * s), Vector3.one * 0.11f * s, null, "Lens");
+                    Part(visual, PrimitiveType.Cube, "metal_dark", new Vector3(0, 0.18f * s, -0.18f * s), new Vector3(0.12f * s, 0.12f * s, 0.34f * s), new Vector3(-18f, 0, 0), "Tail");
+                    var muzzleDot = new GameObject("Muzzle").transform;
+                    muzzleDot.SetParent(visual, false);
+                    muzzleDot.localPosition = new Vector3(0, 0.45f * s, 0.35f * s);
+                    break;
+                }
+                case "dot_core":
+                {
+                    Part(visual, PrimitiveType.Sphere, "rally", new Vector3(0, 0.65f * s, 0), Vector3.one * 0.65f * s, null, "CoreBody");
+                    Part(visual, PrimitiveType.Sphere, "metal_light", new Vector3(0, 0.65f * s, 0), Vector3.one * 0.38f * s, null, "InnerCore");
+                    for (int i = 0; i < 4; i++)
+                    {
+                        float a = i * 90f + 45f;
+                        Part(visual, PrimitiveType.Cube, "rally", Quaternion.Euler(0, a, 0) * new Vector3(0, 0.65f * s, 0.55f * s),
+                            new Vector3(0.09f * s, 0.09f * s, 0.65f * s), new Vector3(0, a, 0), "PowerRail");
+                    }
+                    var muzzleCore = new GameObject("Muzzle").transform;
+                    muzzleCore.SetParent(visual, false);
+                    muzzleCore.localPosition = new Vector3(0, 0.65f * s, 0.65f * s);
+                    break;
+                }
+                case "dot_giant":
+                {
+                    Part(visual, PrimitiveType.Sphere, "rally", new Vector3(0, 1.7f * s, 0), Vector3.one * 0.75f * s, null, "CoreChest");
+                    Part(visual, PrimitiveType.Cube, "metal_light", new Vector3(0, 1.55f * s, 0), new Vector3(1.6f * s, 1.15f * s, 0.8f * s), null, "BodyFrame");
+                    Part(visual, PrimitiveType.Sphere, "rally", new Vector3(0, 2.55f * s, 0.05f * s), Vector3.one * 0.5f * s, null, "HeadCluster");
+                    Part(visual, PrimitiveType.Cube, "metal_dark", new Vector3(-0.95f * s, 1.35f * s, 0), new Vector3(0.35f * s, 1.4f * s, 0.35f * s), new Vector3(0, 0, -12f), "ArmL");
+                    Part(visual, PrimitiveType.Cube, "metal_dark", new Vector3(0.95f * s, 1.35f * s, 0), new Vector3(0.35f * s, 1.4f * s, 0.35f * s), new Vector3(0, 0, 12f), "ArmR");
+                    Part(visual, PrimitiveType.Cube, "metal_dark", new Vector3(-0.42f * s, 0.45f * s, 0), new Vector3(0.35f * s, 1.0f * s, 0.35f * s), new Vector3(6f, 0, 0), "LegL");
+                    Part(visual, PrimitiveType.Cube, "metal_dark", new Vector3(0.42f * s, 0.45f * s, 0), new Vector3(0.35f * s, 1.0f * s, 0.35f * s), new Vector3(-6f, 0, 0), "LegR");
+                    for (int i = 0; i < 10; i++)
+                    {
+                        float a = i * 36f;
+                        Part(visual, PrimitiveType.Sphere, "rally", Quaternion.Euler(0, a, 0) * new Vector3(0, (1.1f + (i % 3) * 0.22f) * s, 0.78f * s),
+                            Vector3.one * 0.16f * s, null, "BodyDot");
+                    }
+                    var muzzleGiant = new GameObject("Muzzle").transform;
+                    muzzleGiant.SetParent(visual, false);
+                    muzzleGiant.localPosition = new Vector3(0, 1.75f * s, 1.05f * s);
+                    break;
+                }
+                case "dot_blade":
+                {
+                    Part(visual, PrimitiveType.Sphere, "rally", new Vector3(0, 0.55f * s, 0), Vector3.one * 0.42f * s, null, "CoreDot");
+                    Part(visual, PrimitiveType.Cube, "rally", new Vector3(0, 0.72f * s, 0.45f * s), new Vector3(0.22f * s, 0.18f * s, 1.05f * s), new Vector3(24f, 0, 0), "Blade");
+                    Part(visual, PrimitiveType.Cube, "metal_light", new Vector3(0, 0.56f * s, 0.05f * s), new Vector3(0.75f * s, 0.14f * s, 0.18f * s), null, "CrossLink");
+                    for (int i = 0; i < 4; i++)
+                    {
+                        float x = (i - 1.5f) * 0.26f * s;
+                        Part(visual, PrimitiveType.Sphere, "rally", new Vector3(x, (0.4f + i * 0.08f) * s, -0.25f * s), Vector3.one * 0.18f * s, null, "BladeDot");
+                    }
+                    var muzzleBlade = new GameObject("Muzzle").transform;
+                    muzzleBlade.SetParent(visual, false);
+                    muzzleBlade.localPosition = new Vector3(0, 0.75f * s, 0.85f * s);
+                    break;
+                }
+                case "dot_shield":
+                {
+                    Part(visual, PrimitiveType.Cube, "metal_light", new Vector3(0, 0.72f * s, 0.18f * s), new Vector3(1.1f * s, 1.0f * s, 0.22f * s), new Vector3(-8f, 0, 0), "ShieldPlate");
+                    Part(visual, PrimitiveType.Sphere, "rally", new Vector3(0, 0.78f * s, -0.05f * s), Vector3.one * 0.42f * s, null, "ShieldCore");
+                    for (int i = 0; i < 6; i++)
+                    {
+                        float a = i * 60f;
+                        Part(visual, PrimitiveType.Sphere, "rally", Quaternion.Euler(0, 0, a) * new Vector3(0.42f * s, 0.25f * s, 0) + new Vector3(0, 0.75f * s, 0.08f * s),
+                            Vector3.one * 0.16f * s, null, "ShieldDot");
+                    }
+                    var muzzleShield = new GameObject("Muzzle").transform;
+                    muzzleShield.SetParent(visual, false);
+                    muzzleShield.localPosition = new Vector3(0, 0.72f * s, 0.48f * s);
+                    break;
+                }
                 case "heavy":
                 {
                     Part(visual, PrimitiveType.Cube, body, new Vector3(0, 0.5f * s, 0), new Vector3(1.3f * s, 0.55f * s, 1.6f * s), null, "Chassis");
@@ -402,6 +477,51 @@ namespace VoidClash
                     Part(visual, PrimitiveType.Sphere, "rally", new Vector3(0.28f, 1.9f, 0.1f), Vector3.one * 0.18f, null, "Bud");
                     Part(visual, PrimitiveType.Sphere, "crystal", new Vector3(-0.22f, 1.85f, -0.12f), Vector3.one * 0.14f, null, "Bud");
                     Part(visual, PrimitiveType.Cube, "metal_dark", new Vector3(0.55f, 0.7f, 0), new Vector3(0.14f, 0.14f, 0.5f), new Vector3(0, 90f, 0), "Pipe");
+                    break;
+                }
+                case "power_core":
+                {
+                    Part(visual, PrimitiveType.Cylinder, "metal_dark", new Vector3(0, 0.28f, 0), new Vector3(1.45f, 0.28f, 1.45f), null, "Base");
+                    Part(visual, PrimitiveType.Cube, "metal_light", new Vector3(0, 0.9f, 0), new Vector3(1.25f, 1.25f, 1.25f), new Vector3(0, 45f, 0), "CoreFrame");
+                    Part(visual, PrimitiveType.Sphere, "rally", new Vector3(0, 1.25f, 0), Vector3.one * 0.58f, null, "PowerOrb");
+                    for (int i = 0; i < 4; i++)
+                    {
+                        float a = i * 90f + 45f;
+                        Part(visual, PrimitiveType.Cube, "rally", Quaternion.Euler(0, a, 0) * new Vector3(0, 0.75f, 0.9f),
+                            new Vector3(0.12f, 0.12f, 0.9f), new Vector3(0, a, 0), "PowerRail");
+                    }
+                    break;
+                }
+                case "dot_printer":
+                {
+                    Part(visual, PrimitiveType.Cylinder, "metal_dark", new Vector3(0, 0.25f, 0), new Vector3(1.35f, 0.25f, 1.35f), null, "Base");
+                    Part(visual, PrimitiveType.Cube, "metal_light", new Vector3(0, 0.8f, 0), new Vector3(1.45f, 0.85f, 1.1f), null, "PrinterBody");
+                    Part(visual, PrimitiveType.Cube, "rally", new Vector3(0, 0.82f, 0.62f), new Vector3(0.9f, 0.22f, 0.12f), null, "OutputSlot");
+                    Part(visual, PrimitiveType.Sphere, "rally", new Vector3(-0.38f, 1.35f, 0.18f), Vector3.one * 0.22f, null, "DotReady");
+                    Part(visual, PrimitiveType.Sphere, "rally", new Vector3(0.12f, 1.42f, -0.12f), Vector3.one * 0.18f, null, "DotReady");
+                    break;
+                }
+                case "shape_matrix":
+                {
+                    Part(visual, PrimitiveType.Cylinder, "metal_dark", new Vector3(0, 0.22f, 0), new Vector3(1.4f, 0.22f, 1.4f), null, "Base");
+                    Part(visual, PrimitiveType.Cube, "metal_light", new Vector3(0, 0.9f, 0), new Vector3(1.1f, 1.1f, 1.1f), new Vector3(0, 45f, 0), "Matrix");
+                    Part(visual, PrimitiveType.Cube, "rally", new Vector3(0, 1.55f, 0), new Vector3(1.4f, 0.08f, 1.4f), new Vector3(0, 45f, 0), "Plane");
+                    Part(visual, PrimitiveType.Sphere, "rally", new Vector3(0.6f, 1.55f, 0), Vector3.one * 0.16f, null, "Node");
+                    Part(visual, PrimitiveType.Sphere, "rally", new Vector3(-0.6f, 1.55f, 0), Vector3.one * 0.16f, null, "Node");
+                    Part(visual, PrimitiveType.Sphere, "rally", new Vector3(0, 1.55f, 0.6f), Vector3.one * 0.16f, null, "Node");
+                    Part(visual, PrimitiveType.Sphere, "rally", new Vector3(0, 1.55f, -0.6f), Vector3.one * 0.16f, null, "Node");
+                    break;
+                }
+                case "dot_wall":
+                {
+                    Part(visual, PrimitiveType.Cube, "metal_dark", new Vector3(0, 0.42f, 0), new Vector3(3.0f, 0.28f, 0.7f), null, "Base");
+                    for (int i = 0; i < 5; i++)
+                    {
+                        float x = -1.15f + i * 0.58f;
+                        Part(visual, PrimitiveType.Cube, "metal_light", new Vector3(x, 1.05f, 0), new Vector3(0.42f, 1.35f, 0.28f), new Vector3(0, 0, i % 2 == 0 ? 4f : -4f), "Panel");
+                        Part(visual, PrimitiveType.Sphere, "rally", new Vector3(x, 1.8f, 0.02f), Vector3.one * 0.2f, null, "LockDot");
+                    }
+                    Part(visual, PrimitiveType.Cube, "rally", new Vector3(0, 1.15f, 0.18f), new Vector3(2.75f, 0.08f, 0.08f), null, "EnergyLine");
                     break;
                 }
             }
