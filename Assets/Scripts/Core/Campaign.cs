@@ -316,17 +316,17 @@ namespace VoidClash
             {
                 index = 9,
                 title = "Dots 1 - Hidden Core",
-                menuBlurb = "Learn Core Dot, Printers, and Giant.",
+                menuBlurb = "Learn Printers, Core Dot, and Giant.",
                 objective = "Form a Dot Giant and destroy the Terran test base.",
                 victoryText = "The Core survived inside the shape. The Dots are awake.",
                 defeatText = "The Core Dot was isolated before the swarm could shape itself.",
-                storyBeatText = "The Core Dot powers nearby Printers. Keep it close, then hide it inside a Giant.",
+                storyBeatText = "Printers make loose Dots. Spend them into Core, Kite, Spike, and Giant shapes.",
                 storyBeatTime = 115f,
-                briefing = "Dots do not mine with workers. Your Core Dot moves with the swarm\n" +
-                           "and generates a slow mineral flow. It also powers nearby Dot Printers.\n" +
-                           "Build a Shape Matrix, gather 20 loose Dots near the Core Dot,\n" +
-                           "then form a Dot Giant. The Core hides inside the Giant and escapes\n" +
-                           "when the shape is destroyed.\n\n" +
+                briefing = "Dots do not mine with workers. Dot Printers make loose Dots,\n" +
+                           "and loose Dots are spent into shapes. Use <C> to form a Core Dot,\n" +
+                           "<V> for a flying Kite, <B> for a long-range Spike, and <Z>\n" +
+                           "for a Giant once a Core Dot exists. The Giant hides the Core\n" +
+                           "inside and releases it when destroyed.\n\n" +
                            "VICTORY: form a Giant and destroy the Terran test base.",
                 playerRace = PlayerRace.Dots,
                 enemyRace = EnemyRace.Terran,

@@ -285,7 +285,7 @@ namespace VoidClash
                 }
             }
             if (G.Hud != null)
-                G.Hud.Notify("Core Dot selected: it moves, builds Dot structures, and hides inside Giant shapes.");
+                G.Hud.Notify("Dots: C Core, V Kite, B Spike, Z Giant. Printers make Dots; shapes spend them.");
         }
     }
 }

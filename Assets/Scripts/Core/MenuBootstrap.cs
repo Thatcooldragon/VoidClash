@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
@@ -169,12 +170,12 @@ namespace VoidClash
             _mainPanel = UIFactory.Invisible(canvas.transform, "MainPanel");
             UIFactory.SetRect(_mainPanel, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 18f), new Vector2(1500f, 720f));
 
-            BuildEpisodeCard(_mainPanel, -500f, "EPISODE I", "TERRAN FRONT", "Progress saved locally", "PLAY CAMPAIGN",
-                new Color(0.25f, 0.62f, 1f), () => ShowCampaign(true), true);
-            BuildEpisodeCard(_mainPanel, 0f, "NEW RACE", "BUBBLE TIDE", "Foam economy: self-building, morph & swarm", "PLAY BUBBLE TIDE",
-                new Color(0.35f, 1f, 0.85f), () => { Campaign.Current = null; SkirmishConfig.Mode = SkirmishMode.BubbleLab; SceneManager.LoadScene("Game"); }, true);
-            BuildEpisodeCard(_mainPanel, 500f, "NEW RACE", "DOTS LAB", "Shape droids powered by cores", "PLAY DOTS LAB",
-                new Color(1f, 0.58f, 0.28f), () => { Campaign.Current = null; SkirmishConfig.Mode = SkirmishMode.DotsLab; SceneManager.LoadScene("Game"); }, true);
+            BuildEpisodeCard(_mainPanel, -500f, "EPISODE I", "TERRAN FRONT", CampaignSummary(PlayerRace.Terran), "PLAY TERRAN",
+                new Color(0.25f, 0.62f, 1f), () => ShowCampaign(true, PlayerRace.Terran), true);
+            BuildEpisodeCard(_mainPanel, 0f, "EPISODE II", "BUBBLE TIDE", CampaignSummary(PlayerRace.Bubble), "PLAY BUBBLE",
+                new Color(0.35f, 1f, 0.85f), () => ShowCampaign(true, PlayerRace.Bubble), true);
+            BuildEpisodeCard(_mainPanel, 500f, "EPISODE III", "DOTS AWAKENING", CampaignSummary(PlayerRace.Dots), "PLAY DOTS",
+                new Color(1f, 0.58f, 0.28f), () => ShowCampaign(true, PlayerRace.Dots), true);
 
             BuildOptions(canvas);
             BuildCampaignPanel(canvas);
@@ -182,7 +183,7 @@ namespace VoidClash
             var status = UIFactory.Panel(canvas.transform, "BottomStatus", new Color(0.02f, 0.04f, 0.08f, 0.82f));
             UIFactory.SetRect(status, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 18f), new Vector2(900f, 54f));
             var hint = UIFactory.Label(status, "hint",
-                "v0.7 prototype  |  Bubble missions, Dots lab, build, scout, and survive the first waves",
+                "v0.11.0 pre-alpha  |  race campaigns, Bubble swarms, Dots shapes, build, scout, survive",
                 18, TextAnchor.MiddleCenter, new Color(0.6f, 0.75f, 0.9f));
             UIFactory.Stretch(hint.rectTransform, 8f);
         }
@@ -195,7 +196,7 @@ namespace VoidClash
             var sigil = UIFactory.Label(top, "Sigil", "VC", 24, TextAnchor.MiddleCenter, new Color(0.45f, 0.9f, 1f));
             UIFactory.SetRect(sigil.rectTransform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(18f, 0f), new Vector2(72f, 48f));
 
-            TopNavButton(top, "CAMPAIGN", 120f, 220f, true, () => ShowCampaign(false));
+            TopNavButton(top, "CAMPAIGN", 120f, 220f, true, () => ShowCampaign(true, PlayerRace.Terran));
             TopNavButton(top, "FREE PLAY", 350f, 210f, false, () => { Campaign.Current = null; SkirmishConfig.Mode = SkirmishMode.Terran; SceneManager.LoadScene("Game"); });
             TopNavButton(top, "OPTIONS", 570f, 190f, false, () => ShowOptions(true));
             TopNavButton(top, "QUIT", 770f, 150f, false, GameManager.QuitApplication);
@@ -276,26 +277,38 @@ namespace VoidClash
         }
 
         RectTransform _campaignPanel;
+        PlayerRace _campaignRace = PlayerRace.Terran;
 
         void BuildCampaignPanel(Canvas canvas)
         {
             _campaignPanel = UIFactory.Panel(canvas.transform, "CampaignPanel", UIFactory.PanelColor);
-            float rowStep = Campaign.Missions.Length > 8 ? 49f : (Campaign.Missions.Length > 6 ? 58f : 74f);
-            float rowHeight = Campaign.Missions.Length > 8 ? 43f : (Campaign.Missions.Length > 6 ? 50f : 62f);
-            float panelHeight = Mathf.Clamp(200f + Campaign.Missions.Length * rowStep, 470f, 700f);
+            UIFactory.SetRect(_campaignPanel, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -60f), new Vector2(680f, 620f));
+            _campaignPanel.gameObject.SetActive(false);
+        }
+
+        void PopulateCampaignPanel(PlayerRace race)
+        {
+            if (_campaignPanel == null) return;
+            foreach (Transform c in _campaignPanel) Destroy(c.gameObject);
+
+            var missions = MissionsForRace(race);
+            float rowStep = missions.Count > 6 ? 52f : 74f;
+            float rowHeight = missions.Count > 6 ? 46f : 62f;
+            float panelHeight = Mathf.Clamp(220f + missions.Count * rowStep, 470f, 700f);
             UIFactory.SetRect(_campaignPanel, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -60f), new Vector2(680f, panelHeight));
 
-            var title = UIFactory.Label(_campaignPanel, "title", "CAMPAIGN - All Fronts", 30, TextAnchor.MiddleCenter);
+            var title = UIFactory.Label(_campaignPanel, "title", $"CAMPAIGN - {RaceTitle(race)}", 30, TextAnchor.MiddleCenter);
             UIFactory.SetRect(title.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -36f), new Vector2(600f, 44f));
 
-            int unlocked = Campaign.UnlockedCount;
-            int cleared = Mathf.Clamp(unlocked - 1, 0, Campaign.Missions.Length);
-            var progress = UIFactory.Label(_campaignPanel, "progress", $"Progress: {cleared}/{Campaign.Missions.Length} missions cleared", 16, TextAnchor.MiddleCenter, new Color(0.62f, 0.72f, 0.86f));
+            int cleared = ClearedForRace(race);
+            var progress = UIFactory.Label(_campaignPanel, "progress", $"{RaceTitle(race)}: {missions.Count} missions  |  Progress: {cleared}/{missions.Count} cleared",
+                16, TextAnchor.MiddleCenter, new Color(0.62f, 0.72f, 0.86f));
             UIFactory.SetRect(progress.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -68f), new Vector2(540f, 24f));
-            for (int i = 0; i < Campaign.Missions.Length; i++)
+
+            for (int i = 0; i < missions.Count; i++)
             {
-                var m = Campaign.Missions[i];
-                bool isUnlocked = i < unlocked;
+                var m = missions[i];
+                bool isUnlocked = IsMissionUnlocked(m);
                 var captured = m;
                 string blurb = string.IsNullOrEmpty(m.menuBlurb) ? "Deploy and complete the objective." : m.menuBlurb;
                 var btn = UIFactory.TextButton(_campaignPanel, $"m{i}",
@@ -310,7 +323,13 @@ namespace VoidClash
 
             var back = UIFactory.TextButton(_campaignPanel, "back", "Back", 22, () => ShowCampaign(false));
             UIFactory.SetRect((RectTransform)back.transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 22f), new Vector2(220f, 50f));
-            _campaignPanel.gameObject.SetActive(false);
+        }
+
+        void ShowCampaign(bool show, PlayerRace race)
+        {
+            _campaignRace = race;
+            if (show) PopulateCampaignPanel(_campaignRace);
+            ShowCampaign(show);
         }
 
         void ShowCampaign(bool show)
@@ -318,6 +337,38 @@ namespace VoidClash
             _campaignPanel.gameObject.SetActive(show);
             _mainPanel.gameObject.SetActive(!show);
             if (_optionsPanel != null) _optionsPanel.gameObject.SetActive(false);
+        }
+
+        static List<MissionDef> MissionsForRace(PlayerRace race)
+        {
+            var list = new List<MissionDef>();
+            for (int i = 0; i < Campaign.Missions.Length; i++)
+                if (Campaign.Missions[i].playerRace == race) list.Add(Campaign.Missions[i]);
+            return list;
+        }
+
+        static bool IsMissionUnlocked(MissionDef mission) => mission != null && mission.index < Campaign.UnlockedCount;
+
+        static int ClearedForRace(PlayerRace race)
+        {
+            int cleared = 0;
+            for (int i = 0; i < Campaign.Missions.Length; i++)
+                if (Campaign.Missions[i].playerRace == race && Campaign.Missions[i].index < Campaign.UnlockedCount - 1)
+                    cleared++;
+            return cleared;
+        }
+
+        static string CampaignSummary(PlayerRace race)
+        {
+            var missions = MissionsForRace(race);
+            return $"{RaceTitle(race)} campaign: {missions.Count} missions";
+        }
+
+        static string RaceTitle(PlayerRace race)
+        {
+            if (race == PlayerRace.Bubble) return "Bubble Tide";
+            if (race == PlayerRace.Dots) return "Dots Awakening";
+            return "Terran Front";
         }
 
         void CycleResolution(int dir)

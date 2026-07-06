@@ -1,15 +1,15 @@
 # VoidClash
 
-*Pre-Alpha v0.8.0 - Unity 6.3 (6000.3.16f1)*
+*Pre-Alpha v0.11.0 - Unity 6.3 (6000.3.16f1)*
 
 VoidClash is a real-time strategy game built entirely in Unity/C#, in the spirit of StarCraft. The
 player commands prototype Terran, Bubble, and Dots factions with worker economy, structure-driven
 economy, mobile power-core economy, base building, lift-off buildings, fog of war, and a rule-based
 AI opponent.
 
-The game is playable as Free Play, Bubble Lab, Dots Lab, or through a 10-mission campaign against
-Zerg, Protoss, and Terran enemies. v0.8.0 adds Dots tutorial content, the corrected mobile Core Dot
-economy, Dot Giant shaping, a third Bubble mission, and stronger worker harvest recovery.
+The game is playable as Free Play, Bubble Lab, Dots Lab, or through race-specific campaign fronts
+against Zerg, Protoss, and Terran enemies. v0.11.0 splits campaign mission display by race so the
+Terran, Bubble, and Dots cards each show only their own missions and progress.
 
 Everything ships from code: 3D art is assembled from Unity primitives, materials and textures are
 generated in project code, sound effects and voice chirps are synthesized, and both scenes build
@@ -38,7 +38,7 @@ repo stays source-first.
 
 - Free Play: a skirmish against the Terran AI.
 - Bubble Tide: a self-building Bubble lab where a Nexus produces fragile bubbles.
-- Dots Lab: a prototype race lab with a mobile Core Dot, Dot Printers, Shape Matrix, and Giant shape.
+- Dots Lab: a prototype race lab with Dot Printers, Shape Matrix, Core Dots, Kite/Spike shapes, and Giant shape.
 - Campaign: ten missions, unlocked in order, with local progress:
   1. First Contact: Zerg swarm pressure.
   2. The Golden Armada: Protoss armor and slower power waves.
@@ -68,7 +68,7 @@ repo stays source-first.
 | Ctrl + 1-9 | Assign control group |
 | 1-9 | Recall control group; double-tap to jump camera |
 | Q / W / E / R / T / Y | Build hotkeys, or train hotkeys on production buildings |
-| Z | Form a Dot Giant when 20 Dots are selected near a Core Dot and a Shape Matrix exists |
+| C / V / B / Z | Dots shape commands: Core Dot, Dot Kite, Dot Spike, Dot Giant |
 | W A S D / arrows / screen edge | Pan camera |
 | Mouse wheel | Zoom |
 | Shift while placing | Keep placing the same building |
@@ -105,12 +105,32 @@ Bubble is a structure-driven swarm race. The Bubble Nexus automatically makes on
 Bubble Springs earn a slow crystal-linked mineral trickle, Poison Pools morph basic bubbles into
 gas-bursting poison bubbles, and Aerators upgrade Bubble production speed.
 
-Dots are a shape-droid prototype race. They do not mine with workers. A mobile Core Dot provides
-slow passive income, powers nearby Dot Printers, and hides inside major shapes. Dot Printers create
-loose Dots while powered by the Core Dot. A Shape Matrix unlocks the Dot Giant: 20 loose Dots plus a
-nearby Core Dot combine into a powerful walking shape. When the Giant dies, the Core Dot escapes.
+Dots are a shape-droid prototype race. They do not mine with workers. Dot Printers create loose
+Dots on their own; loose Dots are the race's raw material and are spent to create shapes. A Shape
+Matrix unlocks shaping commands: Core Dot, flying Dot Kite, long-range Dot Spike, and Dot Giant.
+Core Dots trickle minerals. A Dot Giant costs loose Dots and swallows a Core Dot; when the Giant
+dies, the Core Dot escapes.
 
-## v0.8.0 Highlights
+## v0.11.0 Highlights
+
+- Campaign menu split by race: Terran, Bubble, and Dots no longer share one all-missions list.
+- Episode cards now open the correct race campaign list.
+- Each race campaign panel shows its own mission count and cleared progress.
+- Main menu bottom text updated to v0.11.0.
+- Dots Lab intro hint now shows shape hotkeys: C Core, V Kite, B Spike, Z Giant.
+
+## v0.10.1 Highlights
+
+- Bubble balance pass: faster Nexus production, faster Spring income, and tougher basic/poison bubbles.
+- Dots now work as a spendable raw-material race: Printers produce loose Dots without needing power.
+- Core Dot is formed from Dots and provides passive mineral income.
+- Dot Giant now consumes a Core Dot and releases it on death.
+- Dot Kite added as a flying Dots shape.
+- Dot Spike added as a fragile long-range Dots shape.
+- Select Army UI now shows army count.
+- v0.8-v0.10 release zips are available locally when packaged.
+
+## v0.8.0-v0.10.0 Highlights
 
 - Dots Lab added as a playable prototype mode.
 - Mobile Core Dot replaces the old Power Core building idea.
@@ -147,8 +167,8 @@ All game code lives under `Assets/Scripts`.
 4. Campaign missions loading objectives, story beats, personalities, race visuals, and bosses.
 5. Sensor Tower data and generated voice clips.
 6. Bubble Lab economy, production upgrade, self-building, and poison morphing.
-7. Dots Lab Core Dot income, powered printing, Shape Matrix self-building, Giant forming, and Core
-   Dot escape on Giant death.
+7. Dots Lab Dot printing, Shape Matrix self-building, Core/Kite/Spike/Giant forming, and Core Dot
+   escape on Giant death.
 8. An unattended AI match reaching a conclusion without console errors.
 
 Note: during an earlier v0.4.0 packaging pass, Unity compiled and built successfully, but the PlayMode test
@@ -157,13 +177,13 @@ runner did not emit an XML results file, so that run is not counted as passed.
 ## Release Artifacts
 
 - `Build/` is the local compiled player folder and is not committed.
-- `VoidClash-v0.8.0-prealpha-win64.zip` is the v0.8.0 Windows release archive when packaged.
+- `VoidClash-v0.11.0-prealpha-win64.zip` is the latest Windows release archive when packaged.
 - Older release zips are kept as historical artifacts when already tracked.
 
 ## Known Rough Edges
 
 - Balance and campaign pacing still need real player-facing tuning.
-- Dots still need more major shapes and abilities beyond the Giant.
+- Dots still need more major shapes and active abilities beyond Giant/Kite/Spike.
 - Bubble and Dots campaign arcs are early prototypes.
 - Fog is radius-based; cliffs do not block line of sight.
 - Worker mining has stronger recovery logic, but still needs longer playtesting before it can be
