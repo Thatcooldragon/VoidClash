@@ -11,6 +11,7 @@ namespace VoidClash
         AudioSource _music;
         float _sfxVolume = 1f;
         readonly Dictionary<string, float> _lastPlayed = new Dictionary<string, float>();
+        float _lastVoiceTime;
 
         public const string PrefMaster = "vc_master_volume";
         public const string PrefMusic = "vc_music_volume";
@@ -51,6 +52,13 @@ namespace VoidClash
             src.spatialBlend = 0f;
             src.pitch = Random.Range(0.96f, 1.05f);
             src.PlayOneShot(GetClip(name), volume * _sfxVolume);
+        }
+
+        public void PlayVoice(string name, float volume = 0.75f)
+        {
+            if (Time.unscaledTime - _lastVoiceTime < 1.2f) return;
+            _lastVoiceTime = Time.unscaledTime;
+            Play(name, volume);
         }
 
         /// <summary>Positional world sound.</summary>

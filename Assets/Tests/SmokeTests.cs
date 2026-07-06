@@ -113,9 +113,9 @@ namespace VoidClash.Tests
             Assert.AreEqual(10, G.PlayerBank.SupplyCap, "starting supply cap");
             Assert.AreEqual(4, G.PlayerBank.SupplyUsed, "4 starting workers");
 
-            // --- build all 5 building types (worker-constructed, like the real flow) ---
+            // --- build all player building types (worker-constructed, like the real flow) ---
             G.PlayerBank.AddMinerals(5000);
-            foreach (var id in new[] { "depot", "barracks", "factory", "turret", "cc" })
+            foreach (var id in new[] { "depot", "barracks", "factory", "turret", "sensor", "cc" })
             {
                 var data = G.DB.Building(id);
                 Vector3? spot = FindSpot(data);
@@ -128,6 +128,8 @@ namespace VoidClash.Tests
                 yield return WaitUntil(() => site == null || site.IsComplete, data.buildTime * 4f + 90f, $"{id} construction");
             }
             Assert.AreEqual(18 + 10, G.PlayerBank.SupplyCap, "supply cap 10 (CC) + 8 (depot) + 10 (2nd CC)");
+            Assert.Greater(G.DB.Building("sensor").visionRadius, G.DB.Building("turret").visionRadius,
+                "Sensor Tower should provide stronger vision than a Turret");
 
             // --- train all 4 unit types ---
             IEnumerator Train(string buildingId, string unitId)
@@ -279,6 +281,8 @@ namespace VoidClash.Tests
                 Assert.IsFalse(string.IsNullOrEmpty(mission.objective), $"mission {i + 1} objective");
                 Assert.IsFalse(string.IsNullOrEmpty(mission.victoryText), $"mission {i + 1} victory text");
                 Assert.IsFalse(string.IsNullOrEmpty(mission.defeatText), $"mission {i + 1} defeat text");
+                Assert.IsFalse(string.IsNullOrEmpty(mission.storyBeatText), $"mission {i + 1} story beat");
+                Assert.AreNotEqual(AIPersonality.Balanced, mission.aiPersonality, $"mission {i + 1} personality");
 
                 Campaign.Current = mission;
                 SceneManager.LoadScene("Game");
@@ -306,6 +310,25 @@ namespace VoidClash.Tests
             }
 
             LogGuard.AssertClean();
+        }
+
+        [Test]
+        public void V03DeferredHalf_DataAndAudioDefinitionsExist()
+        {
+            var db = GameDatabase.BuildTransient();
+            var sensor = db.Building("sensor");
+            Assert.IsNotNull(sensor, "Sensor Tower data exists");
+            Assert.AreEqual(KeyCode.Y, sensor.hotkey, "Sensor Tower hotkey");
+            Assert.Greater(sensor.visionRadius, 20f, "Sensor Tower is a real scouting building");
+
+            foreach (var clip in new[] { "voice_select", "voice_move", "voice_attack", "voice_build", "voice_warning" })
+                Assert.Greater(SynthLib.Generate(clip).Length, 1000, $"{clip} generated audio");
+
+            foreach (var mission in Campaign.Missions)
+            {
+                Assert.IsFalse(string.IsNullOrEmpty(mission.storyBeatText), $"{mission.title} has story flavor");
+                Assert.AreNotEqual(AIPersonality.Balanced, mission.aiPersonality, $"{mission.title} has AI personality");
+            }
         }
 
         // ------------------------------------------------------------------

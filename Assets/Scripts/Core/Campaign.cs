@@ -3,6 +3,7 @@ using UnityEngine;
 namespace VoidClash
 {
     public enum EnemyRace { Terran, Zerg, Protoss }
+    public enum AIPersonality { Balanced, Rusher, Turtle, Expander, Tech, Swarm }
 
     /// <summary>Everything that makes one campaign mission different from free play.</summary>
     public class MissionDef
@@ -13,8 +14,11 @@ namespace VoidClash
         public string objective;
         public string victoryText;
         public string defeatText;
+        public string storyBeatText;
+        public float storyBeatTime = 180f;
         public string briefing;
         public EnemyRace enemyRace;
+        public AIPersonality aiPersonality = AIPersonality.Balanced;
         public string[] armyMix;          // weighted list of unit ids the AI trains
         public int playerStartMinerals = 50;
         public int enemyStartMinerals = 50;
@@ -46,12 +50,15 @@ namespace VoidClash
                 objective = "Destroy every Zerg structure.",
                 victoryText = "The first brood is burned out. Terran foothold secured.",
                 defeatText = "The infestation overran the landing zone.",
+                storyBeatText = "Scans show the brood feeding faster near the north crystal field.",
+                storyBeatTime = 135f,
                 briefing = "Commander, a Zerg brood has infested this sector.\n" +
                            "Their swarms are fast, cheap and endless - but fragile.\n" +
                            "Establish your economy, wall up with Turrets, and burn out\n" +
                            "the infestation. Destroy every Zerg structure.\n\n" +
                            "TIP: Rangers shred swarms. Buildings with <L> can lift off and relocate.",
                 enemyRace = EnemyRace.Zerg,
+                aiPersonality = AIPersonality.Swarm,
                 armyMix = new[] { "zergling", "zergling", "zergling", "hydralisk" },
                 playerStartMinerals = 100,
                 enemyStartMinerals = 50,
@@ -71,12 +78,15 @@ namespace VoidClash
                 objective = "Destroy every Protoss structure.",
                 victoryText = "The Protoss plateau is broken. Their armada retreats.",
                 defeatText = "The Golden Armada crushed our forward base.",
+                storyBeatText = "Protoss shields are strongest near their towers. Siege them before the next pulse.",
+                storyBeatTime = 190f,
                 briefing = "Protoss forces have claimed the far plateau.\n" +
                            "Their warriors are few but terrifyingly strong, and their\n" +
                            "Zealots cut through light infantry like plasma through ice.\n" +
                            "Field Heavies to crack their armor. Raze their nexus.\n\n" +
                            "TIP: Their attacks come slower - expand to the center minerals early.",
                 enemyRace = EnemyRace.Protoss,
+                aiPersonality = AIPersonality.Turtle,
                 armyMix = new[] { "zealot", "zealot", "stalker", "stalker" },
                 playerStartMinerals = 150,
                 enemyStartMinerals = 200,
@@ -96,12 +106,15 @@ namespace VoidClash
                 objective = "Kill the Overlord boss.",
                 victoryText = "The Overlord is dead. The swarm collapses without its brood mind.",
                 defeatText = "The Overlord reached our base and drowned it in chitin.",
+                storyBeatText = "The Overlord is syncing with every hive nerve. Prepare before it moves.",
+                storyBeatTime = 260f,
                 briefing = "This is it, Commander. The brood mother itself - the OVERLORD -\n" +
                            "nests in the enemy base, regenerating behind an endless swarm.\n" +
                            "It WILL come for you when the swarm senses blood.\n" +
                            "Slay the Overlord and the brood dies with it.\n\n" +
                            "VICTORY: kill the Overlord. Its hide shrugs off small arms - bring Heavies.",
                 enemyRace = EnemyRace.Zerg,
+                aiPersonality = AIPersonality.Swarm,
                 armyMix = new[] { "zergling", "zergling", "zergling", "hydralisk", "hydralisk" },
                 playerStartMinerals = 200,
                 enemyStartMinerals = 100,
@@ -123,6 +136,8 @@ namespace VoidClash
                 objective = "Destroy the rebel Terran command.",
                 victoryText = "The rebel commander is offline. Their factories now answer to you.",
                 defeatText = "The rebel siege line broke our command network.",
+                storyBeatText = "Enemy comms are coordinating a second front. Deny their expansion if you can.",
+                storyBeatTime = 220f,
                 briefing = "A breakaway Terran commander has fortified the opposite ridge.\n" +
                            "Expect the same tools you command: workers, Barracks, Factories,\n" +
                            "Turrets, and lifting production buildings.\n" +
@@ -131,6 +146,7 @@ namespace VoidClash
                            "TIP: Right-click an unfinished friendly building with workers selected\n" +
                            "to send them back onto construction.",
                 enemyRace = EnemyRace.Terran,
+                aiPersonality = AIPersonality.Expander,
                 armyMix = new[] { "soldier", "soldier", "ranged", "ranged", "heavy" },
                 playerStartMinerals = 125,
                 enemyStartMinerals = 180,
@@ -150,12 +166,15 @@ namespace VoidClash
                 objective = "Control the center and destroy every Protoss structure.",
                 victoryText = "The shattered gate is sealed. The center crystals are ours.",
                 defeatText = "Protoss pressure split the center and cut off our base.",
+                storyBeatText = "The center gate is drawing power. Hold vision there before the Stalkers mass.",
+                storyBeatTime = 210f,
                 briefing = "Protoss raiders have opened a gate near the center crystals.\n" +
                            "Their first attacks arrive late, but every wave grows sharper.\n" +
                            "Claim the middle, anchor it with Turrets, then roll forward with\n" +
                            "Heavies before Stalkers control the open ground.\n\n" +
                            "VICTORY: destroy every Protoss structure.",
                 enemyRace = EnemyRace.Protoss,
+                aiPersonality = AIPersonality.Tech,
                 armyMix = new[] { "zealot", "stalker", "stalker", "stalker" },
                 playerStartMinerals = 175,
                 enemyStartMinerals = 260,
@@ -175,12 +194,15 @@ namespace VoidClash
                 objective = "Kill the final Overlord before the swarm overwhelms you.",
                 victoryText = "The eclipse brood is finished. The sector is finally quiet.",
                 defeatText = "The final brood swallowed the sector under the eclipse line.",
+                storyBeatText = "The final brood is choosing speed over safety. Expect early pressure and weak flanks.",
+                storyBeatTime = 165f,
                 briefing = "The last brood has tunneled beneath the eclipse line.\n" +
                            "They attack sooner, rebuild faster, and hide their Overlord behind\n" +
                            "layers of cheap bodies. Build clean walls, keep Rangers alive, and\n" +
                            "add Factories once your economy can breathe.\n\n" +
                            "VICTORY: kill the Overlord before the swarm overwhelms the sector.",
                 enemyRace = EnemyRace.Zerg,
+                aiPersonality = AIPersonality.Rusher,
                 armyMix = new[] { "zergling", "zergling", "zergling", "hydralisk", "hydralisk" },
                 playerStartMinerals = 225,
                 enemyStartMinerals = 180,

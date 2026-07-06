@@ -13,6 +13,7 @@ namespace VoidClash
         {
             "select", "move", "attack_order", "fire", "fire_heavy", "melee", "explosion",
             "build_place", "build_done", "train_done", "deposit", "error", "click",
+            "voice_select", "voice_move", "voice_attack", "voice_build", "voice_warning",
             "victory", "defeat", "music"
         };
 
@@ -33,6 +34,11 @@ namespace VoidClash
                 case "deposit": return Blip(1200f, 1600f, 0.06f, 0.18f);
                 case "error": return Buzz(140f, 0.18f, 0.3f);
                 case "click": return Blip(900f, 900f, 0.03f, 0.2f);
+                case "voice_select": return Voice(new[] { 520f, 690f, 610f }, 0.32f, 0.22f);
+                case "voice_move": return Voice(new[] { 430f, 510f, 610f }, 0.34f, 0.24f);
+                case "voice_attack": return Voice(new[] { 360f, 310f, 460f, 300f }, 0.42f, 0.28f);
+                case "voice_build": return Voice(new[] { 480f, 560f, 520f, 650f }, 0.45f, 0.24f);
+                case "voice_warning": return Voice(new[] { 240f, 190f, 240f, 190f }, 0.55f, 0.3f);
                 case "victory": return Chime(new[] { 523.25f, 659.25f, 783.99f, 1046.5f }, 1.6f, 0.35f);
                 case "defeat": return Chime(new[] { 392f, 311.13f, 261.63f }, 1.8f, 0.3f);
                 case "music": return Music();
@@ -162,6 +168,26 @@ namespace VoidClash
                             + Mathf.Sin(2f * Mathf.PI * notes[n] * 2f * t) * 0.3f;
                     buf[start + i] += s * Mathf.Pow(1f - i / (float)len, 1.6f) * vol * 0.6f;
                 }
+            }
+            return buf;
+        }
+
+        static float[] Voice(float[] tones, float dur, float vol)
+        {
+            var buf = NewBuf(dur);
+            int syllable = Mathf.Max(1, buf.Length / tones.Length);
+            var rng = new System.Random(123 + tones.Length);
+            for (int i = 0; i < buf.Length; i++)
+            {
+                int n = Mathf.Min(tones.Length - 1, i / syllable);
+                float t = i / (float)SampleRate;
+                float local = (i % syllable) / (float)syllable;
+                float carrier = tones[n] * (1f + 0.04f * Mathf.Sin(2f * Mathf.PI * 17f * t));
+                float buzz = Mathf.Sign(Mathf.Sin(2f * Mathf.PI * carrier * t)) * 0.55f
+                    + Mathf.Sin(2f * Mathf.PI * carrier * 1.5f * t) * 0.35f;
+                float radio = ((float)rng.NextDouble() * 2f - 1f) * 0.08f;
+                float gate = local < 0.72f ? Mathf.Sin(local / 0.72f * Mathf.PI) : 0f;
+                buf[i] = (buzz + radio) * gate * Env(i, buf.Length, 0.01f) * vol;
             }
             return buf;
         }

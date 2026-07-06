@@ -20,7 +20,13 @@ namespace VoidClash
         int _waveGrowth = 4;
         int _workerTarget = 13;
         int _turretTarget = 2;
+        int _sensorTarget;
         bool _buildFactory = true;
+        float _factoryTime = 150f;
+        float _secondRaxTime = 240f;
+        float _turretTime = 200f;
+        float _expandTime = 360f;
+        AIPersonality _personality = AIPersonality.Balanced;
         string[] _armyMixLight = { "soldier", "soldier", "ranged" };
         string[] _armyMixHeavy = { "heavy" };
         Unit _boss;
@@ -39,6 +45,7 @@ namespace VoidClash
         Vector3 _threatPos;
 
         int _turretsBuilt;
+        int _sensorsBuilt;
         int _raxCount;
         int _ccCount;
         bool _hasFactory;
@@ -55,11 +62,63 @@ namespace VoidClash
             _workerTarget = m.aiWorkerCap;
             _turretTarget = m.aiTurrets;
             _buildFactory = m.aiBuildsFactory;
+            _personality = m.aiPersonality;
             _armyMixLight = m.armyMix;
             _armyMixHeavy = m.armyMix;
             _bossAttackTime = m.bossAttackTime;
             _bossWarningSent = false;
             _warnedWaveTime = -1f;
+            ApplyPersonality();
+        }
+
+        void ApplyPersonality()
+        {
+            _sensorTarget = 0;
+            _factoryTime = 150f;
+            _secondRaxTime = 240f;
+            _turretTime = 200f;
+            _expandTime = 360f;
+
+            switch (_personality)
+            {
+                case AIPersonality.Rusher:
+                    _nextWaveTime *= 0.85f;
+                    _waveInterval *= 0.85f;
+                    _waveSize = Mathf.Max(4, _waveSize - 1);
+                    _waveGrowth += 1;
+                    _workerTarget = Mathf.Max(9, _workerTarget - 2);
+                    _secondRaxTime = 165f;
+                    _turretTime = 260f;
+                    _expandTime = 430f;
+                    break;
+                case AIPersonality.Turtle:
+                    _waveInterval *= 1.15f;
+                    _turretTarget += 2;
+                    _sensorTarget = 1;
+                    _turretTime = 150f;
+                    _expandTime = 420f;
+                    break;
+                case AIPersonality.Expander:
+                    _workerTarget += 2;
+                    _sensorTarget = 1;
+                    _expandTime = 290f;
+                    _turretTime = 185f;
+                    break;
+                case AIPersonality.Tech:
+                    _buildFactory = true;
+                    _factoryTime = 115f;
+                    _secondRaxTime = 270f;
+                    _sensorTarget = 1;
+                    _waveInterval *= 1.08f;
+                    break;
+                case AIPersonality.Swarm:
+                    _nextWaveTime *= 0.92f;
+                    _waveInterval *= 0.9f;
+                    _waveGrowth += 2;
+                    _sensorTarget = 1;
+                    _turretTarget = Mathf.Max(1, _turretTarget - 1);
+                    break;
+            }
         }
 
         /// <summary>Mission 3: the boss unit this AI escorts and eventually unleashes.</summary>
@@ -88,7 +147,7 @@ namespace VoidClash
 
         void RefreshCounts()
         {
-            _raxCount = 0; _ccCount = 0; _hasFactory = false; _turretsBuilt = 0;
+            _raxCount = 0; _ccCount = 0; _hasFactory = false; _turretsBuilt = 0; _sensorsBuilt = 0;
             foreach (var e in Entity.All)
             {
                 if (!(e is Building b) || b.Faction != Faction.Enemy || b.IsDead) continue;
@@ -96,6 +155,7 @@ namespace VoidClash
                 else if (b.Data.id == "barracks") _raxCount++;
                 else if (b.Data.id == "factory") _hasFactory = true;
                 else if (b.Data.id == "turret") _turretsBuilt++;
+                else if (b.Data.id == "sensor") _sensorsBuilt++;
             }
         }
 
@@ -146,16 +206,29 @@ namespace VoidClash
             if (_raxCount == 0 && workers >= 6 && Bank.CanAfford(150) && !IsConstructing("barracks"))
             { TryBuild("barracks"); return; }
 
-            if (_raxCount >= 1 && _buildFactory && !_hasFactory && _matchTime > 150f && Bank.CanAfford(200) && !IsConstructing("factory"))
+            var factory = G.DB.Building("factory");
+            if (_raxCount >= 1 && _buildFactory && !_hasFactory && _matchTime > _factoryTime
+                && factory != null && Bank.CanAfford(factory.mineralCost) && !IsConstructing("factory"))
             { TryBuild("factory"); return; }
 
-            if (_raxCount == 1 && _matchTime > 240f && Bank.CanAfford(300) && !IsConstructing("barracks"))
+            var barracks = G.DB.Building("barracks");
+            if (_raxCount == 1 && _matchTime > _secondRaxTime
+                && barracks != null && Bank.CanAfford(barracks.mineralCost * 2) && !IsConstructing("barracks"))
             { TryBuild("barracks"); return; }
 
-            if (_turretsBuilt < _turretTarget && _matchTime > 200f && Bank.CanAfford(250) && !IsConstructing("turret"))
+            var sensor = G.DB.Building("sensor");
+            if (_sensorsBuilt < _sensorTarget && _matchTime > 170f
+                && sensor != null && Bank.CanAfford(sensor.mineralCost) && !IsConstructing("sensor"))
+            { TryBuild("sensor"); return; }
+
+            var turret = G.DB.Building("turret");
+            if (_turretsBuilt < _turretTarget && _matchTime > _turretTime
+                && turret != null && Bank.CanAfford(turret.mineralCost) && !IsConstructing("turret"))
             { TryBuild("turret"); return; }
 
-            if (_ccCount < 2 && workers >= _workerTarget && _matchTime > 360f && Bank.CanAfford(400) && !IsConstructing("cc"))
+            var cc = G.DB.Building("cc");
+            if (_ccCount < 2 && workers >= _workerTarget && _matchTime > _expandTime
+                && cc != null && Bank.CanAfford(cc.mineralCost) && !IsConstructing("cc"))
             { TryBuild("cc"); return; }
 
             // army production from the mission's unit mix
@@ -226,11 +299,13 @@ namespace VoidClash
             Vector3 anchor = _basePos;
             if (data.id == "turret")
                 anchor = _basePos + (Vector3.zero - _basePos).normalized * 9f;
+            else if (data.id == "sensor")
+                anchor = _basePos + (Vector3.zero - _basePos).normalized * 15f;
             else if (data.id == "cc" && _ccCount > 0)
                 anchor = _basePos.x > 0f ? MapBuilder.EnemyExpansionPos : MapBuilder.PlayerExpansionPos;
 
-            int maxRing = data.id == "cc" && _ccCount > 0 ? 3 : 4;
-            float startDist = data.id == "cc" && _ccCount > 0 ? 0f : 6f;
+            int maxRing = data.id == "cc" && _ccCount > 0 ? 3 : (data.id == "sensor" ? 2 : 4);
+            float startDist = data.id == "cc" && _ccCount > 0 ? 0f : (data.id == "sensor" ? 2f : 6f);
             for (int ring = 1; ring <= maxRing; ring++)
             {
                 float dist = startDist + ring * 4.5f;

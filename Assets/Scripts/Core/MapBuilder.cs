@@ -35,6 +35,8 @@ namespace VoidClash
             BuildRocks();
             BuildMinerals();
             BuildExpansionMarkers();
+            BuildLandmarks();
+            BuildClutter();
             BakeNavMesh();
         }
 
@@ -291,6 +293,49 @@ namespace VoidClash
                     marker.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 }
             }
+        }
+
+        void BuildLandmarks()
+        {
+            BuildSignalArray(new Vector3(-8f, 0f, 28f), -28f, "player_accent");
+            BuildSignalArray(new Vector3(8f, 0f, -28f), 152f, "enemy_accent");
+        }
+
+        void BuildSignalArray(Vector3 center, float yaw, string accentMat)
+        {
+            var parent = new GameObject("SignalArray").transform;
+            parent.SetParent(_root, false);
+            parent.position = center;
+            parent.rotation = Quaternion.Euler(0f, yaw, 0f);
+
+            for (int i = 0; i < 3; i++)
+            {
+                float x = (i - 1) * 1.2f;
+                var mast = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                mast.name = "SignalMast";
+                DestroyImmediate(mast.GetComponent<Collider>());
+                mast.transform.SetParent(parent, false);
+                mast.transform.localPosition = new Vector3(x, 1.0f + i * 0.18f, 0f);
+                mast.transform.localScale = new Vector3(0.08f, 1.0f + i * 0.18f, 0.08f);
+                mast.GetComponent<Renderer>().sharedMaterial = MaterialLibrary.Get("metal_light");
+
+                var lamp = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                lamp.name = "SignalLamp";
+                DestroyImmediate(lamp.GetComponent<Collider>());
+                lamp.transform.SetParent(parent, false);
+                lamp.transform.localPosition = new Vector3(x, 2.1f + i * 0.35f, 0f);
+                lamp.transform.localScale = Vector3.one * 0.22f;
+                lamp.GetComponent<Renderer>().sharedMaterial = MaterialLibrary.Get(accentMat);
+            }
+
+            var dish = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            dish.name = "SignalDish";
+            DestroyImmediate(dish.GetComponent<Collider>());
+            dish.transform.SetParent(parent, false);
+            dish.transform.localPosition = new Vector3(0f, 1.1f, 0.55f);
+            dish.transform.localRotation = Quaternion.Euler(82f, 0f, 0f);
+            dish.transform.localScale = new Vector3(1.4f, 0.07f, 1.4f);
+            dish.GetComponent<Renderer>().sharedMaterial = MaterialLibrary.Get("metal_dark");
         }
 
         void SpawnCluster(Vector3 center, float facingDeg, int count)

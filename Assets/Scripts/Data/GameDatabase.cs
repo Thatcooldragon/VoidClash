@@ -53,6 +53,30 @@ namespace VoidClash
             return null;
         }
 
+        public void EnsureDefinitions()
+        {
+            foreach (var unit in DataDefs.CreateUnits())
+            {
+                if (!HasUnit(unit.id)) units.Add(unit);
+            }
+            foreach (var building in DataDefs.CreateBuildings())
+            {
+                if (!HasBuilding(building.id)) buildings.Add(building);
+            }
+        }
+
+        bool HasUnit(string id)
+        {
+            for (int i = 0; i < units.Count; i++) if (units[i] != null && units[i].id == id) return true;
+            return false;
+        }
+
+        bool HasBuilding(string id)
+        {
+            for (int i = 0; i < buildings.Count; i++) if (buildings[i] != null && buildings[i].id == id) return true;
+            return false;
+        }
+
         public static GameDatabase BuildTransient()
         {
             var db = CreateInstance<GameDatabase>();

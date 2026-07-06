@@ -67,6 +67,7 @@ namespace VoidClash
                 }
             }
             G.Hud.ShowBriefing(mission.title, mission.briefing);
+            gameObject.AddComponent<StoryDirector>().Init(mission);
         }
 
         void SetupEnvironment()

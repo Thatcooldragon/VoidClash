@@ -164,7 +164,16 @@ namespace VoidClash
             turret.visionRadius = 12f;
             turret.accentColor = new Color(1f, 0.35f, 0.35f);
 
-            return new[] { cc, depot, rax, fac, turret };
+            var sensor = ScriptableObject.CreateInstance<BuildingData>();
+            sensor.id = "sensor"; sensor.displayName = "Sensor Tower";
+            sensor.description = "Optional scout structure. No weapon, but reveals a wide area through fog.";
+            sensor.hotkey = KeyCode.Y;
+            sensor.mineralCost = 125; sensor.buildTime = 18f; sensor.maxHP = 450; sensor.armor = 0;
+            sensor.sizeX = 3f; sensor.sizeZ = 3f;
+            sensor.visionRadius = 24f;
+            sensor.accentColor = new Color(0.35f, 0.95f, 1f);
+
+            return new[] { cc, depot, rax, fac, turret, sensor };
         }
     }
 }

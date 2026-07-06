@@ -41,6 +41,7 @@ namespace VoidClash
                 Debug.LogWarning("VoidClash: GameDatabase asset not found, building transient database from code.");
                 DB = GameDatabase.BuildTransient();
             }
+            DB.EnsureDefinitions();
         }
     }
 

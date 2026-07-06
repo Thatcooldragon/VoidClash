@@ -118,6 +118,8 @@ namespace VoidClash
                     Part(visual, PrimitiveType.Cube,   accent,        new Vector3(0, 1.56f * s, 0.2f * s),   new Vector3(0.26f * s, 0.09f * s, 0.08f * s), null, "Visor");
                     Part(visual, PrimitiveType.Cube,   "metal_dark",  new Vector3(0.34f * s, 1.02f * s, 0.5f * s),  new Vector3(0.16f * s, 0.16f * s, 0.9f * s), null, "Gun");
                     Part(visual, PrimitiveType.Sphere, accent,        new Vector3(0.34f * s, 1.08f * s, 0.42f * s), Vector3.one * 0.1f * s, null, "GunSight");
+                    Part(visual, PrimitiveType.Cube,   "metal_dark",  new Vector3(0f, 1.82f * s, -0.12f * s), new Vector3(0.08f * s, 0.38f * s, 0.08f * s), new Vector3(12f, 0, 0), "CommsMast");
+                    Part(visual, PrimitiveType.Cube,   accent,        new Vector3(0f, 2.04f * s, -0.1f * s), Vector3.one * 0.09f * s, null, "CommsLight");
                     var muzzle = new GameObject("Muzzle").transform;
                     muzzle.SetParent(visual, false);
                     muzzle.localPosition = new Vector3(0.34f * s, 1.02f * s, 1.0f * s);
@@ -133,6 +135,8 @@ namespace VoidClash
                     Part(visual, PrimitiveType.Cube,   accent,        new Vector3(-0.12f * s, 1.72f * s, -0.05f * s), new Vector3(0.04f * s, 0.3f * s, 0.04f * s), new Vector3(0, 0, 10f), "Antenna");
                     Part(visual, PrimitiveType.Cube,   "metal_dark",  new Vector3(0.22f * s, 1.02f * s, 0.4f * s), new Vector3(0.1f * s, 0.1f * s, 1.3f * s), null, "Rifle");
                     Part(visual, PrimitiveType.Sphere, accent,        new Vector3(0.22f * s, 1.1f * s, 0.3f * s), Vector3.one * 0.1f * s, null, "Scope");
+                    Part(visual, PrimitiveType.Cube,   "metal_light", new Vector3(-0.28f * s, 1.02f * s, 0.22f * s), new Vector3(0.08f * s, 0.08f * s, 0.9f * s), new Vector3(0, -10f, 0), "Stabilizer");
+                    Part(visual, PrimitiveType.Cube,   accent,        new Vector3(-0.42f * s, 1.28f * s, -0.12f * s), new Vector3(0.04f * s, 0.46f * s, 0.04f * s), new Vector3(0, 0, -12f), "ScannerFin");
                     var muzzle2 = new GameObject("Muzzle").transform;
                     muzzle2.SetParent(visual, false);
                     muzzle2.localPosition = new Vector3(0.22f * s, 1.02f * s, 1.05f * s);
@@ -148,6 +152,7 @@ namespace VoidClash
                     LegZerg(visual, 1f, -1f, body, s); LegZerg(visual, -1f, -1f, body, s);
                     Part(visual, PrimitiveType.Cube, "metal_dark", new Vector3(0.28f * s, 0.95f * s, 0.05f * s),  new Vector3(0.08f * s, 0.7f * s, 0.12f * s), new Vector3(30f, 0, -28f), "ScytheR");
                     Part(visual, PrimitiveType.Cube, "metal_dark", new Vector3(-0.28f * s, 0.95f * s, 0.05f * s), new Vector3(0.08f * s, 0.7f * s, 0.12f * s), new Vector3(30f, 0, 28f), "ScytheL");
+                    Part(visual, PrimitiveType.Cube, "metal_dark", new Vector3(0, 0.42f * s, -0.78f * s), new Vector3(0.12f * s, 0.12f * s, 0.75f * s), new Vector3(-22f, 0, 0), "TailBlade");
                     var muzzleZ = new GameObject("Muzzle").transform;
                     muzzleZ.SetParent(visual, false);
                     muzzleZ.localPosition = new Vector3(0, 0.6f * s, 0.8f * s);
@@ -163,6 +168,7 @@ namespace VoidClash
                     for (int i = 0; i < 3; i++)
                         Part(visual, PrimitiveType.Cube, "metal_dark", new Vector3((i - 1) * 0.2f * s, 1.55f * s, -0.15f * s),
                             new Vector3(0.06f * s, 0.55f * s, 0.06f * s), new Vector3(-28f + i * 6f, 0, (i - 1) * 16f), "Spine");
+                    Part(visual, PrimitiveType.Cube, accent, new Vector3(0, 1.96f * s, 0.08f * s), new Vector3(0.22f * s, 0.09f * s, 0.5f * s), new Vector3(-14f, 0, 0), "CrestGlow");
                     Part(visual, PrimitiveType.Cube, "metal_dark", new Vector3(0.3f * s, 1.2f * s, 0.3f * s),  new Vector3(0.09f * s, 0.09f * s, 0.5f * s), new Vector3(20f, 0, 0), "ArmR");
                     Part(visual, PrimitiveType.Cube, "metal_dark", new Vector3(-0.3f * s, 1.2f * s, 0.3f * s), new Vector3(0.09f * s, 0.09f * s, 0.5f * s), new Vector3(20f, 0, 0), "ArmL");
                     var muzzleH = new GameObject("Muzzle").transform;
@@ -237,6 +243,12 @@ namespace VoidClash
                     Part(visual, PrimitiveType.Cylinder, "metal_light", new Vector3(0, 0.95f * s, 0), new Vector3(0.8f * s, 0.22f * s, 0.8f * s), null, "TurretBase");
                     Part(visual, PrimitiveType.Cube, body, new Vector3(0, 1.12f * s, 0.5f * s), new Vector3(0.24f * s, 0.24f * s, 1.1f * s), null, "Barrel");
                     Part(visual, PrimitiveType.Sphere, accent, new Vector3(0, 1.15f * s, -0.25f * s), Vector3.one * 0.3f * s);
+                    for (int i = 0; i < 3; i++)
+                    {
+                        float z = (-0.55f + i * 0.55f) * s;
+                        Part(visual, PrimitiveType.Cylinder, "metal_light", new Vector3(-0.82f * s, 0.35f * s, z), new Vector3(0.18f * s, 0.08f * s, 0.18f * s), new Vector3(90f, 0, 0), "WheelL");
+                        Part(visual, PrimitiveType.Cylinder, "metal_light", new Vector3(0.82f * s, 0.35f * s, z), new Vector3(0.18f * s, 0.08f * s, 0.18f * s), new Vector3(90f, 0, 0), "WheelR");
+                    }
                     var muzzle3 = new GameObject("Muzzle").transform;
                     muzzle3.SetParent(visual, false);
                     muzzle3.localPosition = new Vector3(0, 1.12f * s, 1.1f * s);
@@ -311,6 +323,16 @@ namespace VoidClash
                     var muzzle = new GameObject("Muzzle").transform;
                     muzzle.SetParent(head, false);
                     muzzle.localPosition = new Vector3(0, 0.05f, 1.3f);
+                    break;
+                }
+                case "sensor":
+                {
+                    Part(visual, PrimitiveType.Cylinder, body, new Vector3(0, 0.45f, 0), new Vector3(1.4f, 0.45f, 1.4f), null, "Base");
+                    Part(visual, PrimitiveType.Cylinder, "metal_dark", new Vector3(0, 1.55f, 0), new Vector3(0.35f, 1.7f, 0.35f), null, "Mast");
+                    Part(visual, PrimitiveType.Sphere, accent, new Vector3(0, 2.85f, 0), Vector3.one * 0.55f, null, "Beacon");
+                    Part(visual, PrimitiveType.Cylinder, "metal_light", new Vector3(0, 2.2f, 0), new Vector3(1.25f, 0.07f, 1.25f), null, "DishRing");
+                    Part(visual, PrimitiveType.Cube, accent, new Vector3(0, 2.2f, 0.75f), new Vector3(0.12f, 0.12f, 1.2f), new Vector3(0, 0, 6f), "ScannerBoom");
+                    Part(visual, PrimitiveType.Cube, accent, new Vector3(0.75f, 2.2f, 0), new Vector3(1.2f, 0.12f, 0.12f), new Vector3(0, 0, -6f), "ScannerBoom");
                     break;
                 }
             }

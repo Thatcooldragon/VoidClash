@@ -191,7 +191,11 @@ namespace VoidClash
             {
                 G.Selection.SelectSingle(e, shift);
             }
-            if (e.Faction == Faction.Player && G.Audio != null) G.Audio.Play("select", 0.5f);
+            if (e.Faction == Faction.Player && G.Audio != null)
+            {
+                G.Audio.Play("select", 0.5f);
+                G.Audio.PlayVoice("voice_select", 0.55f);
+            }
         }
 
         void BoxSelect(Vector3 a, Vector3 b, bool shift)
@@ -212,7 +216,11 @@ namespace VoidClash
             // units take priority over buildings in a mixed box
             if (anyUnit) picked.RemoveAll(e => e.IsBuilding);
             G.Selection.Set(picked, shift);
-            if (picked.Count > 0 && G.Audio != null) G.Audio.Play("select", 0.5f);
+            if (picked.Count > 0 && G.Audio != null)
+            {
+                G.Audio.Play("select", 0.5f);
+                G.Audio.PlayVoice("voice_select", 0.55f);
+            }
         }
 
         void RightClickCommand()
@@ -238,6 +246,7 @@ namespace VoidClash
                 {
                     if (G.Effects != null) G.Effects.SpawnMoveMarker(ownSite.Position, false);
                     if (G.Audio != null) G.Audio.Play("build_place", 0.55f);
+                    if (G.Audio != null) G.Audio.PlayVoice("voice_build");
                     if (G.Hud != null) G.Hud.Notify($"Constructing {ownSite.DisplayName}");
                     return;
                 }
@@ -304,6 +313,7 @@ namespace VoidClash
             for (int i = 0; i < units.Count; i++) units[i].CommandMove(spots[i]);
             if (G.Effects != null) G.Effects.SpawnMoveMarker(pos, false);
             if (G.Audio != null) G.Audio.Play("move", 0.5f);
+            if (G.Audio != null) G.Audio.PlayVoice("voice_move");
         }
 
         void IssueAttackMove(Vector3 pos)
@@ -314,6 +324,7 @@ namespace VoidClash
             for (int i = 0; i < units.Count; i++) units[i].CommandAttackMove(spots[i]);
             if (G.Effects != null) G.Effects.SpawnMoveMarker(pos, true);
             if (G.Audio != null) G.Audio.Play("attack_order", 0.6f);
+            if (G.Audio != null) G.Audio.PlayVoice("voice_attack");
         }
 
         void IssueAttack(Entity target)
@@ -328,6 +339,7 @@ namespace VoidClash
             {
                 if (G.Effects != null) G.Effects.SpawnMoveMarker(target.Position, true);
                 if (G.Audio != null) G.Audio.Play("attack_order", 0.6f);
+                if (G.Audio != null) G.Audio.PlayVoice("voice_attack");
             }
         }
 
@@ -427,7 +439,11 @@ namespace VoidClash
 
         public void BeginPlacement(BuildingData data)
         {
-            if (G.Placer.Begin(data)) CurrentMode = Mode.Placement;
+            if (G.Placer.Begin(data))
+            {
+                CurrentMode = Mode.Placement;
+                if (G.Audio != null) G.Audio.PlayVoice("voice_build");
+            }
         }
 
         public void BeginAttackMoveMode()
