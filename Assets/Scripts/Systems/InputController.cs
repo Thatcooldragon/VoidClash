@@ -101,7 +101,7 @@ namespace VoidClash
                 {
                     if (RaycastGround(out var spot))
                     {
-                        spot = new Vector3(Mathf.Round(spot.x), 0f, Mathf.Round(spot.z));
+                        spot = BuildingPlacer.SnapToBuildGrid(spot);
                         bool any = false;
                         foreach (var e in G.Selection.Selected)
                             if (e is Building fb && fb.Faction == Faction.Player && fb.IsAirborne)
@@ -224,6 +224,24 @@ namespace VoidClash
             var targetEntity = RaycastEntity(out _);
             var mineral = RaycastMineral();
             RaycastGround(out var groundPos);
+
+            if (targetEntity is Building ownSite && ownSite.Faction == Faction.Player && !ownSite.IsComplete)
+            {
+                bool anyWorker = false;
+                foreach (var e in sel)
+                    if (e is WorkerUnit w && w.Faction == Faction.Player)
+                    {
+                        w.CommandBuild(ownSite);
+                        anyWorker = true;
+                    }
+                if (anyWorker)
+                {
+                    if (G.Effects != null) G.Effects.SpawnMoveMarker(ownSite.Position, false);
+                    if (G.Audio != null) G.Audio.Play("build_place", 0.55f);
+                    if (G.Hud != null) G.Hud.Notify($"Constructing {ownSite.DisplayName}");
+                    return;
+                }
+            }
 
             // production building selected → set rally
             bool onlyBuildings = true;
