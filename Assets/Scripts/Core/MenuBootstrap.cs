@@ -54,7 +54,7 @@ namespace VoidClash
             sky.SetFloat("_Exposure", 0.9f);
             RenderSettings.skybox = sky;
 
-            // slowly spinning crystal cluster as a set piece
+            // Slowly spinning crystal cluster as a set piece.
             var stage = new GameObject("Stage");
             stage.AddComponent<SlowSpin>();
             var rng = new System.Random(5);
@@ -69,7 +69,6 @@ namespace VoidClash
                     new Vector3((float)rng.NextDouble() * 30f - 15f, ang, (float)rng.NextDouble() * 30f - 15f));
             }
 
-            // post processing
             var volGo = new GameObject("PostFX");
             var volume = volGo.AddComponent<Volume>();
             volume.isGlobal = true;
@@ -166,31 +165,27 @@ namespace VoidClash
         void BuildCampaignPanel(Canvas canvas)
         {
             _campaignPanel = UIFactory.Panel(canvas.transform, "CampaignPanel", UIFactory.PanelColor);
-            UIFactory.SetRect(_campaignPanel, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -60f), new Vector2(680f, 470f));
+            float panelHeight = Mathf.Clamp(200f + Campaign.Missions.Length * 74f, 470f, 650f);
+            UIFactory.SetRect(_campaignPanel, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -60f), new Vector2(680f, panelHeight));
 
-            var title = UIFactory.Label(_campaignPanel, "title", "CAMPAIGN — Terran Front", 30, TextAnchor.MiddleCenter);
+            var title = UIFactory.Label(_campaignPanel, "title", "CAMPAIGN - Terran Front", 30, TextAnchor.MiddleCenter);
             UIFactory.SetRect(title.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -36f), new Vector2(600f, 44f));
 
             int unlocked = Campaign.UnlockedCount;
-            string[] blurbs =
-            {
-                "Burn out the Zerg infestation.",
-                "Break the Protoss armada.",
-                "Slay the Overlord.  [BOSS]",
-            };
             for (int i = 0; i < Campaign.Missions.Length; i++)
             {
                 var m = Campaign.Missions[i];
                 bool isUnlocked = i < unlocked;
                 var captured = m;
+                string blurb = string.IsNullOrEmpty(m.menuBlurb) ? "Deploy and complete the objective." : m.menuBlurb;
                 var btn = UIFactory.TextButton(_campaignPanel, $"m{i}",
-                    isUnlocked ? $"{m.title}\n{blurbs[i]}" : $"{m.title}\n[ LOCKED — clear the previous mission ]",
-                    20,
+                    isUnlocked ? $"{m.title}\n{blurb}" : $"{m.title}\n[ LOCKED - clear the previous mission ]",
+                    18,
                     () => { if (isUnlocked) { Campaign.Current = captured; SceneManager.LoadScene("Game"); } },
                     isUnlocked ? UIFactory.PanelLight : new Color(0.07f, 0.09f, 0.12f, 0.95f));
                 btn.interactable = isUnlocked;
                 UIFactory.SetRect((RectTransform)btn.transform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
-                    new Vector2(0f, -110f - i * 100f), new Vector2(620f, 88f));
+                    new Vector2(0f, -92f - i * 74f), new Vector2(620f, 62f));
             }
 
             var back = UIFactory.TextButton(_campaignPanel, "back", "Back", 22, () => ShowCampaign(false));

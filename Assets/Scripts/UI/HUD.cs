@@ -284,12 +284,11 @@ namespace VoidClash
             int slot = 0;
             if (hasWorker)
             {
-                var hotkeys = new[] { KeyCode.Q, KeyCode.W, KeyCode.E, KeyCode.R, KeyCode.T };
-                for (int i = 0; i < G.DB.buildings.Count && i < hotkeys.Length; i++)
+                for (int i = 0; i < G.DB.buildings.Count; i++)
                 {
                     var bd = G.DB.buildings[i];
-                    var key = hotkeys[i];
-                    AddCommandButton(slot++, $"{bd.displayName}\n<{key}>  {bd.mineralCost}m",
+                    var key = bd.hotkey;
+                    AddCommandButton(slot++, $"{bd.displayName}\n<{KeyLabel(key)}>  {bd.mineralCost}m",
                         () => G.Input.BeginPlacement(bd), key,
                         $"{bd.displayName} — {bd.mineralCost} minerals, {bd.buildTime:0}s\n{bd.description}",
                         G.PlayerBank.CanAfford(bd.mineralCost));
@@ -352,6 +351,11 @@ namespace VoidClash
         {
             foreach (var e in G.Selection.Selected)
                 if (e is Unit u && u.Faction == Faction.Player) act(u);
+        }
+
+        static string KeyLabel(KeyCode key)
+        {
+            return key == KeyCode.None ? "-" : key.ToString().ToUpperInvariant();
         }
 
         void AddCommandButton(int slot, string label, System.Action onClick, KeyCode hotkey, string tooltip, bool enabled)

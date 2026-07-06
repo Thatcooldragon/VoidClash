@@ -13,6 +13,7 @@ namespace VoidClash
         BuildingData _data;
         GameObject _ghost;
         readonly List<Renderer> _ghostRenderers = new List<Renderer>();
+        readonly List<Renderer> _footprintRenderers = new List<Renderer>();
         bool _valid;
         int _blockMask;
 
@@ -34,13 +35,15 @@ namespace VoidClash
             _data = data;
             _ghost = new GameObject("PlacementGhost");
             VisualFactory.BuildBuildingVisual(_ghost.transform, data.id, Faction.Player);
+            BuildFootprintGrid(data);
             _ghostRenderers.Clear();
             foreach (var r in _ghost.GetComponentsInChildren<Renderer>())
             {
                 r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-                _ghostRenderers.Add(r);
+                if (!_footprintRenderers.Contains(r)) _ghostRenderers.Add(r);
             }
             IsActive = true;
+            if (G.Hud != null) G.Hud.Notify($"{data.displayName}: choose a build site");
             return true;
         }
 
@@ -69,6 +72,7 @@ namespace VoidClash
             _valid = IsValidAt(_data, pos);
             var mat = MaterialLibrary.Get(_valid ? "ghost_valid" : "ghost_invalid");
             foreach (var r in _ghostRenderers) r.sharedMaterial = mat;
+            foreach (var r in _footprintRenderers) r.sharedMaterial = mat;
 
             bool overUI = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
             if (Input.GetMouseButtonDown(0) && !overUI)
@@ -98,6 +102,42 @@ namespace VoidClash
         {
             float x = Mathf.Round(p.x), z = Mathf.Round(p.z);
             return new Vector3(x, MapBuilder.GroundHeight(x, z), z);
+        }
+
+        public static Vector3 SnapToBuildGrid(Vector3 p) => Snap(p);
+
+        void BuildFootprintGrid(BuildingData data)
+        {
+            _footprintRenderers.Clear();
+
+            int cellsX = Mathf.Max(1, Mathf.CeilToInt(data.sizeX));
+            int cellsZ = Mathf.Max(1, Mathf.CeilToInt(data.sizeZ));
+            float startX = -(cellsX - 1) * 0.5f;
+            float startZ = -(cellsZ - 1) * 0.5f;
+
+            var grid = new GameObject("FootprintGrid");
+            grid.transform.SetParent(_ghost.transform, false);
+            grid.transform.localPosition = new Vector3(0f, 0.035f, 0f);
+
+            for (int x = 0; x < cellsX; x++)
+                for (int z = 0; z < cellsZ; z++)
+                {
+                    var tile = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    tile.name = "FootprintTile";
+                    var col = tile.GetComponent<Collider>();
+                    if (col != null)
+                    {
+                        col.enabled = false;
+                        Destroy(col);
+                    }
+                    tile.transform.SetParent(grid.transform, false);
+                    tile.transform.localPosition = new Vector3(startX + x, 0f, startZ + z);
+                    tile.transform.localScale = new Vector3(0.9f, 0.035f, 0.9f);
+                    var renderer = tile.GetComponent<Renderer>();
+                    renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                    renderer.sharedMaterial = MaterialLibrary.Get("ghost_valid");
+                    _footprintRenderers.Add(renderer);
+                }
         }
 
         public bool IsValidAt(BuildingData data, Vector3 pos)
