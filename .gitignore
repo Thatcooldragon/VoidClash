@@ -7,8 +7,9 @@
 [Mm]emoryCaptures/
 [Rr]ecordings/
 
-# Builds
-[Bb]uild/
+# Builds — Build/ itself IS committed (via Git LFS, see .gitattributes) so the
+# playable exe ships with the repo; only debug-symbol cruft inside it is excluded.
+[Bb]uild/*_BurstDebugInformation_DoNotShip/
 [Bb]uilds/
 *.apk
 *.aab
