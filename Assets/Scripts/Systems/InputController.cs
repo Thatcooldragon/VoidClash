@@ -401,6 +401,12 @@ namespace VoidClash
                 return;
             }
 
+            if (Input.GetKeyDown(KeyCode.F2) && G.Selection != null)
+            {
+                G.Selection.SelectAllArmy();
+                return;
+            }
+
             if (G.Selection.HasCombatUnitsSelected && Input.GetKeyDown(KeyCode.A))
             {
                 CurrentMode = Mode.AttackMoveTarget;

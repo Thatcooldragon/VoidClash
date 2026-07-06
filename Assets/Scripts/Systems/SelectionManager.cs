@@ -93,6 +93,25 @@ namespace VoidClash
             Set(list, additive);
         }
 
+        /// <summary>Selects every player combat unit on the whole map (workers/harvesters excluded).</summary>
+        public void SelectAllArmy()
+        {
+            var list = new List<Entity>();
+            foreach (var e in Entity.All)
+            {
+                if (e == null || e.IsDead || e.Faction != Faction.Player) continue;
+                if (e is Unit u && !(u is WorkerUnit) && u.Data.canAttack) list.Add(e);
+            }
+            Set(list, false);
+            if (list.Count > 0)
+            {
+                if (G.Audio != null) G.Audio.Play("select", 0.5f);
+                var c = SelectionCenter();
+                if (c.HasValue && G.Cam != null) G.Cam.Focus(c.Value);
+            }
+            else if (G.Hud != null) G.Hud.Notify("No army units yet");
+        }
+
         public void NotifyDied(Entity e)
         {
             if (Selected.Remove(e)) Changed?.Invoke();

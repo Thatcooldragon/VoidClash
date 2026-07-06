@@ -393,6 +393,17 @@ namespace VoidClash
                     muzzle.localPosition = new Vector3(0, 0.05f, 0.78f);
                     break;
                 }
+                case "aerator":
+                {
+                    Part(visual, PrimitiveType.Cylinder, "crystal", new Vector3(0, 0.3f, 0), new Vector3(1.2f, 0.3f, 1.2f), null, "Base");
+                    Part(visual, PrimitiveType.Cube, "metal_light", new Vector3(0, 0.85f, 0), new Vector3(0.7f, 0.7f, 0.7f), null, "PumpBody");
+                    Part(visual, PrimitiveType.Cylinder, "metal_dark", new Vector3(0, 1.32f, 0), new Vector3(0.42f, 0.22f, 0.42f), null, "Bellows");
+                    Part(visual, PrimitiveType.Sphere, "rally", new Vector3(0, 1.7f, 0), Vector3.one * 0.42f, null, "FoamBloom");
+                    Part(visual, PrimitiveType.Sphere, "rally", new Vector3(0.28f, 1.9f, 0.1f), Vector3.one * 0.18f, null, "Bud");
+                    Part(visual, PrimitiveType.Sphere, "crystal", new Vector3(-0.22f, 1.85f, -0.12f), Vector3.one * 0.14f, null, "Bud");
+                    Part(visual, PrimitiveType.Cube, "metal_dark", new Vector3(0.55f, 0.7f, 0), new Vector3(0.14f, 0.14f, 0.5f), new Vector3(0, 90f, 0), "Pipe");
+                    break;
+                }
             }
             return visual;
         }

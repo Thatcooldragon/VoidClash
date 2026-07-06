@@ -106,6 +106,10 @@ namespace VoidClash
             var menuBtn = UIFactory.TextButton(bar, "menuBtn", "MENU (Esc)", 16, () => G.Game.TogglePause());
             UIFactory.SetRect((RectTransform)menuBtn.transform, new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(-12f, 0f), new Vector2(130f, 30f));
 
+            var armyBtn = UIFactory.TextButton(bar, "selectArmy", "SELECT ARMY", 16,
+                () => { if (G.Selection != null) G.Selection.SelectAllArmy(); });
+            UIFactory.SetRect((RectTransform)armyBtn.transform, new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(-150f, 0f), new Vector2(150f, 30f));
+
             _objectiveText = UIFactory.Label(_canvas.transform, "Objective", "", 19, TextAnchor.MiddleCenter, new Color(0.8f, 0.9f, 1f));
             UIFactory.SetRect(_objectiveText.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -58f), new Vector2(960f, 28f));
             RefreshObjective();
@@ -334,6 +338,7 @@ namespace VoidClash
             Building liftable = null;
             Building cancelable = null;
             Building bubbleBuilder = null;
+            Building aerator = null;
             foreach (var e in sel)
             {
                 if (e is WorkerUnit && e.Faction == Faction.Player) hasWorker = true;
@@ -345,6 +350,7 @@ namespace VoidClash
                     if (b.Data.CanTrain && !b.IsAirborne && trainer == null) trainer = b;
                     if (b.CanLift && liftable == null) liftable = b;
                     if (b.Data.opensBuildMenu && bubbleBuilder == null) bubbleBuilder = b;
+                    if (b.Data.id == "aerator" && aerator == null) aerator = b;
                 }
             }
 
@@ -371,6 +377,18 @@ namespace VoidClash
                         $"{ud.displayName} — {ud.mineralCost} minerals, {ud.supplyCost} supply, {ud.trainTime:0}s\n{ud.description}",
                         captured.CanQueue(ud));
                 }
+            }
+
+            if (aerator != null && G.Bubble != null)
+            {
+                bool maxed = G.Bubble.ProductionMaxed;
+                string label = maxed
+                    ? $"Max Speed\nevery {G.Bubble.ProductionInterval:0.0}s"
+                    : $"UPGRADE\n<G>  {G.Bubble.NextUpgradeCost}m";
+                string tip = maxed
+                    ? "Bubble production speed is maxed out."
+                    : $"Speed up your Bubble Nexus: now every {G.Bubble.ProductionInterval:0.0}s, next {G.Bubble.PreviewNextInterval():0.0}s. Costs {G.Bubble.NextUpgradeCost} minerals.";
+                AddCommandButton(slot, label, TryUpgradeBubbles, KeyCode.G, tip, !maxed);
             }
 
             if (cancelable != null)
@@ -413,6 +431,22 @@ namespace VoidClash
                     () => G.Input.BeginPlacement(bd), key,
                     $"{bd.displayName} — {bd.mineralCost} minerals, {bd.buildTime:0}s\n{bd.description}",
                     G.PlayerBank.CanAfford(bd.mineralCost));
+            }
+        }
+
+        void TryUpgradeBubbles()
+        {
+            if (G.Bubble == null) return;
+            if (G.Bubble.TryUpgradeProduction(Faction.Player, out string msg))
+            {
+                Notify(msg);
+                if (G.Audio != null) G.Audio.Play("build_done", 0.5f);
+                if (G.Selection != null) G.Selection.RaiseChanged(); // refresh the upgrade button
+            }
+            else
+            {
+                Notify(msg);
+                if (G.Audio != null) G.Audio.Play("error");
             }
         }
 

@@ -344,22 +344,26 @@ namespace VoidClash.Tests
             Assert.IsNotNull(db.Building("poison_pool"), "Poison Pool");
             Assert.IsNotNull(db.Building("foam_turret"), "Foam Turret");
             Assert.AreEqual(0, db.Unit("bubble").supplyCost, "bubbles stream without supply");
-            Assert.Less(db.Unit("bubble").maxHP, 25, "basic bubbles should pop easily");
+            Assert.AreEqual(1, db.Unit("bubble").maxHP, "basic bubbles should pop in one hit");
+            Assert.AreEqual(1, db.Unit("poison_bubble").maxHP, "poison bubbles should pop in one hit");
+            Assert.LessOrEqual(db.Unit("bubble").damage, 1f, "basic bubble damage should stay tiny");
 
             // every bubble structure self-builds and lives in the bubble tech group
-            foreach (var id in new[] { "bubble_core", "bubble_spring", "poison_pool", "foam_turret" })
+            foreach (var id in new[] { "bubble_core", "bubble_spring", "poison_pool", "foam_turret", "aerator" })
             {
                 var b = db.Building(id);
                 Assert.AreEqual("bubble", b.techGroup, $"{id} in bubble tech group");
                 Assert.IsTrue(b.selfBuild, $"{id} self-builds");
             }
             Assert.Greater(db.Building("bubble_spring").passiveMineralsPerSec, 0f, "spring earns minerals");
+            Assert.LessOrEqual(db.Building("bubble_spring").passiveMineralsPerSec, 0.75f, "spring income stays slow");
             Assert.Greater(db.Building("bubble_core").supplyProvided, 0, "nexus provides supply");
+            Assert.IsNotNull(db.Building("aerator"), "Aerator upgrade building");
         }
 
         [UnityTest]
         [Timeout(900000)]
-        public IEnumerator BubbleLab_EconomyBuildAndMorph()
+        public IEnumerator BubbleLab_EconomyProduceUpgradeBuildMorph()
         {
             Campaign.Current = null;
             SkirmishConfig.Mode = SkirmishMode.BubbleLab;
@@ -369,36 +373,47 @@ namespace VoidClash.Tests
             Time.timeScale = 8f;
             G.AI.enabled = false;
 
-            // starts as the Bubble faction, not Terran
+            // starts as the Bubble faction: Nexus + Spring, and NO Poison Pool
             Assert.AreEqual(0, Count<Building>(Faction.Player, b => b.Data.id == "cc"), "no Terran Command Center");
             Assert.AreEqual(1, Count<Building>(Faction.Player, b => b.Data.id == "bubble_core"), "Bubble Nexus start");
             Assert.AreEqual(1, Count<Building>(Faction.Player, b => b.Data.id == "bubble_spring"), "Bubble Spring start");
-            Assert.AreEqual(1, Count<Building>(Faction.Player, b => b.Data.id == "poison_pool"), "Poison Pool start");
+            Assert.AreEqual(0, Count<Building>(Faction.Player, b => b.Data.id == "poison_pool"), "no Poison Pool at start");
 
-            // economy: the spring drains minerals into income
+            // economy: the spring mines a slow trickle
             int startMin = G.PlayerBank.Minerals;
-            yield return WaitUntil(() => G.PlayerBank.Minerals > startMin, 40f, "spring mineral income");
+            yield return WaitUntil(() => G.PlayerBank.Minerals > startMin, 45f, "spring mineral income");
 
-            // production: bubbles keep streaming out of the spring
-            yield return WaitUntil(
-                () => Count<Unit>(Faction.Player, u => u.Data.id == "bubble" || u.Data.id == "poison_bubble") >= 10,
-                40f, "spring bubble production");
+            // production: the Nexus blows out more bubbles over time
+            int startBubbles = Count<Unit>(Faction.Player, u => u.Data.id == "bubble");
+            yield return WaitUntil(() => Count<Unit>(Faction.Player, u => u.Data.id == "bubble") > startBubbles,
+                30f, "Nexus bubble production");
+
+            // upgrade: an Aerator upgrade shortens the production interval
+            float before = G.Bubble.ProductionInterval;
+            G.PlayerBank.AddMinerals(500);
+            Assert.IsTrue(G.Bubble.TryUpgradeProduction(Faction.Player, out _), "aerator production upgrade");
+            Assert.Less(G.Bubble.ProductionInterval, before, "production interval shrinks after upgrade");
 
             // self-build: a placed Foam Turret finishes with no worker present
             var turretData = G.DB.Building("foam_turret");
             var spot = FindSpot(turretData);
             Assert.IsTrue(spot.HasValue, "a spot for the Foam Turret");
-            G.PlayerBank.AddMinerals(turretData.mineralCost);
-            Assert.IsTrue(G.PlayerBank.TrySpend(turretData.mineralCost), "afford Foam Turret");
+            G.PlayerBank.TrySpend(turretData.mineralCost);
             var turret = G.Placer.PlaceAt(turretData, Faction.Player, spot.Value);
             Assert.AreEqual(0, Count<WorkerUnit>(Faction.Player), "no workers exist in Bubble Lab");
             yield return WaitUntil(() => turret == null || turret.IsComplete,
                 turretData.buildTime * 3f + 30f, "Foam Turret self-builds");
             Assert.IsTrue(turret != null && turret.IsComplete, "Foam Turret completed with no worker");
 
-            // morph: the Poison Pool converts nearby bubbles into poison bubbles
-            yield return WaitUntil(() => Count<Unit>(Faction.Player, u => u.Data.id == "poison_bubble") >= 3,
-                40f, "Poison Pool morphing");
+            // morph: a Poison Pool built at the swarm's gather point converts bubbles
+            var poolData = G.DB.Building("poison_pool");
+            Vector3 gather = MapBuilder.PlayerBasePos + (Vector3.zero - MapBuilder.PlayerBasePos).normalized * 5.5f;
+            G.PlayerBank.TrySpend(poolData.mineralCost);
+            var pool = G.Placer.PlaceAt(poolData, Faction.Player, BuildingPlacer.SnapToBuildGrid(gather));
+            yield return WaitUntil(() => pool == null || pool.IsComplete,
+                poolData.buildTime * 3f + 30f, "Poison Pool self-builds");
+            yield return WaitUntil(() => Count<Unit>(Faction.Player, u => u.Data.id == "poison_bubble") >= 2,
+                60f, "Poison Pool morphing");
 
             LogGuard.AssertClean();
         }

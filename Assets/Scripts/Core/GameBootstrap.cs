@@ -30,7 +30,7 @@ namespace VoidClash
             G.Game = gameObject.AddComponent<GameManager>();
             G.Audio = gameObject.AddComponent<AudioManager>();
             G.Effects = gameObject.AddComponent<EffectsManager>();
-            gameObject.AddComponent<BubbleSystem>();
+            G.Bubble = gameObject.AddComponent<BubbleSystem>();
             G.Selection = gameObject.AddComponent<SelectionManager>();
             G.Input = gameObject.AddComponent<InputController>();
             G.Placer = gameObject.AddComponent<BuildingPlacer>();
@@ -49,6 +49,7 @@ namespace VoidClash
             G.Fog.Init();
             G.Minimap.Init();
             G.Hud.Build();
+            if (bubbleLab) ShowBubbleLabIntro();
             G.AI.Init(MapBuilder.EnemyBasePos);
             G.Game.StartMatch();
 
@@ -193,24 +194,35 @@ namespace VoidClash
             BuildingFactory.Place(G.DB.Building("bubble_spring"), Faction.Player,
                 BuildingPlacer.SnapToBuildGrid(springPos), true);
 
-            // A Poison Pool at the swarm's gather point in front of the Nexus, so arriving
-            // bubbles are morphed into poison bubbles (matches BubbleSystem.GatherPoint).
+            // Seed a small amount of minerals to shape your first extra structures.
+            // (Poison Pool, Aerator, Foam Turret are yours to build when you want them.)
+            G.PlayerBank.AddMinerals(75);
+
+            // A small starting cluster of bubbles gathering at the base, ready to command.
             Vector3 toCenter = (Vector3.zero - basePos).normalized;
             Vector3 gather = basePos + toCenter * 4f;
-            BuildingFactory.Place(G.DB.Building("poison_pool"), Faction.Player,
-                BuildingPlacer.SnapToBuildGrid(basePos + toCenter * 4.6f), true);
-
-            // Seed minerals so the commander can immediately shape more structures.
-            G.PlayerBank.AddMinerals(150);
-
-            // A starting cluster of bubbles gathering at the base, ready to be commanded.
             var bubbleData = G.DB.Unit("bubble");
-            for (int i = 0; i < 6; i++)
+            for (int i = 0; i < 3; i++)
             {
-                Vector3 pos = basePos + Quaternion.Euler(0f, i * 60f, 0f) * Vector3.forward * 4f;
+                Vector3 pos = basePos + Quaternion.Euler(0f, i * 120f, 0f) * Vector3.forward * 4f;
                 var u = UnitFactory.Spawn(bubbleData, Faction.Player, pos);
                 if (u != null) u.CommandMove(gather);
             }
+        }
+
+        void ShowBubbleLabIntro()
+        {
+            foreach (var e in Entity.All)
+            {
+                if (e is Building b && b.Faction == Faction.Player && b.Data.id == "bubble_core")
+                {
+                    G.Selection.SelectSingle(b, false);
+                    if (G.Cam != null) G.Cam.Focus(b.Position);
+                    break;
+                }
+            }
+            if (G.Hud != null)
+                G.Hud.Notify("Bubble Nexus selected: it auto-makes bubbles every 7s. Build Aerators to speed it up.");
         }
     }
 }

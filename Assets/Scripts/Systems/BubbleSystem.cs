@@ -3,20 +3,48 @@ using UnityEngine;
 
 namespace VoidClash
 {
-    /// <summary>Drives the Bubble faction: structure-driven economy (springs drain nearby
-    /// minerals into income + a stream of soap bubbles), a passive Nexus trickle, Poison Pool
-    /// morphing, and poison-gas bursts. Bubbles are free chaff that gather at their spring's
-    /// rally point (or idle for the player to command); enemy-owned bubbles still push out.</summary>
+    /// <summary>Drives the Bubble faction: the Bubble Nexus blows bubbles on an upgradeable
+    /// timer (Aerators speed it up), Bubble Springs slowly mine minerals from nearby crystals,
+    /// Poison Pools morph bubbles, and poison bubbles burst into gas. Bubbles gather at the
+    /// Nexus for the player to command; enemy-owned bubbles push out.</summary>
     public class BubbleSystem : MonoBehaviour
     {
         readonly Dictionary<Building, float> _spawnTimers = new Dictionary<Building, float>();
         readonly Dictionary<int, float> _mineralFraction = new Dictionary<int, float>();
         const float MineralLinkRange = 9f;
-        const float SpawnEvery = 2.6f;
         const float PoolMorphRange = 7f;
-        const float MorphEvery = 1.6f;
-        const int BubbleSoftCap = 60;
+        const float MorphEvery = 2.2f;
+        const int BubbleSoftCap = 24;
         float _morphTimer;
+
+        // ---- upgradeable bubble production (per-faction Aerator tech) ----
+        const float BaseSpawnEvery = 7f;   // seconds between bubbles at level 0
+        const float MinSpawnEvery = 3.5f;  // fastest possible
+        const float StepPerLevel = 0.7f;   // each Aerator upgrade shaves this off
+        public const int MaxProductionLevel = 5;
+
+        public int ProductionLevel { get; private set; }
+        public float ProductionInterval => Mathf.Max(MinSpawnEvery, BaseSpawnEvery - ProductionLevel * StepPerLevel);
+        public int NextUpgradeCost => 60 + ProductionLevel * 45;
+        public bool ProductionMaxed => ProductionLevel >= MaxProductionLevel;
+
+        /// <summary>Interval the Nexus would reach after one more upgrade (for UI preview).</summary>
+        public float PreviewNextInterval()
+        {
+            int lvl = Mathf.Min(ProductionLevel + 1, MaxProductionLevel);
+            return Mathf.Max(MinSpawnEvery, BaseSpawnEvery - lvl * StepPerLevel);
+        }
+
+        /// <summary>Player-facing upgrade from an Aerator: spends minerals, speeds up the Nexus.</summary>
+        public bool TryUpgradeProduction(Faction faction, out string message)
+        {
+            if (ProductionMaxed) { message = "Bubble speed already maxed"; return false; }
+            int cost = NextUpgradeCost;
+            if (!G.Bank(faction).TrySpend(cost)) { message = $"Need {cost} minerals to upgrade"; return false; }
+            ProductionLevel++;
+            message = $"Bubble speed upgraded — now every {ProductionInterval:0.0}s";
+            return true;
+        }
 
         void OnEnable() => Entity.AnyDied += OnEntityDied;
         void OnDisable() => Entity.AnyDied -= OnEntityDied;
@@ -24,40 +52,39 @@ namespace VoidClash
         void Update()
         {
             if (G.Game == null || G.Game.IsPaused || G.Game.IsOver || G.DB == null) return;
-            TickEconomyAndSprings();
+            TickEconomyAndProduction();
             TickPoisonPools();
         }
 
-        // ---- economy + bubble production ----
+        // ---- economy (springs) + bubble production (nexus) ----
 
-        void TickEconomyAndSprings()
+        void TickEconomyAndProduction()
         {
             float dt = Time.deltaTime;
             var snapshot = new List<Entity>(Entity.All);
             foreach (var e in snapshot)
             {
                 if (!(e is Building b) || b.IsDead || !b.IsComplete) continue;
-                if (b.Data.passiveMineralsPerSec <= 0f) continue;
 
-                if (b.Data.id == "bubble_spring")
+                if (b.Data.id == "bubble_core")
                 {
-                    var node = NearestLiveNode(b.Position, MineralLinkRange);
-                    if (node == null) continue; // a spring only works while linked to minerals
-                    Accrue(b.Faction, b.Data.passiveMineralsPerSec * dt, node);
+                    // the Nexus blows a bubble on the upgradeable timer + a tiny mineral trickle
+                    if (b.Data.passiveMineralsPerSec > 0f) Accrue(b.Faction, b.Data.passiveMineralsPerSec * dt, null);
 
                     _spawnTimers.TryGetValue(b, out float timer);
                     timer -= dt;
                     if (timer <= 0f)
                     {
-                        timer = SpawnEvery;
+                        timer = ProductionInterval;
                         if (CountBubbles(b.Faction) < BubbleSoftCap) SpawnBubble(b);
                     }
                     _spawnTimers[b] = timer;
                 }
-                else
+                else if (b.Data.id == "bubble_spring" && b.Data.passiveMineralsPerSec > 0f)
                 {
-                    // Bubble Nexus and other structures: flat trickle, no node needed
-                    Accrue(b.Faction, b.Data.passiveMineralsPerSec * dt, null);
+                    // a spring mines minerals only while linked to live crystals
+                    var node = NearestLiveNode(b.Position, MineralLinkRange);
+                    if (node != null) Accrue(b.Faction, b.Data.passiveMineralsPerSec * dt, node);
                 }
             }
         }
@@ -91,15 +118,15 @@ namespace VoidClash
             return best;
         }
 
-        void SpawnBubble(Building spring)
+        void SpawnBubble(Building source)
         {
             var data = G.DB.Unit("bubble");
-            Vector3 pos = spring.Position + Random.insideUnitSphere * 2.2f;
+            Vector3 pos = source.Position + Random.insideUnitSphere * 2.4f;
             pos.y = 0f;
-            var bubble = UnitFactory.Spawn(data, spring.Faction, pos);
+            var bubble = UnitFactory.Spawn(data, source.Faction, pos);
             if (bubble == null) return;
-            SendNewBubble(bubble, spring);
-            if (spring.Faction == Faction.Player && G.Audio != null) G.Audio.Play("deposit", 0.2f);
+            SendNewBubble(bubble, source);
+            if (source.Faction == Faction.Player && G.Audio != null) G.Audio.Play("deposit", 0.2f);
         }
 
         /// <summary>Fresh bubbles follow the structure's rally point if set; an enemy AI pushes
@@ -175,9 +202,9 @@ namespace VoidClash
     public class PoisonGas : MonoBehaviour
     {
         Faction _owner;
-        float _life = 4.5f;
+        float _life = 3.2f;
         float _tick;
-        const float Radius = 4.2f;
+        const float Radius = 3.0f;
 
         public static void Spawn(Vector3 pos, Faction owner)
         {
@@ -202,13 +229,13 @@ namespace VoidClash
 
             _tick -= Time.deltaTime;
             if (_tick > 0f) return;
-            _tick = 0.45f;
+            _tick = 0.75f;
 
             foreach (var e in Entity.All)
             {
                 if (e == null || e.IsDead || e.Faction == _owner || e.Faction == Faction.Neutral) continue;
                 if (Vector3.Distance(e.Position, transform.position) <= Radius)
-                    e.Health.TakeDamage(4f, DamageClass.Normal, null);
+                    e.Health.TakeDamage(1.5f, DamageClass.Normal, null);
             }
         }
     }
