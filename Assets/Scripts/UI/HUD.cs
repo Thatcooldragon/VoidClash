@@ -252,9 +252,11 @@ namespace VoidClash
 
             string statLine = "";
             if (e is Unit u)
-                statLine = e is WorkerUnit worker
-                    ? worker.WorkStatus
-                    : (u.Data.canAttack ? $"DMG {u.Data.damage}  ({u.Data.damageClass})   RNG {u.Data.attackRange}" : "");
+            {
+                if (e is WorkerUnit worker) statLine = worker.WorkStatus;
+                else if (u.Data.id == "dot_core") statLine = $"Power field {DotsSystem.PowerRange:0}m   Income +0.55 minerals/sec";
+                else statLine = u.Data.canAttack ? $"DMG {u.Data.damage}  ({u.Data.damageClass})   RNG {u.Data.attackRange}" : "";
+            }
             else if (e is Building b)
             {
                 if (!b.IsComplete) statLine = $"Constructing…  {(int)(b.BuildProgress * 100f)}%";

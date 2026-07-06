@@ -18,8 +18,11 @@ namespace VoidClash
         Vector3 _workTarget;
         Vector3 _lastProgressPos;
         float _stallTimer;
+        float _noPathTimer;
         int _failedArrivals;
         MineralNode _resumeNode;
+        MineralNode _avoidNode;
+        float _avoidNodeUntil;
 
         const int CarryMax = 5;
         const float MineTime = 2f;
@@ -115,7 +118,12 @@ namespace VoidClash
             {
                 case WorkStep.ToNode:
                     if (_node == null || _node.Depleted) { RetargetNode(); return; }
-                    if (WorkPathStalled()) { RetargetNode(); return; }
+                    if (WorkPathStalled())
+                    {
+                        if (++_failedArrivals >= 2) RetargetNode(_node);
+                        else SetWorkDestination(FindMineralApproach(_node), InteractRange, false);
+                        return;
+                    }
                     if (CloseTo(_node.transform.position, InteractRange + _node.Radius))
                     {
                         StopAgent();
@@ -126,8 +134,8 @@ namespace VoidClash
                     }
                     else if (Arrived())
                     {
-                        if (++_failedArrivals >= 3) RetargetNode();
-                        else SetWorkDestination(_node.transform.position, InteractRange, false);
+                        if (++_failedArrivals >= 3) RetargetNode(_node);
+                        else SetWorkDestination(FindMineralApproach(_node), InteractRange, false);
                     }
                     break;
 
@@ -156,7 +164,12 @@ namespace VoidClash
 
                 case WorkStep.ToDropoff:
                     if (_dropoff == null || _dropoff.IsDead || _dropoff.IsAirborne) { GoToDropoff(); if (_dropoff == null) return; }
-                    if (WorkPathStalled()) { GoToDropoff(); return; }
+                    if (WorkPathStalled())
+                    {
+                        if (++_failedArrivals >= 3) GoToDropoff();
+                        else SetWorkDestination(FindBuildingApproach(_dropoff), 0.5f, false);
+                        return;
+                    }
                     if (_dropoff.DistanceToEdge(transform.position) <= InteractDist)
                     {
                         G.Bank(Faction).AddMinerals(_carrying);
@@ -244,9 +257,15 @@ namespace VoidClash
             SetWorkDestination(FindBuildingApproach(_dropoff), 0.5f);
         }
 
-        void RetargetNode()
+        void RetargetNode(MineralNode avoid = null)
         {
-            var node = MineralNode.FindNearest(transform.position, 40f);
+            if (avoid != null)
+            {
+                _avoidNode = avoid;
+                _avoidNodeUntil = Time.time + 8f;
+            }
+
+            var node = FindReachableNode(transform.position, 45f);
             if (node == null)
             {
                 if (_carrying > 0) { GoToDropoff(); return; }
@@ -272,6 +291,7 @@ namespace VoidClash
         {
             _lastProgressPos = transform.position;
             _stallTimer = 0f;
+            _noPathTimer = 0f;
             if (resetFailures) _failedArrivals = 0;
         }
 
@@ -283,7 +303,12 @@ namespace VoidClash
                 if (Agent.pathStatus == NavMeshPathStatus.PathInvalid) return true;
                 if (Agent.pathStatus == NavMeshPathStatus.PathPartial && Arrived()) return true;
             }
-            if (Agent.isStopped || !Agent.hasPath) { ResetWorkWatch(false); return false; }
+            if (Agent.isStopped || !Agent.hasPath)
+            {
+                _noPathTimer += Time.deltaTime;
+                return _noPathTimer >= 1.25f;
+            }
+            _noPathTimer = 0f;
             if (Agent.remainingDistance <= Agent.stoppingDistance + 0.6f) { ResetWorkWatch(false); return false; }
 
             Vector3 moved = transform.position - _lastProgressPos;
@@ -297,6 +322,42 @@ namespace VoidClash
 
             _stallTimer += Time.deltaTime;
             return _stallTimer >= StallSeconds && Vector3.Distance(transform.position, _workTarget) > Agent.stoppingDistance + 0.75f;
+        }
+
+        MineralNode FindReachableNode(Vector3 from, float range)
+        {
+            MineralNode best = null;
+            float bestD = range * range;
+            var path = new NavMeshPath();
+            foreach (var node in MineralNode.All)
+            {
+                if (node == null || node.Depleted) continue;
+                if (_avoidNode == node && Time.time < _avoidNodeUntil) continue;
+                float d = (node.transform.position - from).sqrMagnitude;
+                if (d > bestD) continue;
+                Vector3 approach = FindMineralApproach(node);
+                if (Agent != null && Agent.isOnNavMesh &&
+                    (!NavMesh.CalculatePath(transform.position, approach, NavMesh.AllAreas, path) ||
+                     path.status == NavMeshPathStatus.PathInvalid))
+                    continue;
+                bestD = d;
+                best = node;
+            }
+            if (best == null && _avoidNode != null && Time.time >= _avoidNodeUntil) _avoidNode = null;
+            return best;
+        }
+
+        Vector3 FindMineralApproach(MineralNode node)
+        {
+            if (node == null) return transform.position;
+            Vector3 center = node.transform.position;
+            Vector3 away = (transform.position - center);
+            away.y = 0f;
+            if (away.sqrMagnitude < 0.01f) away = (MapBuilder.PlayerBasePos - center);
+            if (away.sqrMagnitude < 0.01f) away = Vector3.forward;
+            Vector3 probe = center + away.normalized * Mathf.Max(1.2f, node.Radius + 0.8f);
+            if (NavMesh.SamplePosition(probe, out var hit, 2f, NavMesh.AllAreas)) return hit.position;
+            return center;
         }
 
         Vector3 FindBuildingApproach(Building b)

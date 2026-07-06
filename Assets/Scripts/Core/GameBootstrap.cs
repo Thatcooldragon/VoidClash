@@ -162,6 +162,13 @@ namespace VoidClash
                 return;
             }
 
+            if (Campaign.Current?.playerRace == PlayerRace.Dots)
+            {
+                SpawnDotsLabStart(Campaign.Current.playerStartMinerals);
+                SpawnTerranStart(Faction.Enemy, MapBuilder.EnemyBasePos);
+                return;
+            }
+
             if (Campaign.Current == null && SkirmishConfig.Mode == SkirmishMode.BubbleLab)
             {
                 SpawnBubbleLabStart();

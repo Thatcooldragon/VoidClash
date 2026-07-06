@@ -283,6 +283,65 @@ namespace VoidClash
                 firstWaveSize = 5,
                 waveSizeGrowth = 3,
             },
+            new MissionDef
+            {
+                index = 8,
+                title = "Bubble 3 - Pressure Dome",
+                menuBlurb = "Hold while the foam engine ramps.",
+                objective = "Survive the Terran pressure and destroy the forward base.",
+                victoryText = "The dome held. The foam tide can survive organized fire.",
+                defeatText = "The Terran pressure popped the Nexus before the tide formed.",
+                storyBeatText = "Terran patrols are spreading out. Use Foam Turrets and poison clouds to split them.",
+                storyBeatTime = 150f,
+                briefing = "The Terrans learned not to stand in poison clouds.\n" +
+                           "This time they will pressure your Spring and try to thin the swarm\n" +
+                           "before the Nexus reaches critical mass. Build a Foam Turret,\n" +
+                           "add an Aerator, and counterattack once the bubble wave is thick.\n\n" +
+                           "VICTORY: break the forward Terran base after surviving the pressure.",
+                playerRace = PlayerRace.Bubble,
+                enemyRace = EnemyRace.Terran,
+                aiPersonality = AIPersonality.Expander,
+                armyMix = new[] { "soldier", "ranged", "ranged", "soldier", "heavy" },
+                playerStartMinerals = 170,
+                enemyStartMinerals = 120,
+                aiWorkerCap = 10,
+                aiBuildsFactory = true,
+                aiTurrets = 1,
+                firstWaveTime = 170f,
+                waveInterval = 95f,
+                firstWaveSize = 6,
+                waveSizeGrowth = 3,
+            },
+            new MissionDef
+            {
+                index = 9,
+                title = "Dots 1 - Hidden Core",
+                menuBlurb = "Learn Core Dot, Printers, and Giant.",
+                objective = "Form a Dot Giant and destroy the Terran test base.",
+                victoryText = "The Core survived inside the shape. The Dots are awake.",
+                defeatText = "The Core Dot was isolated before the swarm could shape itself.",
+                storyBeatText = "The Core Dot powers nearby Printers. Keep it close, then hide it inside a Giant.",
+                storyBeatTime = 115f,
+                briefing = "Dots do not mine with workers. Your Core Dot moves with the swarm\n" +
+                           "and generates a slow mineral flow. It also powers nearby Dot Printers.\n" +
+                           "Build a Shape Matrix, gather 20 loose Dots near the Core Dot,\n" +
+                           "then form a Dot Giant. The Core hides inside the Giant and escapes\n" +
+                           "when the shape is destroyed.\n\n" +
+                           "VICTORY: form a Giant and destroy the Terran test base.",
+                playerRace = PlayerRace.Dots,
+                enemyRace = EnemyRace.Terran,
+                aiPersonality = AIPersonality.Turtle,
+                armyMix = new[] { "soldier", "soldier", "ranged" },
+                playerStartMinerals = 210,
+                enemyStartMinerals = 60,
+                aiWorkerCap = 7,
+                aiBuildsFactory = false,
+                aiTurrets = 0,
+                firstWaveTime = 280f,
+                waveInterval = 130f,
+                firstWaveSize = 4,
+                waveSizeGrowth = 2,
+            },
         };
 
         public static int UnlockedCount

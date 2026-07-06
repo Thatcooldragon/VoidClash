@@ -346,7 +346,22 @@ namespace VoidClash.Tests
                     $"{mission.title} explains a Bubble-facing objective");
                 Assert.AreEqual(EnemyRace.Terran, mission.enemyRace, $"{mission.title} starts against Terran for balance");
             }
-            Assert.GreaterOrEqual(bubbleMissions, 2, "starter Bubble campaign missions");
+            Assert.GreaterOrEqual(bubbleMissions, 3, "v0.8 Bubble campaign missions");
+        }
+
+        [Test]
+        public void DotsCampaign_TutorialMissionExists()
+        {
+            int dotsMissions = 0;
+            foreach (var mission in Campaign.Missions)
+            {
+                if (mission.playerRace != PlayerRace.Dots) continue;
+                dotsMissions++;
+                Assert.IsTrue(mission.objective.Contains("Giant"), $"{mission.title} teaches the Giant shape");
+                Assert.IsTrue(mission.briefing.Contains("Core Dot"), $"{mission.title} explains the Core Dot");
+                Assert.AreEqual(EnemyRace.Terran, mission.enemyRace, $"{mission.title} starts against Terran for balance");
+            }
+            Assert.GreaterOrEqual(dotsMissions, 1, "Dots tutorial campaign mission");
         }
 
         [Test]

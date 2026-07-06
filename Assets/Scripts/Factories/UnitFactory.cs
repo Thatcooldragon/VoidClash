@@ -18,6 +18,8 @@ namespace VoidClash
                 visual.gameObject.AddComponent<BubbleWobble>();
             if ((data.id == "dot" || data.id == "dot_core" || data.id == "dot_giant") && visual != null)
                 visual.gameObject.AddComponent<DotPulse>();
+            if (data.id == "dot_core" && visual != null)
+                visual.gameObject.AddComponent<DotPowerRing>();
 
             Unit unit = data.isWorker ? go.AddComponent<WorkerUnit>() : go.AddComponent<Unit>();
             unit.Init(data, faction);

@@ -280,12 +280,12 @@ namespace VoidClash
         void BuildCampaignPanel(Canvas canvas)
         {
             _campaignPanel = UIFactory.Panel(canvas.transform, "CampaignPanel", UIFactory.PanelColor);
-            float rowStep = Campaign.Missions.Length > 6 ? 58f : 74f;
-            float rowHeight = Campaign.Missions.Length > 6 ? 50f : 62f;
+            float rowStep = Campaign.Missions.Length > 8 ? 49f : (Campaign.Missions.Length > 6 ? 58f : 74f);
+            float rowHeight = Campaign.Missions.Length > 8 ? 43f : (Campaign.Missions.Length > 6 ? 50f : 62f);
             float panelHeight = Mathf.Clamp(200f + Campaign.Missions.Length * rowStep, 470f, 700f);
             UIFactory.SetRect(_campaignPanel, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -60f), new Vector2(680f, panelHeight));
 
-            var title = UIFactory.Label(_campaignPanel, "title", "CAMPAIGN - Terran Front", 30, TextAnchor.MiddleCenter);
+            var title = UIFactory.Label(_campaignPanel, "title", "CAMPAIGN - All Fronts", 30, TextAnchor.MiddleCenter);
             UIFactory.SetRect(title.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -36f), new Vector2(600f, 44f));
 
             int unlocked = Campaign.UnlockedCount;

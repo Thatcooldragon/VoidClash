@@ -9,7 +9,7 @@ namespace VoidClash
     public class DotsSystem : MonoBehaviour
     {
         readonly Dictionary<Building, float> _printTimers = new Dictionary<Building, float>();
-        const float PowerRange = 12f;
+        public const float PowerRange = 12f;
         const float PrintEvery = 5.5f;
         const float CoreMineralsPerSec = 0.55f;
         const int DotSoftCap = 42;
@@ -228,6 +228,42 @@ namespace VoidClash
             float pulse = 1f + Mathf.Sin(Time.time * 7.5f + _seed) * 0.08f;
             transform.localScale = _baseScale * pulse;
             transform.Rotate(0f, 160f * Time.deltaTime, 0f);
+        }
+    }
+
+    public class DotPowerRing : MonoBehaviour
+    {
+        Unit _unit;
+        GameObject _ring;
+
+        void Start()
+        {
+            _unit = GetComponentInParent<Unit>();
+            _ring = new GameObject("CoreDotPowerRange");
+            _ring.name = "CoreDotPowerRange";
+            _ring.transform.SetParent(_unit != null ? _unit.transform : transform, false);
+            _ring.transform.localPosition = new Vector3(0f, 0.04f, 0f);
+            const int segments = 36;
+            float circumference = 2f * Mathf.PI * DotsSystem.PowerRange;
+            for (int i = 0; i < segments; i++)
+            {
+                float angle = i * (360f / segments);
+                var seg = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                seg.name = "RangeSegment";
+                Destroy(seg.GetComponent<Collider>());
+                seg.transform.SetParent(_ring.transform, false);
+                seg.transform.localPosition = Quaternion.Euler(0f, angle, 0f) * Vector3.forward * DotsSystem.PowerRange;
+                seg.transform.localRotation = Quaternion.Euler(0f, angle, 0f);
+                seg.transform.localScale = new Vector3(circumference / segments * 0.55f, 0.035f, 0.08f);
+                seg.GetComponent<Renderer>().sharedMaterial = MaterialLibrary.Get("rally");
+            }
+            _ring.SetActive(false);
+        }
+
+        void Update()
+        {
+            if (_ring == null || _unit == null || G.Selection == null) return;
+            _ring.SetActive(!_unit.IsDead && G.Selection.IsSelected(_unit));
         }
     }
 }
