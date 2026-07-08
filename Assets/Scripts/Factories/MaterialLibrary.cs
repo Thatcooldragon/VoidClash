@@ -35,7 +35,9 @@ namespace VoidClash
             "crystal", "crystal_dim", "particle_add", "ghost_valid", "ghost_invalid",
             "hp_back", "hp_green", "hp_yellow", "hp_red", "hp_build",
             "ring_player", "ring_enemy", "ring_hover", "fog", "marker_move", "marker_attack",
-            "projectile_player", "projectile_enemy", "rally", "frost", "overdrive"
+            "projectile_player", "projectile_enemy", "rally", "frost", "overdrive",
+            "base_player", "base_enemy", "base_neutral", "lane_edge", "center_beacon",
+            "warning_gold", "ui_panel_deep"
         };
 
         public static Material Build(string name)
@@ -113,6 +115,13 @@ namespace VoidClash
                     SetTransparent(m, true); // additive warm glow aura
                     return m;
                 }
+                case "base_player": return Emissive("mat_base_player", new Color(0.16f, 0.56f, 1f), 1.25f, new Color(0.04f, 0.10f, 0.16f));
+                case "base_enemy": return Emissive("mat_base_enemy", new Color(1f, 0.24f, 0.2f), 1.2f, new Color(0.16f, 0.055f, 0.05f));
+                case "base_neutral": return Lit("mat_base_neutral", new Color(0.16f, 0.18f, 0.21f), 0.62f, 0.55f);
+                case "lane_edge": return Emissive("mat_lane_edge", new Color(0.22f, 0.84f, 1f), 1.85f, new Color(0.02f, 0.08f, 0.11f));
+                case "center_beacon": return Emissive("mat_center_beacon", new Color(1f, 0.78f, 0.25f), 2.4f, new Color(0.18f, 0.12f, 0.04f));
+                case "warning_gold": return Emissive("mat_warning_gold", new Color(1f, 0.62f, 0.14f), 1.65f, new Color(0.22f, 0.14f, 0.04f));
+                case "ui_panel_deep": return UnlitColor("mat_ui_panel_deep", new Color(0.018f, 0.024f, 0.032f, 0.95f));
                 default:
                     Debug.LogError($"VoidClash: unknown material '{name}'");
                     return Lit("mat_missing", Color.magenta);

@@ -37,15 +37,25 @@ Current state:
 - Core systems are broad: campaigns, Free Play, three playable race prototypes, AI, powers, fog, minimap, tests, builds.
 - Biggest weakness is now visual presentation and screenshot quality.
 
-## Next Target - v0.15.0
+## 2026-07-08 - v0.15.0 Battlefield Identity Update
 
 Working title:
 
 - **Battlefield Identity Update**
 
-Main goal:
+Implemented:
 
-- Make the game actually look good.
+- Replaced the flat checker ground with sci-fi tactical floor plates.
+- Added player/enemy base identity pads with faction glow.
+- Added center beacon, lane guide lines, visible cliff-edge glow, and animated signal arrays.
+- Added unit idle motion, building accent pulsing, melee swipe arcs, and damage-class impact sparks.
+- Added race-accent HUD top edge and a cleaner objective strip.
+- Added smoke-test coverage for `PlayerBasePad`, `EnemyBasePad`, and `CenterBeacon`.
+
+Still pre-alpha:
+
+- This is the first implemented slice of the big visual mind map, not a full alpha gate.
+- Next visual targets are menu screenshots, briefing presentation, and richer race-specific FX.
 
 Design rule:
 
@@ -63,4 +73,3 @@ Main pillars:
 Success sentence:
 
 > VoidClash is still early, but now it looks like a real strategy game with a clear identity.
-

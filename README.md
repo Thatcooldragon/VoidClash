@@ -1,6 +1,6 @@
 # VoidClash
 
-*Pre-Alpha v0.14.0 - Unity 6.3 (6000.3.16f1)*
+*Pre-Alpha v0.15.0 - Unity 6.3 (6000.3.16f1)*
 
 VoidClash is a real-time strategy game built entirely in Unity/C#, in the spirit of StarCraft. The
 player commands prototype Terran, Bubble, and Dots factions with worker economy, structure-driven
@@ -32,6 +32,15 @@ Unity.exe -batchmode -quit -projectPath <path> -executeMethod VoidClash.Editor.B
 
 The player lands at `Build/VoidClash.exe`. Release zips are stored separately from `Build/` so the
 repo stays source-first.
+
+## v0.15.0 Visual Update
+
+- Battlefield identity pass: sci-fi tactical ground plates, glowing lane guides, visible cliff edges,
+  base pads, and a center beacon.
+- Presentation motion: idle unit bob/sway, pulsing building accents, animated signal lamps, and
+  rotating signal dishes.
+- Combat feedback: melee swipe arcs and damage-class impact sparks.
+- HUD polish: race-colored top bar edge and a cleaner objective strip.
 
 ## Modes
 

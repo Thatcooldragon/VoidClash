@@ -4,6 +4,17 @@ Goal: make VoidClash finally look good while still staying honest as pre-alpha /
 
 Core idea: the game already has systems. The next update should make every screenshot say: "this is a real game now."
 
+## Implemented First Slice - 2026-07-08
+
+- Sci-fi tactical ground plate texture replaced the old simple checker ground.
+- Player and enemy base pads now frame the opening bases.
+- Center beacon, lane guides, and cliff-edge glow make the battlefield readable.
+- Signal lamps pulse and signal dishes rotate for ambient motion.
+- Units gained idle bob/sway; building accent pieces pulse.
+- Melee attacks gained swipe arcs; hitscan/melee impacts now vary by damage class.
+- HUD gained a race-accent top edge and objective strip.
+- Smoke tests now verify the base pads and center beacon exist.
+
 ```mermaid
 mindmap
   root((VoidClash v0.15 Battlefield Identity Update))
@@ -177,4 +188,3 @@ Do not add a fourth race or a huge new mechanic until the current game looks goo
 This update wins if someone sees one screenshot and thinks:
 
 > "Okay, this is still early, but it has a real identity now."
-

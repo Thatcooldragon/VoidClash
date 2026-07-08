@@ -30,8 +30,10 @@ namespace VoidClash
 
             BuildGround();
             BuildGrid();
+            BuildBasePads();
             BuildBorder();
             BuildRidges();
+            BuildLaneGuides();
             BuildRocks();
             BuildMinerals();
             BuildExpansionMarkers();
@@ -149,6 +151,7 @@ namespace VoidClash
             mod.overrideArea = true;
             mod.area = 1; // Not Walkable
             BlockedRects.Add(new Rect(cx - w * 0.5f, cz - d * 0.5f, w, d));
+            AddBarrierEdge(cx, cz, w, d);
 
             // jumbled boulder crown along the top — breaks up the box silhouette (visual only)
             var rng = new System.Random((int)(cx * 73 + cz * 131) ^ 0x5f17);
@@ -178,6 +181,114 @@ namespace VoidClash
                 chunk.transform.localScale = new Vector3(sx, sh, sz);
                 chunk.GetComponent<Renderer>().sharedMaterial = MaterialLibrary.Get("rock");
             }
+        }
+
+        void AddBarrierEdge(float cx, float cz, float w, float d)
+        {
+            bool alongX = w >= d;
+            var edge = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            edge.name = "CliffEdge";
+            DestroyImmediate(edge.GetComponent<Collider>());
+            edge.transform.SetParent(_root, false);
+            edge.transform.position = new Vector3(cx, GroundHeight(cx, cz) + 0.09f, cz);
+            edge.transform.localScale = alongX
+                ? new Vector3(w * 0.94f, 0.08f, Mathf.Min(0.28f, d * 0.55f))
+                : new Vector3(Mathf.Min(0.28f, w * 0.55f), 0.08f, d * 0.94f);
+            edge.GetComponent<Renderer>().sharedMaterial = MaterialLibrary.Get("lane_edge");
+            edge.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        }
+
+        void BuildBasePads()
+        {
+            var parent = new GameObject("BaseIdentity").transform;
+            parent.SetParent(_root, false);
+            BuildFactionPad(parent, "PlayerBasePad", PlayerBasePos, "base_player", "player_accent", 45f);
+            BuildFactionPad(parent, "EnemyBasePad", EnemyBasePos, "base_enemy", "enemy_accent", 225f);
+        }
+
+        void BuildFactionPad(Transform parent, string name, Vector3 pos, string padMat, string accentMat, float yaw)
+        {
+            var root = new GameObject(name).transform;
+            root.SetParent(parent, false);
+            root.position = pos + Vector3.up * 0.04f;
+            root.rotation = Quaternion.Euler(0f, yaw, 0f);
+
+            var deck = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            deck.name = "CommandDeck";
+            DestroyImmediate(deck.GetComponent<Collider>());
+            deck.transform.SetParent(root, false);
+            deck.transform.localScale = new Vector3(7.5f, 0.045f, 7.5f);
+            deck.GetComponent<Renderer>().sharedMaterial = MaterialLibrary.Get("base_neutral");
+            deck.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+
+            AddRingSegments(root, 4.35f, 20, padMat, 0.1f, 0.42f);
+            AddRingSegments(root, 6.15f, 28, accentMat, 0.12f, 0.25f);
+
+            for (int i = -1; i <= 1; i++)
+            {
+                var strip = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                strip.name = "LaunchStripe";
+                DestroyImmediate(strip.GetComponent<Collider>());
+                strip.transform.SetParent(root, false);
+                strip.transform.localPosition = new Vector3(i * 1.15f, 0.08f, 3.2f);
+                strip.transform.localScale = new Vector3(0.32f, 0.06f, 3.6f);
+                strip.GetComponent<Renderer>().sharedMaterial = MaterialLibrary.Get(i == 0 ? accentMat : padMat);
+                strip.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            }
+
+            var beacon = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            beacon.name = "BaseBeacon";
+            DestroyImmediate(beacon.GetComponent<Collider>());
+            beacon.transform.SetParent(root, false);
+            beacon.transform.localPosition = new Vector3(0f, 0.35f, -3.85f);
+            beacon.transform.localScale = Vector3.one * 0.42f;
+            beacon.GetComponent<Renderer>().sharedMaterial = MaterialLibrary.Get(accentMat);
+            beacon.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            beacon.AddComponent<WorldPulse>().Amount = 0.12f;
+        }
+
+        void AddRingSegments(Transform parent, float radius, int segments, string mat, float height, float depth)
+        {
+            float circumference = 2f * Mathf.PI * radius;
+            for (int i = 0; i < segments; i++)
+            {
+                if (i % 4 == 3) continue;
+                float angle = i * (360f / segments);
+                var seg = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                seg.name = "PadRingSegment";
+                DestroyImmediate(seg.GetComponent<Collider>());
+                seg.transform.SetParent(parent, false);
+                seg.transform.localPosition = Quaternion.Euler(0f, angle, 0f) * Vector3.forward * radius + Vector3.up * height;
+                seg.transform.localRotation = Quaternion.Euler(0f, angle, 0f);
+                seg.transform.localScale = new Vector3(circumference / segments * 0.7f, 0.06f, depth);
+                seg.GetComponent<Renderer>().sharedMaterial = MaterialLibrary.Get(mat);
+                seg.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            }
+        }
+
+        void BuildLaneGuides()
+        {
+            var parent = new GameObject("BattlefieldGuides").transform;
+            parent.SetParent(_root, false);
+            AddLaneLine(parent, "MainAttackLane", PlayerBasePos + new Vector3(6f, 0f, 10f), EnemyBasePos + new Vector3(-6f, 0f, -10f), 0.11f);
+            AddLaneLine(parent, "NorthExpansionLane", PlayerBasePos + new Vector3(2f, 0f, 24f), EnemyExpansionPos + new Vector3(-4f, 0f, 3f), 0.065f);
+            AddLaneLine(parent, "SouthExpansionLane", PlayerExpansionPos + new Vector3(4f, 0f, -3f), EnemyBasePos + new Vector3(-2f, 0f, -24f), 0.065f);
+        }
+
+        void AddLaneLine(Transform parent, string name, Vector3 a, Vector3 b, float width)
+        {
+            var line = new GameObject(name);
+            line.transform.SetParent(parent, false);
+            var lr = line.AddComponent<LineRenderer>();
+            lr.sharedMaterial = MaterialLibrary.Get("lane_edge");
+            lr.positionCount = 2;
+            lr.SetPosition(0, new Vector3(a.x, GroundHeight(a.x, a.z) + 0.075f, a.z));
+            lr.SetPosition(1, new Vector3(b.x, GroundHeight(b.x, b.z) + 0.075f, b.z));
+            lr.startWidth = width;
+            lr.endWidth = width * 0.7f;
+            lr.numCapVertices = 2;
+            lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            lr.receiveShadows = false;
         }
 
         void BuildBorder()
@@ -297,8 +408,40 @@ namespace VoidClash
 
         void BuildLandmarks()
         {
+            BuildCenterBeacon();
             BuildSignalArray(new Vector3(-8f, 0f, 28f), -28f, "player_accent");
             BuildSignalArray(new Vector3(8f, 0f, -28f), 152f, "enemy_accent");
+        }
+
+        void BuildCenterBeacon()
+        {
+            var root = new GameObject("CenterBeacon").transform;
+            root.SetParent(_root, false);
+            root.position = Vector3.up * 0.05f;
+
+            var baseRing = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            baseRing.name = "CenterControlPad";
+            DestroyImmediate(baseRing.GetComponent<Collider>());
+            baseRing.transform.SetParent(root, false);
+            baseRing.transform.localScale = new Vector3(5.4f, 0.045f, 5.4f);
+            baseRing.GetComponent<Renderer>().sharedMaterial = MaterialLibrary.Get("base_neutral");
+            baseRing.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            AddRingSegments(root, 3.35f, 24, "center_beacon", 0.1f, 0.28f);
+
+            for (int i = 0; i < 4; i++)
+            {
+                float angle = i * 90f + 45f;
+                var pillar = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                pillar.name = "CenterPillar";
+                DestroyImmediate(pillar.GetComponent<Collider>());
+                pillar.transform.SetParent(root, false);
+                pillar.transform.localPosition = Quaternion.Euler(0f, angle, 0f) * Vector3.forward * 2.25f + Vector3.up * 0.75f;
+                pillar.transform.localRotation = Quaternion.Euler(0f, angle, 0f);
+                pillar.transform.localScale = new Vector3(0.28f, 1.5f, 0.28f);
+                pillar.GetComponent<Renderer>().sharedMaterial = MaterialLibrary.Get("center_beacon");
+                pillar.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                pillar.AddComponent<WorldPulse>().Amount = 0.05f;
+            }
         }
 
         void BuildSignalArray(Vector3 center, float yaw, string accentMat)
@@ -326,6 +469,7 @@ namespace VoidClash
                 lamp.transform.localPosition = new Vector3(x, 2.1f + i * 0.35f, 0f);
                 lamp.transform.localScale = Vector3.one * 0.22f;
                 lamp.GetComponent<Renderer>().sharedMaterial = MaterialLibrary.Get(accentMat);
+                lamp.AddComponent<WorldPulse>().Amount = 0.18f;
             }
 
             var dish = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
@@ -336,6 +480,9 @@ namespace VoidClash
             dish.transform.localRotation = Quaternion.Euler(82f, 0f, 0f);
             dish.transform.localScale = new Vector3(1.4f, 0.07f, 1.4f);
             dish.GetComponent<Renderer>().sharedMaterial = MaterialLibrary.Get("metal_dark");
+            var spin = dish.AddComponent<WorldSpin>();
+            spin.Axis = Vector3.up;
+            spin.DegreesPerSecond = 18f;
         }
 
         void SpawnCluster(Vector3 center, float facingDeg, int count)

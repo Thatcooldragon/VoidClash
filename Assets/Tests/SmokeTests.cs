@@ -60,6 +60,9 @@ namespace VoidClash.Tests
             Assert.IsNotNull(fog, "fog of war overlay should exist");
             Assert.Less(fog.transform.position.y, 0.5f, "fog overlay should sit on the battlefield, not above the camera view");
 
+            Assert.IsNotNull(GameObject.Find("PlayerBasePad"), "player base identity pad should exist");
+            Assert.IsNotNull(GameObject.Find("EnemyBasePad"), "enemy base identity pad should exist");
+            Assert.IsNotNull(GameObject.Find("CenterBeacon"), "center battlefield landmark should exist");
         }
 
         [UnityTearDown]

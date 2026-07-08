@@ -75,6 +75,46 @@ namespace VoidClash
         public void SpawnImpact(Vector3 pos, Faction f)
             => Burst("fx_impact", pos, FactionGlow(f), 10, 0.14f, 3.5f, 0.3f);
 
+        public void SpawnDamageImpact(Vector3 pos, Faction f, DamageClass dc)
+        {
+            Color color = FactionGlow(f);
+            int count = 10;
+            float size = 0.14f;
+            float speed = 3.5f;
+            if (dc == DamageClass.Siege)
+            {
+                color = new Color(1f, 0.72f, 0.18f);
+                count = 18;
+                size = 0.2f;
+                speed = 5.5f;
+            }
+            else if (dc == DamageClass.Piercing)
+            {
+                color = new Color(0.68f, 0.92f, 1f);
+                count = 8;
+                size = 0.1f;
+                speed = 6f;
+            }
+            Burst("fx_damage_impact", pos, color, count, size, speed, 0.34f, dc == DamageClass.Siege, dc == DamageClass.Siege ? 1.4f : 0f);
+        }
+
+        public void SpawnMeleeArc(Vector3 from, Vector3 to, Faction f)
+        {
+            var go = new GameObject("fx_melee_arc");
+            go.layer = LayerMask.NameToLayer("FX");
+            var lr = go.AddComponent<LineRenderer>();
+            lr.positionCount = 3;
+            Vector3 mid = Vector3.Lerp(from, to, 0.5f) + Vector3.up * 0.45f;
+            lr.SetPosition(0, from);
+            lr.SetPosition(1, mid);
+            lr.SetPosition(2, to);
+            lr.startWidth = 0.12f;
+            lr.endWidth = 0.02f;
+            lr.material = MaterialLibrary.Get(f == Faction.Player ? "projectile_player" : "projectile_enemy");
+            lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            go.AddComponent<FadeAndDie>().Init(0.12f);
+        }
+
         public void SpawnTracer(Vector3 from, Vector3 to, Faction f)
         {
             var go = new GameObject("fx_tracer");

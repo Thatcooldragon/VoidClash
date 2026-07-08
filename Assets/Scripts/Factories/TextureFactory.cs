@@ -28,15 +28,39 @@ namespace VoidClash
             tex.name = "tex_ground";
             tex.wrapMode = TextureWrapMode.Repeat;
             var px = new Color32[size * size];
-            var baseCol = new Color32(24, 29, 35, 255);
-            var subtle = new Color32(28, 34, 41, 255);
+            var deck = new Color(0.075f, 0.09f, 0.11f);
+            var panel = new Color(0.105f, 0.125f, 0.15f);
+            var seam = new Color(0.015f, 0.025f, 0.035f);
+            var glow = new Color(0.14f, 0.34f, 0.43f);
+            var hazard = new Color(0.55f, 0.38f, 0.11f);
 
             for (int y = 0; y < size; y++)
             {
                 for (int x = 0; x < size; x++)
                 {
-                    bool checker = ((x / 64) + (y / 64)) % 2 == 0;
-                    px[y * size + x] = checker ? baseCol : subtle;
+                    int panelX = x / 128;
+                    int panelY = y / 128;
+                    bool checker = (panelX + panelY) % 2 == 0;
+                    float fx = x / (float)size;
+                    float fy = y / (float)size;
+                    float n = Fbm(fx * 18f + 2.3f, fy * 18f + 5.7f, 4) - 0.45f;
+                    Color c = Color.Lerp(deck, panel, checker ? 0.62f : 0.34f);
+                    c += new Color(n, n, n) * 0.055f;
+
+                    int lx = x & 127;
+                    int ly = y & 127;
+                    int edge = Mathf.Min(Mathf.Min(lx, 127 - lx), Mathf.Min(ly, 127 - ly));
+                    if (edge < 3) c = Color.Lerp(c, seam, 0.82f);
+                    else if (edge < 6) c = Color.Lerp(c, glow, 0.18f);
+
+                    bool bolt = (lx == 18 || lx == 110) && (ly == 18 || ly == 110);
+                    if (bolt || (Mathf.Abs(lx - ly) < 2 && lx > 78 && ly < 122 && ((panelX + panelY) % 5 == 0)))
+                        c = Color.Lerp(c, hazard, bolt ? 0.65f : 0.35f);
+
+                    bool dataLine = (lx == 63 || ly == 63) && ((panelX * 17 + panelY * 23) % 4 == 0);
+                    if (dataLine) c = Color.Lerp(c, glow, 0.42f);
+
+                    px[y * size + x] = new Color(Mathf.Clamp01(c.r), Mathf.Clamp01(c.g), Mathf.Clamp01(c.b), 1f);
                 }
             }
             tex.SetPixels32(px); tex.Apply(true);

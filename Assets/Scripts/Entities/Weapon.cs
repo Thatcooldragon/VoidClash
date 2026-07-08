@@ -55,7 +55,11 @@ namespace VoidClash
             if (_melee)
             {
                 target.Health.TakeDamage(_damage, _dc, _owner);
-                if (G.Effects != null && seen) G.Effects.SpawnImpact(target.Position + Vector3.up * 0.5f, _owner.Faction);
+                if (G.Effects != null && seen)
+                {
+                    G.Effects.SpawnMeleeArc(muzzlePos, target.Position + Vector3.up * 0.5f, _owner.Faction);
+                    G.Effects.SpawnDamageImpact(target.Position + Vector3.up * 0.5f, _owner.Faction, _dc);
+                }
                 if (G.Audio != null && seen) G.Audio.PlayAt("melee", target.Position);
             }
             else if (_projectileSpeed > 0.5f)
@@ -72,7 +76,7 @@ namespace VoidClash
                 {
                     G.Effects.SpawnMuzzleFlash(muzzlePos, _owner.Faction);
                     G.Effects.SpawnTracer(muzzlePos, target.Position + Vector3.up * 0.5f, _owner.Faction);
-                    G.Effects.SpawnImpact(target.Position + Vector3.up * 0.5f, _owner.Faction);
+                    G.Effects.SpawnDamageImpact(target.Position + Vector3.up * 0.5f, _owner.Faction, _dc);
                 }
                 if (G.Audio != null && seen) G.Audio.PlayAt("fire", muzzlePos);
             }

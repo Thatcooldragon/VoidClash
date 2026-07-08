@@ -86,6 +86,13 @@ namespace VoidClash
             bar.anchoredPosition = Vector2.zero;
             bar.sizeDelta = new Vector2(0f, 42f);
 
+            var accentLine = UIFactory.Panel(bar, "accentLine", CurrentRaceAccent());
+            accentLine.anchorMin = new Vector2(0f, 0f);
+            accentLine.anchorMax = new Vector2(1f, 0f);
+            accentLine.pivot = new Vector2(0.5f, 0f);
+            accentLine.anchoredPosition = Vector2.zero;
+            accentLine.sizeDelta = new Vector2(0f, 3f);
+
             var mineralIcon = UIFactory.Panel(bar, "mineralIcon", new Color(0.3f, 0.85f, 1f, 1f));
             UIFactory.SetRect(mineralIcon, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(14f, 0f), new Vector2(20f, 20f));
             mineralIcon.rotation = Quaternion.Euler(0, 0, 45f);
@@ -114,8 +121,13 @@ namespace VoidClash
             UIFactory.SetRect((RectTransform)armyBtn.transform, new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(-150f, 0f), new Vector2(160f, 30f));
             _armyText = armyBtn.GetComponentInChildren<Text>();
 
-            _objectiveText = UIFactory.Label(_canvas.transform, "Objective", "", 19, TextAnchor.MiddleCenter, new Color(0.8f, 0.9f, 1f));
-            UIFactory.SetRect(_objectiveText.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -58f), new Vector2(960f, 28f));
+            var objectiveBack = UIFactory.Panel(_canvas.transform, "ObjectiveBack", new Color(0.02f, 0.03f, 0.04f, 0.66f));
+            UIFactory.SetRect(objectiveBack, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -58f), new Vector2(980f, 31f));
+            var objectiveStripe = UIFactory.Panel(objectiveBack, "objectiveStripe", CurrentRaceAccent());
+            UIFactory.SetRect(objectiveStripe, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0f), new Vector2(4f, 24f));
+
+            _objectiveText = UIFactory.Label(objectiveBack, "Objective", "", 19, TextAnchor.MiddleCenter, new Color(0.8f, 0.9f, 1f));
+            UIFactory.SetRect(_objectiveText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(960f, 28f));
             RefreshObjective();
         }
 
@@ -155,10 +167,10 @@ namespace VoidClash
             if (_objectiveText == null) return;
             if (!Campaign.IsCampaign || Campaign.Current == null || string.IsNullOrEmpty(Campaign.Current.objective))
             {
-                _objectiveText.gameObject.SetActive(false);
+                _objectiveText.transform.parent.gameObject.SetActive(false);
                 return;
             }
-            _objectiveText.gameObject.SetActive(true);
+            _objectiveText.transform.parent.gameObject.SetActive(true);
             _objectiveText.text = $"Objective: {Campaign.Current.objective}";
         }
 
