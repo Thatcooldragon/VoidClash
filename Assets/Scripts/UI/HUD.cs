@@ -847,11 +847,23 @@ namespace VoidClash
             _briefingPanel = UIFactory.Panel(_canvas.transform, "Briefing", new Color(0f, 0f, 0f, 0.82f));
             UIFactory.Stretch(_briefingPanel);
             var box = UIFactory.Panel(_briefingPanel, "box", UIFactory.PanelColor);
-            UIFactory.SetRect(box, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(760f, 460f));
+            UIFactory.SetRect(box, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(820f, 500f));
             var t = UIFactory.Label(box, "title", title, 32, TextAnchor.MiddleCenter, new Color(0.5f, 0.85f, 1f));
-            UIFactory.SetRect(t.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -46f), new Vector2(700f, 50f));
-            var b = UIFactory.Label(box, "body", body, 21, TextAnchor.UpperLeft);
-            UIFactory.SetRect(b.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -230f), new Vector2(660f, 280f));
+            UIFactory.SetRect(t.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -40f), new Vector2(720f, 50f));
+
+            var stripe = UIFactory.Panel(box, "stripe", CurrentRaceAccent());
+            UIFactory.SetRect(stripe, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -78f), new Vector2(560f, 3f));
+
+            string objective = Campaign.Current != null ? Campaign.Current.objective : "Destroy the enemy base.";
+            var objHeader = UIFactory.Label(box, "objHeader", "MISSION OBJECTIVE", 17, TextAnchor.MiddleLeft, new Color(0.58f, 0.78f, 1f));
+            UIFactory.SetRect(objHeader.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -112f), new Vector2(700f, 24f));
+            var obj = UIFactory.Label(box, "objective", objective, 22, TextAnchor.MiddleLeft, Color.white);
+            UIFactory.SetRect(obj.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -142f), new Vector2(700f, 32f));
+
+            var intel = UIFactory.Label(box, "intelHeader", "COMMAND INTEL", 17, TextAnchor.MiddleLeft, new Color(0.58f, 0.78f, 1f));
+            UIFactory.SetRect(intel.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -184f), new Vector2(700f, 24f));
+            var b = UIFactory.Label(box, "body", body, 20, TextAnchor.UpperLeft);
+            UIFactory.SetRect(b.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -318f), new Vector2(700f, 240f));
             var start = UIFactory.TextButton(box, "start", "ENGAGE", 24, () =>
             {
                 Time.timeScale = 1f;
@@ -860,6 +872,14 @@ namespace VoidClash
             });
             UIFactory.SetRect((RectTransform)start.transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 28f), new Vector2(260f, 56f));
             Time.timeScale = 0f; // hold the world while the commander reads
+        }
+
+        static Color CurrentRaceAccent()
+        {
+            var race = Campaign.Current != null ? Campaign.Current.playerRace : SkirmishConfig.PlayerRaceFromMode;
+            if (race == PlayerRace.Bubble) return new Color(0.35f, 1f, 0.85f, 0.95f);
+            if (race == PlayerRace.Dots) return new Color(1f, 0.58f, 0.28f, 0.95f);
+            return new Color(0.25f, 0.62f, 1f, 0.95f);
         }
     }
 }

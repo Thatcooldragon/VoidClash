@@ -13,9 +13,9 @@ namespace VoidClash
         const float Yaw = 45f;
         const float PanSpeed = 26f;
         const float EdgeSize = 8f;
-        const float ZoomMin = 13f, ZoomMax = 38f;
+        const float ZoomMin = 11f, ZoomMax = 34f;
 
-        float _zoom = 26f;
+        float _zoom = 21f;
         Vector3 _target; // point on ground the camera looks at
         float _shake;
 
@@ -24,7 +24,7 @@ namespace VoidClash
             var camGo = new GameObject("MainCamera");
             camGo.tag = "MainCamera";
             Cam = camGo.AddComponent<Camera>();
-            Cam.fieldOfView = 45f;
+            Cam.fieldOfView = 42f;
             Cam.nearClipPlane = 0.5f;
             Cam.farClipPlane = 300f;
             camGo.AddComponent<AudioListener>();

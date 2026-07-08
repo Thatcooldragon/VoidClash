@@ -63,6 +63,7 @@ namespace VoidClash
     public static class Campaign
     {
         public const string PrefUnlocked = "vc_campaign_unlocked";
+        public const string PrefUnlockedPrefix = "vc_campaign_unlocked_";
 
         public static MissionDef Current;
 
@@ -360,22 +361,166 @@ namespace VoidClash
                 firstWaveSize = 4,
                 waveSizeGrowth = 2,
             },
+            new MissionDef
+            {
+                index = 10,
+                title = "Bubble 4 - Glass Undertow",
+                menuBlurb = "Fight through Protoss armor with poison clouds.",
+                objective = "Use poison bubbles and Foam Turrets to break the Protoss holdout.",
+                victoryText = "The undertow slipped under the shields. Even armor can drown.",
+                defeatText = "Protoss lances burned the foam before the tide could gather.",
+                storyBeatText = "Protoss lines are slow and bright. Drag them through poison clouds before committing the swarm.",
+                storyBeatTime = 170f,
+                briefing = "Protoss scouts are testing the Bubble front with armored patrols.\n" +
+                           "Their units are tougher than Terran infantry, but they bunch up\n" +
+                           "around their towers. Build a Poison Pool, anchor your Spring with\n" +
+                           "Foam Turrets, then flood the lanes once the clouds soften them.\n\n" +
+                           "VICTORY: crack the Protoss holdout with poison and massed bubbles.",
+                playerRace = PlayerRace.Bubble,
+                enemyRace = EnemyRace.Protoss,
+                aiPersonality = AIPersonality.Tech,
+                armyMix = new[] { "zealot", "zealot", "stalker" },
+                playerStartMinerals = 190,
+                enemyStartMinerals = 170,
+                aiWorkerCap = 11,
+                aiBuildsFactory = true,
+                aiTurrets = 2,
+                firstWaveTime = 205f,
+                waveInterval = 105f,
+                firstWaveSize = 7,
+                waveSizeGrowth = 4,
+            },
+            new MissionDef
+            {
+                index = 11,
+                title = "Dots 2 - Needle Orbit",
+                menuBlurb = "Use Kites and Spikes to fight at range.",
+                objective = "Form Dot Kites and Dot Spikes, then destroy the Terran sensor line.",
+                victoryText = "The sensor line is blind. The Dots learned to fight from orbit.",
+                defeatText = "The sensor net pinned the Core before the shapes could spread.",
+                storyBeatText = "Kites can cross pressure safely; Spikes outrange infantry but must stay screened.",
+                storyBeatTime = 135f,
+                briefing = "The Terrans have built a sensor line to track the Core Dot.\n" +
+                           "This is a range lesson: use <V> for flying Dot Kites, and <B>\n" +
+                           "for fragile long-range Dot Spikes. Keep loose Dots between\n" +
+                           "the Core and the enemy while your shapes pick apart the line.\n\n" +
+                           "VICTORY: make Kite and Spike shapes, then destroy the Terran base.",
+                playerRace = PlayerRace.Dots,
+                enemyRace = EnemyRace.Terran,
+                aiPersonality = AIPersonality.Expander,
+                armyMix = new[] { "soldier", "ranged", "ranged" },
+                playerStartMinerals = 230,
+                enemyStartMinerals = 110,
+                aiWorkerCap = 9,
+                aiBuildsFactory = false,
+                aiTurrets = 1,
+                firstWaveTime = 230f,
+                waveInterval = 105f,
+                firstWaveSize = 5,
+                waveSizeGrowth = 3,
+            },
+            new MissionDef
+            {
+                index = 12,
+                title = "Dots 3 - Giant Relay",
+                menuBlurb = "Chain Core Dots into a decisive Giant push.",
+                objective = "Form a Dot Giant, protect the released Core, and crush the Protoss relay.",
+                victoryText = "The relay collapsed. The Core came back humming.",
+                defeatText = "The relay split the swarm and stranded the Core.",
+                storyBeatText = "Do not spend every Core at once. A released Core can rebuild the whole shape army.",
+                storyBeatTime = 165f,
+                briefing = "A Protoss relay is broadcasting patterns that scramble loose Dots.\n" +
+                           "Build extra Printers, form a spare Core Dot, then commit a Giant\n" +
+                           "when your swarm can protect whatever Core escapes from the wreckage.\n\n" +
+                           "VICTORY: form a Giant and destroy the Protoss relay base.",
+                playerRace = PlayerRace.Dots,
+                enemyRace = EnemyRace.Protoss,
+                aiPersonality = AIPersonality.Tech,
+                armyMix = new[] { "zealot", "stalker", "stalker" },
+                playerStartMinerals = 260,
+                enemyStartMinerals = 190,
+                aiWorkerCap = 11,
+                aiBuildsFactory = true,
+                aiTurrets = 2,
+                firstWaveTime = 215f,
+                waveInterval = 105f,
+                firstWaveSize = 6,
+                waveSizeGrowth = 4,
+            },
         };
 
         public static int UnlockedCount
         {
-            get => Mathf.Clamp(PlayerPrefs.GetInt(PrefUnlocked, 1), 1, Missions.Length);
-            set => PlayerPrefs.SetInt(PrefUnlocked, Mathf.Clamp(value, 1, Missions.Length));
+            get => UnlockedForRace(PlayerRace.Terran);
+            set => SetUnlockedForRace(PlayerRace.Terran, value);
         }
 
         public static bool IsCampaign => Current != null;
-        public static bool HasNextMission => Current != null && Current.index + 1 < Missions.Length;
+        public static bool HasNextMission => NextMission(Current) != null;
 
         public static void NotifyVictory()
         {
             if (Current == null) return;
-            if (Current.index + 1 >= UnlockedCount)
-                UnlockedCount = Current.index + 2;
+            int rank = MissionRank(Current);
+            if (rank + 1 >= UnlockedForRace(Current.playerRace))
+                SetUnlockedForRace(Current.playerRace, rank + 2);
         }
+
+        public static int UnlockedForRace(PlayerRace race)
+        {
+            int count = CountMissionsForRace(race);
+            if (count <= 0) return 0;
+            int fallback = race == PlayerRace.Terran ? PlayerPrefs.GetInt(PrefUnlocked, 1) : 1;
+            return Mathf.Clamp(PlayerPrefs.GetInt(PrefKey(race), fallback), 1, count);
+        }
+
+        public static void SetUnlockedForRace(PlayerRace race, int value)
+        {
+            int count = CountMissionsForRace(race);
+            if (count <= 0) return;
+            PlayerPrefs.SetInt(PrefKey(race), Mathf.Clamp(value, 1, count));
+        }
+
+        public static int CountMissionsForRace(PlayerRace race)
+        {
+            int count = 0;
+            for (int i = 0; i < Missions.Length; i++)
+                if (Missions[i].playerRace == race) count++;
+            return count;
+        }
+
+        public static int MissionRank(MissionDef mission)
+        {
+            if (mission == null) return -1;
+            int rank = 0;
+            for (int i = 0; i < Missions.Length; i++)
+            {
+                if (Missions[i].playerRace != mission.playerRace) continue;
+                if (Missions[i] == mission || Missions[i].index == mission.index) return rank;
+                rank++;
+            }
+            return -1;
+        }
+
+        public static bool IsUnlocked(MissionDef mission)
+        {
+            int rank = MissionRank(mission);
+            return mission != null && rank >= 0 && rank < UnlockedForRace(mission.playerRace);
+        }
+
+        public static MissionDef NextMission(MissionDef mission)
+        {
+            if (mission == null) return null;
+            bool found = false;
+            for (int i = 0; i < Missions.Length; i++)
+            {
+                if (Missions[i].playerRace != mission.playerRace) continue;
+                if (found) return Missions[i];
+                if (Missions[i] == mission || Missions[i].index == mission.index) found = true;
+            }
+            return null;
+        }
+
+        static string PrefKey(PlayerRace race) => PrefUnlockedPrefix + race.ToString().ToLowerInvariant();
     }
 }

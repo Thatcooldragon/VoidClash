@@ -317,6 +317,37 @@ namespace VoidClash.Tests
         }
 
         [Test]
+        public void Campaign_RaceUnlocksAreIndependent()
+        {
+            PlayerPrefs.DeleteKey(Campaign.PrefUnlocked);
+            PlayerPrefs.DeleteKey(Campaign.PrefUnlockedPrefix + "terran");
+            PlayerPrefs.DeleteKey(Campaign.PrefUnlockedPrefix + "bubble");
+            PlayerPrefs.DeleteKey(Campaign.PrefUnlockedPrefix + "dots");
+
+            MissionDef terranFirst = null, bubbleFirst = null, dotsFirst = null;
+            foreach (var mission in Campaign.Missions)
+            {
+                if (mission.playerRace == PlayerRace.Terran && terranFirst == null) terranFirst = mission;
+                if (mission.playerRace == PlayerRace.Bubble && bubbleFirst == null) bubbleFirst = mission;
+                if (mission.playerRace == PlayerRace.Dots && dotsFirst == null) dotsFirst = mission;
+            }
+
+            Assert.IsTrue(Campaign.IsUnlocked(terranFirst), "first Terran mission starts unlocked");
+            Assert.IsTrue(Campaign.IsUnlocked(bubbleFirst), "first Bubble mission starts unlocked without Terran progress");
+            Assert.IsTrue(Campaign.IsUnlocked(dotsFirst), "first Dots mission starts unlocked without Terran progress");
+            Assert.AreEqual(1, Campaign.UnlockedForRace(PlayerRace.Terran), "Terran starts at first mission");
+            Assert.AreEqual(1, Campaign.UnlockedForRace(PlayerRace.Bubble), "Bubble starts at first mission");
+            Assert.AreEqual(1, Campaign.UnlockedForRace(PlayerRace.Dots), "Dots starts at first mission");
+
+            Campaign.Current = bubbleFirst;
+            Campaign.NotifyVictory();
+            Assert.AreEqual(2, Campaign.UnlockedForRace(PlayerRace.Bubble), "Bubble victory unlocks Bubble mission 2");
+            Assert.AreEqual(1, Campaign.UnlockedForRace(PlayerRace.Terran), "Bubble victory does not unlock Terran");
+            Assert.AreEqual(1, Campaign.UnlockedForRace(PlayerRace.Dots), "Bubble victory does not unlock Dots");
+            Assert.AreEqual("Bubble 2 - Toxic Pop", Campaign.NextMission(bubbleFirst).title, "next mission follows the same race arc");
+        }
+
+        [Test]
         public void V03DeferredHalf_DataAndAudioDefinitionsExist()
         {
             var db = GameDatabase.BuildTransient();
@@ -346,9 +377,8 @@ namespace VoidClash.Tests
                 Assert.IsFalse(string.IsNullOrEmpty(mission.briefing), $"{mission.title} has briefing");
                 Assert.IsTrue(mission.objective.Contains("Terran") || mission.objective.Contains("poison"),
                     $"{mission.title} explains a Bubble-facing objective");
-                Assert.AreEqual(EnemyRace.Terran, mission.enemyRace, $"{mission.title} starts against Terran for balance");
             }
-            Assert.GreaterOrEqual(bubbleMissions, 3, "v0.8 Bubble campaign missions");
+            Assert.GreaterOrEqual(bubbleMissions, 4, "Bubble campaign has expanded missions");
         }
 
         [Test]
@@ -359,11 +389,18 @@ namespace VoidClash.Tests
             {
                 if (mission.playerRace != PlayerRace.Dots) continue;
                 dotsMissions++;
-                Assert.IsTrue(mission.objective.Contains("Giant"), $"{mission.title} teaches the Giant shape");
-                Assert.IsTrue(mission.briefing.Contains("Core Dot"), $"{mission.title} explains the Core Dot");
-                Assert.AreEqual(EnemyRace.Terran, mission.enemyRace, $"{mission.title} starts against Terran for balance");
+                Assert.IsTrue(
+                    mission.objective.Contains("Giant") ||
+                    mission.objective.Contains("Kites") ||
+                    mission.objective.Contains("Spikes"),
+                    $"{mission.title} teaches a Dots shape");
+                Assert.IsTrue(
+                    mission.briefing.Contains("Core Dot") ||
+                    mission.briefing.Contains("Dot Kites") ||
+                    mission.briefing.Contains("Dot Spikes"),
+                    $"{mission.title} explains Dots mechanics");
             }
-            Assert.GreaterOrEqual(dotsMissions, 1, "Dots tutorial campaign mission");
+            Assert.GreaterOrEqual(dotsMissions, 3, "Dots campaign has expanded missions");
         }
 
         [Test]

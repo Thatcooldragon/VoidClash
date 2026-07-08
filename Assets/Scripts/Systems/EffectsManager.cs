@@ -138,6 +138,31 @@ namespace VoidClash
             r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             go.AddComponent<ShrinkAndDie>().Init(0.6f);
         }
+
+        public void SpawnPowerMarker(Vector3 pos, float radius, bool hostile)
+        {
+            var go = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            go.name = hostile ? "fx_power_hostile" : "fx_power_support";
+            Destroy(go.GetComponent<Collider>());
+            go.transform.position = pos + Vector3.up * 0.09f;
+            go.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+            go.transform.localScale = Vector3.one * (radius * 2f);
+            go.layer = LayerMask.NameToLayer("FX");
+            var r = go.GetComponent<Renderer>();
+            r.sharedMaterial = MaterialLibrary.Get(hostile ? "marker_attack" : "marker_move");
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            go.AddComponent<PulseAndDie>().Init(1.35f, 0.82f, 1.08f);
+
+            var lightGo = new GameObject("PowerMarkerGlow");
+            lightGo.transform.SetParent(go.transform, false);
+            lightGo.transform.localPosition = Vector3.up * 0.5f;
+            var light = lightGo.AddComponent<Light>();
+            light.type = LightType.Point;
+            light.color = hostile ? new Color(1f, 0.28f, 0.2f) : new Color(0.35f, 1f, 0.55f);
+            light.intensity = hostile ? 1.6f : 1.1f;
+            light.range = radius * 1.6f;
+            lightGo.AddComponent<FadeAndDie>().Init(1.35f);
+        }
     }
 
     public class FadeAndDie : MonoBehaviour
@@ -173,6 +198,30 @@ namespace VoidClash
             _life -= Time.deltaTime;
             float t = Mathf.Clamp01(_life / _total);
             transform.localScale = _startScale * (0.4f + 0.6f * t);
+            if (_life <= 0f) Destroy(gameObject);
+        }
+    }
+
+    public class PulseAndDie : MonoBehaviour
+    {
+        float _life, _total, _from, _to;
+        Vector3 _startScale;
+
+        public void Init(float life, float from, float to)
+        {
+            _life = _total = life;
+            _from = from;
+            _to = to;
+            _startScale = transform.localScale;
+            transform.localScale = _startScale * _from;
+        }
+
+        void Update()
+        {
+            _life -= Time.deltaTime;
+            float t = 1f - Mathf.Clamp01(_life / _total);
+            float pulse = Mathf.Lerp(_from, _to, Mathf.SmoothStep(0f, 1f, t));
+            transform.localScale = _startScale * pulse;
             if (_life <= 0f) Destroy(gameObject);
         }
     }

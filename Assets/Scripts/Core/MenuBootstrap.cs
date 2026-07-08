@@ -184,7 +184,7 @@ namespace VoidClash
             var status = UIFactory.Panel(canvas.transform, "BottomStatus", new Color(0.02f, 0.04f, 0.08f, 0.82f));
             UIFactory.SetRect(status, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 18f), new Vector2(980f, 54f));
             var hint = UIFactory.Label(status, "hint",
-                "v0.12.0 pre-alpha  |  SKIRMISH: any race vs any race + difficulty. Terran, Bubble, Dots.",
+                "v0.14.0 pre-alpha  |  FREE PLAY: choose your race, AI race, and difficulty.",
                 18, TextAnchor.MiddleCenter, new Color(0.6f, 0.75f, 0.9f));
             UIFactory.Stretch(hint.rectTransform, 8f);
         }
@@ -198,7 +198,7 @@ namespace VoidClash
             UIFactory.SetRect(sigil.rectTransform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(18f, 0f), new Vector2(72f, 48f));
 
             TopNavButton(top, "CAMPAIGN", 120f, 200f, true, () => ShowCampaign(true, PlayerRace.Terran));
-            TopNavButton(top, "SKIRMISH", 330f, 200f, false, () => ShowSkirmish(true));
+            TopNavButton(top, "FREE PLAY", 330f, 200f, false, () => ShowSkirmish(true));
             TopNavButton(top, "OPTIONS", 540f, 180f, false, () => ShowOptions(true));
             TopNavButton(top, "QUIT", 730f, 150f, false, GameManager.QuitApplication);
         }
@@ -310,13 +310,21 @@ namespace VoidClash
             for (int i = 0; i < missions.Count; i++)
             {
                 var m = missions[i];
-                bool isUnlocked = IsMissionUnlocked(m);
+                bool isUnlocked = Campaign.IsUnlocked(m);
                 var captured = m;
                 string blurb = string.IsNullOrEmpty(m.menuBlurb) ? "Deploy and complete the objective." : m.menuBlurb;
                 var btn = UIFactory.TextButton(_campaignPanel, $"m{i}",
-                    isUnlocked ? $"{m.title}\n{blurb}" : $"{m.title}\n[ LOCKED - clear the previous mission ]",
+                    isUnlocked ? $"{m.title}\n{blurb}" : $"{m.title}\n[ LOCKED - clear the previous {RaceTitle(race)} mission ]",
                     18,
-                    () => { if (isUnlocked) { Campaign.Current = captured; SkirmishConfig.Mode = SkirmishMode.Terran; SceneManager.LoadScene("Game"); } },
+                    () =>
+                    {
+                        if (isUnlocked)
+                        {
+                            Campaign.Current = captured;
+                            SkirmishConfig.SetSkirmish(captured.playerRace, PlayerRace.Terran, Difficulty.Normal);
+                            SceneManager.LoadScene("Game");
+                        }
+                    },
                     isUnlocked ? UIFactory.PanelLight : new Color(0.07f, 0.09f, 0.12f, 0.95f));
                 btn.interactable = isUnlocked;
                 UIFactory.SetRect((RectTransform)btn.transform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
@@ -342,7 +350,7 @@ namespace VoidClash
             if (_skirmishPanel != null) _skirmishPanel.gameObject.SetActive(false);
         }
 
-        // ---------- New Skirmish (any race vs any race + difficulty) ----------
+        // ---------- Free Play (any race vs any race + difficulty) ----------
 
         RectTransform _skirmishPanel;
         PlayerRace _skPlayer = PlayerRace.Terran;
@@ -362,7 +370,7 @@ namespace VoidClash
             if (_skirmishPanel == null) return;
             foreach (Transform c in _skirmishPanel) Destroy(c.gameObject);
 
-            var title = UIFactory.Label(_skirmishPanel, "title", "NEW SKIRMISH", 32, TextAnchor.MiddleCenter);
+            var title = UIFactory.Label(_skirmishPanel, "title", "FREE PLAY SETUP", 32, TextAnchor.MiddleCenter);
             UIFactory.SetRect(title.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -40f), new Vector2(500f, 44f));
 
             ChoiceRow("Your race", -110f, new[] { "Terran", "Bubble", "Dots" }, (int)_skPlayer,
@@ -372,7 +380,7 @@ namespace VoidClash
             ChoiceRow("Difficulty", -260f, new[] { "Easy", "Normal", "Hard" }, (int)_skDifficulty,
                 i => { _skDifficulty = (Difficulty)i; RebuildSkirmishPanel(); });
 
-            var start = UIFactory.TextButton(_skirmishPanel, "start", "START BATTLE", 24, StartSkirmish,
+            var start = UIFactory.TextButton(_skirmishPanel, "start", "START FREE PLAY", 24, StartSkirmish,
                 new Color(0.16f, 0.5f, 0.28f, 0.95f));
             UIFactory.SetRect((RectTransform)start.transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 92f), new Vector2(320f, 58f));
 
@@ -422,13 +430,11 @@ namespace VoidClash
             return list;
         }
 
-        static bool IsMissionUnlocked(MissionDef mission) => mission != null && mission.index < Campaign.UnlockedCount;
-
         static int ClearedForRace(PlayerRace race)
         {
             int cleared = 0;
             for (int i = 0; i < Campaign.Missions.Length; i++)
-                if (Campaign.Missions[i].playerRace == race && Campaign.Missions[i].index < Campaign.UnlockedCount - 1)
+                if (Campaign.Missions[i].playerRace == race && Campaign.MissionRank(Campaign.Missions[i]) < Campaign.UnlockedForRace(race) - 1)
                     cleared++;
             return cleared;
         }

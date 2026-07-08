@@ -82,8 +82,9 @@ namespace VoidClash
 
         public void LoadNextMission()
         {
-            if (!Campaign.HasNextMission) return;
-            Campaign.Current = Campaign.Missions[Campaign.Current.index + 1];
+            var next = Campaign.NextMission(Campaign.Current);
+            if (next == null) return;
+            Campaign.Current = next;
             Time.timeScale = 1f;
             SceneManager.LoadScene("Game");
         }
