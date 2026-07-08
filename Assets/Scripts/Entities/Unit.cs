@@ -14,6 +14,14 @@ namespace VoidClash
         public Weapon Weapon { get; private set; }
         public UnitState State { get; protected set; } = UnitState.Idle;
 
+        // ---- power effects (Freeze / Overdrive) ----
+        public bool IsFrozen => Time.time < _frozenUntil;
+        public bool IsOverdriven => Time.time < _overdriveUntil;
+        float _frozenUntil;
+        float _overdriveUntil;
+        GameObject _iceVisual;
+        GameObject _odGlow;
+
         public override bool IsBuilding => false;
         public override string DisplayName => Data != null ? Data.displayName : name;
         public override ArmorClass ArmorClass => Data != null ? Data.armorClass : ArmorClass.Light;
@@ -129,9 +137,18 @@ namespace VoidClash
 
         // ---------- Update loop ----------
 
+        /// <summary>Runs buff upkeep and returns true if the unit is frozen (caller should skip its tick).</summary>
+        protected bool TickBuffsAndFreeze()
+        {
+            TickBuffs();
+            if (IsFrozen) { StopAgent(); return true; }
+            return false;
+        }
+
         protected virtual void Update()
         {
             if (IsDead || Data == null) return;
+            if (TickBuffsAndFreeze()) return; // frozen units can't move or fire
             switch (State)
             {
                 case UnitState.Idle: TickIdle(); break;
@@ -139,6 +156,62 @@ namespace VoidClash
                 case UnitState.AttackMove: TickAttackMove(); break;
                 case UnitState.Attack: TickAttack(); break;
                 case UnitState.Hold: TickHold(); break;
+            }
+        }
+
+        // ---------- Power effects ----------
+
+        /// <summary>Freeze Ray: stop the unit cold for a while.</summary>
+        public void Freeze(float duration)
+        {
+            if (IsDead) return;
+            _frozenUntil = Mathf.Max(_frozenUntil, Time.time + duration);
+            StopAgent();
+            if (_iceVisual == null)
+            {
+                _iceVisual = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                _iceVisual.name = "Ice";
+                Destroy(_iceVisual.GetComponent<Collider>());
+                _iceVisual.transform.SetParent(transform, false);
+                _iceVisual.transform.localPosition = new Vector3(0f, 0.75f * Data.bodyScale, 0f);
+                _iceVisual.transform.localRotation = Quaternion.Euler(12f, 30f, 8f);
+                _iceVisual.transform.localScale = Vector3.one * (1.5f * Data.bodyScale);
+                var r = _iceVisual.GetComponent<Renderer>();
+                r.sharedMaterial = MaterialLibrary.Get("frost");
+                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            }
+        }
+
+        /// <summary>Overdrive/Stim: temporary move + attack-speed boost with a glowing aura.</summary>
+        public void ApplyOverdrive(float duration, float speedMult = 1.6f, float atkScale = 0.55f)
+        {
+            if (IsDead || Data == null) return;
+            _overdriveUntil = Time.time + duration;
+            if (Agent != null && Agent.isOnNavMesh) Agent.speed = Data.moveSpeed * speedMult;
+            if (Weapon != null) Weapon.SetCooldownScale(atkScale);
+            if (_odGlow == null)
+            {
+                _odGlow = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                _odGlow.name = "OverdriveAura";
+                Destroy(_odGlow.GetComponent<Collider>());
+                _odGlow.transform.SetParent(transform, false);
+                _odGlow.transform.localPosition = new Vector3(0f, 0.7f * Data.bodyScale, 0f);
+                _odGlow.transform.localScale = Vector3.one * (1.8f * Data.bodyScale);
+                var r = _odGlow.GetComponent<Renderer>();
+                r.sharedMaterial = MaterialLibrary.Get("overdrive");
+                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            }
+        }
+
+        void TickBuffs()
+        {
+            if (_iceVisual != null && !IsFrozen) { Destroy(_iceVisual); _iceVisual = null; }
+            if (_overdriveUntil > 0f && Time.time > _overdriveUntil)
+            {
+                _overdriveUntil = 0f;
+                if (Agent != null && Agent.isOnNavMesh) Agent.speed = Data.moveSpeed;
+                if (Weapon != null) Weapon.SetCooldownScale(1f);
+                if (_odGlow != null) { Destroy(_odGlow); _odGlow = null; }
             }
         }
 

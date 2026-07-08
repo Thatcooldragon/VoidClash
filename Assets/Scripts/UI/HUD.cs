@@ -35,6 +35,7 @@ namespace VoidClash
             BuildMinimapPanel();
             BuildSelectionPanel();
             BuildCommandCard();
+            BuildPowersPanel();
             BuildNotify();
             BuildDragRect();
             BuildTooltip();
@@ -69,6 +70,7 @@ namespace VoidClash
                 _refreshTimer = 0.35f;
                 RefreshIdleWorkers();
                 RefreshArmyCount();
+                RefreshPowers();
                 RefreshSelectionPanel(); // live HP / queue readout; card rebuilds only on selection change
             }
         }
@@ -340,6 +342,65 @@ namespace VoidClash
         }
 
         // ---------- Command card ----------
+
+        // ---------- Commander powers panel ----------
+
+        readonly UnityEngine.UI.Button[] _powerBtns = new UnityEngine.UI.Button[4];
+        readonly Text[] _powerLabels = new Text[4];
+        readonly string[] _powerNames = new string[4];
+
+        static PlayerRace CurrentPlayerRace =>
+            Campaign.Current != null ? Campaign.Current.playerRace : SkirmishConfig.PlayerRaceFromMode;
+
+        void BuildPowersPanel()
+        {
+            var panel = UIFactory.Panel(_canvas.transform, "PowersPanel", UIFactory.PanelColor);
+            UIFactory.SetRect(panel, new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(270f, 10f), new Vector2(392f, 66f));
+
+            var race = CurrentPlayerRace;
+            string od = race == PlayerRace.Terran ? "Stim" : (race == PlayerRace.Bubble ? "Froth" : "Overclock");
+            _powerNames[0] = "Airstrike"; _powerNames[1] = "Heal"; _powerNames[2] = "Freeze"; _powerNames[3] = od;
+
+            System.Action[] acts =
+            {
+                () => G.Input.BeginPower(CommanderPower.Airstrike),
+                () => G.Input.BeginPower(CommanderPower.HealWave),
+                () => G.Input.BeginPower(CommanderPower.Freeze),
+                () => { if (G.Powers != null) G.Powers.TryOverdrive(); },
+            };
+            for (int i = 0; i < 4; i++)
+            {
+                int captured = i;
+                var btn = UIFactory.TextButton(panel, $"pw{i}", _powerNames[i], 14, acts[i], UIFactory.PanelLight);
+                UIFactory.SetRect((RectTransform)btn.transform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f),
+                    new Vector2(8f + captured * 94f, 0f), new Vector2(90f, 52f));
+                _powerBtns[i] = btn;
+                _powerLabels[i] = btn.GetComponentInChildren<Text>();
+            }
+            RefreshPowers();
+        }
+
+        void RefreshPowers()
+        {
+            if (_powerBtns[0] == null || G.Powers == null) return;
+
+            bool pReady = G.Powers.PowerReady;
+            int pPct = Mathf.RoundToInt(G.Powers.PowerCharge * 100f);
+            for (int i = 0; i < 3; i++)
+            {
+                _powerLabels[i].text = pReady ? $"{_powerNames[i]}\n<F{i + 3}>" : $"{_powerNames[i]}\n{pPct}%";
+                _powerBtns[i].interactable = pReady;
+                var img = _powerBtns[i].GetComponent<Image>();
+                if (img != null) img.color = pReady ? UIFactory.PanelLight : new Color(0.08f, 0.1f, 0.13f, 0.92f);
+            }
+
+            bool odReady = G.Powers.OverdriveReady;
+            int odPct = Mathf.RoundToInt(G.Powers.OverdriveCharge * 100f);
+            _powerLabels[3].text = odReady ? $"{_powerNames[3]}\n<F6>" : $"{_powerNames[3]}\n{odPct}%";
+            _powerBtns[3].interactable = odReady;
+            var oimg = _powerBtns[3].GetComponent<Image>();
+            if (oimg != null) oimg.color = odReady ? new Color(0.2f, 0.42f, 0.16f, 0.95f) : new Color(0.08f, 0.1f, 0.13f, 0.92f);
+        }
 
         void BuildCommandCard()
         {

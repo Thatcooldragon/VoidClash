@@ -1,6 +1,6 @@
 # VoidClash
 
-*Pre-Alpha v0.12.0 - Unity 6.3 (6000.3.16f1)*
+*Pre-Alpha v0.13.0 - Unity 6.3 (6000.3.16f1)*
 
 VoidClash is a real-time strategy game built entirely in Unity/C#, in the spirit of StarCraft. The
 player commands prototype Terran, Bubble, and Dots factions with worker economy, structure-driven
@@ -65,6 +65,8 @@ repo stays source-first.
 | L | Lift off or choose a landing zone for lift-capable buildings |
 | F1 | Select and jump to an idle Worker |
 | F2 | Select all combat army units |
+| F3 / F4 / F5 | Commander powers (target a spot): Airstrike / Heal Wave / Freeze |
+| F6 | Race Overdrive: boost the selected combat units |
 | Ctrl + 1-9 | Assign control group |
 | 1-9 | Recall control group; double-tap to jump camera |
 | Q / W / E / R / T / Y | Build hotkeys, or train hotkeys on production buildings |
@@ -110,6 +112,14 @@ Dots on their own; loose Dots are the race's raw material and are spent to creat
 Matrix unlocks shaping commands: Core Dot, flying Dot Kite, long-range Dot Spike, and Dot Giant.
 Core Dots trickle minerals. A Dot Giant costs loose Dots and swallows a Core Dot; when the Giant
 dies, the Core Dot escapes.
+
+## v0.13.0 Highlights
+
+- Commander Powers (player, F3/F4/F5, shared recharge): Airstrike (delayed AoE barrage), Heal Wave
+  (restores nearby units), and Freeze (locks enemy units in place for a few seconds).
+- Race Overdrive (F6, own recharge): temporarily boosts the selected combat units' move + attack
+  speed. Flavored per race — Terran Stim, Bubble Froth, Dots Overclock.
+- New HUD powers panel shows each ability's live recharge.
 
 ## v0.12.0 Highlights
 

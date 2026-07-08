@@ -107,6 +107,7 @@ namespace VoidClash
         protected override void Update()
         {
             if (IsDead || Data == null) return;
+            if (TickBuffsAndFreeze()) return; // frozen workers stop harvesting/building too
             if (State == UnitState.Harvest) TickHarvest();
             else if (State == UnitState.Build) TickBuild();
             else base.Update();

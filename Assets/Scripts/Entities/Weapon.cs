@@ -14,8 +14,12 @@ namespace VoidClash
         Transform _muzzle;
         bool _melee;
         float _nextFire;
+        float _cooldownScale = 1f; // Overdrive shortens this
 
         public float Range { get; private set; }
+
+        /// <summary>Overdrive/stim scales the fire cooldown (1 = normal, &lt;1 = faster).</summary>
+        public void SetCooldownScale(float scale) => _cooldownScale = Mathf.Clamp(scale, 0.1f, 3f);
 
         public void Init(Entity owner, float damage, DamageClass dc, float range, float cooldown,
             float projectileSpeed, Transform muzzle, bool melee)
@@ -43,7 +47,7 @@ namespace VoidClash
         public bool TryFire(Entity target)
         {
             if (!Ready || !InRange(target)) return false;
-            _nextFire = Time.time + _cooldown;
+            _nextFire = Time.time + _cooldown * _cooldownScale;
 
             Vector3 muzzlePos = _muzzle.position;
             bool seen = _owner.Faction == Faction.Player || _owner.VisibleToPlayer;

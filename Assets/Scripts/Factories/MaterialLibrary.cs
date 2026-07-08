@@ -35,7 +35,7 @@ namespace VoidClash
             "crystal", "crystal_dim", "particle_add", "ghost_valid", "ghost_invalid",
             "hp_back", "hp_green", "hp_yellow", "hp_red", "hp_build",
             "ring_player", "ring_enemy", "ring_hover", "fog", "marker_move", "marker_attack",
-            "projectile_player", "projectile_enemy", "rally"
+            "projectile_player", "projectile_enemy", "rally", "frost", "overdrive"
         };
 
         public static Material Build(string name)
@@ -106,6 +106,13 @@ namespace VoidClash
                 case "projectile_player": return Emissive("mat_proj_player", new Color(0.4f, 0.8f, 1f), 3.5f);
                 case "projectile_enemy": return Emissive("mat_proj_enemy", new Color(1f, 0.45f, 0.3f), 3.5f);
                 case "rally": return Emissive("mat_rally", new Color(0.4f, 1f, 0.6f), 2f);
+                case "frost": return UnlitTransparent("mat_frost", new Color(0.55f, 0.85f, 1f, 0.45f));
+                case "overdrive":
+                {
+                    var m = UnlitTransparent("mat_overdrive", new Color(0.6f, 0.4f, 0.12f, 1f));
+                    SetTransparent(m, true); // additive warm glow aura
+                    return m;
+                }
                 default:
                     Debug.LogError($"VoidClash: unknown material '{name}'");
                     return Lit("mat_missing", Color.magenta);

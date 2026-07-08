@@ -53,6 +53,7 @@ namespace VoidClash
             G.Effects = gameObject.AddComponent<EffectsManager>();
             G.Bubble = gameObject.AddComponent<BubbleSystem>();
             G.Dots = gameObject.AddComponent<DotsSystem>();
+            G.Powers = gameObject.AddComponent<CommanderPowers>();
             G.Selection = gameObject.AddComponent<SelectionManager>();
             G.Input = gameObject.AddComponent<InputController>();
             G.Placer = gameObject.AddComponent<BuildingPlacer>();

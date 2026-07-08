@@ -8,8 +8,9 @@ namespace VoidClash
     /// A/S/H, control groups, build placement mode, pause.</summary>
     public class InputController : MonoBehaviour
     {
-        public enum Mode { Normal, AttackMoveTarget, Placement, LandTarget }
+        public enum Mode { Normal, AttackMoveTarget, Placement, LandTarget, PowerTarget }
         public Mode CurrentMode { get; private set; } = Mode.Normal;
+        CommanderPower _pendingPower;
 
         Vector3 _dragStartScreen;
         bool _dragging;
@@ -36,7 +37,8 @@ namespace VoidClash
             if (Input.GetKeyDown(KeyCode.Escape))
             {
                 if (CurrentMode == Mode.Placement) { G.Placer.Cancel(); CurrentMode = Mode.Normal; return; }
-                if (CurrentMode == Mode.AttackMoveTarget || CurrentMode == Mode.LandTarget) { CurrentMode = Mode.Normal; return; }
+                if (CurrentMode == Mode.AttackMoveTarget || CurrentMode == Mode.LandTarget
+                    || CurrentMode == Mode.PowerTarget) { CurrentMode = Mode.Normal; return; }
                 G.Game.TogglePause();
                 return;
             }
@@ -94,6 +96,18 @@ namespace VoidClash
 
         void HandleMouse()
         {
+            // ----- commander power target click -----
+            if (CurrentMode == Mode.PowerTarget)
+            {
+                if (Input.GetMouseButtonDown(0) && !PointerOverUI)
+                {
+                    if (RaycastGround(out var pt) && G.Powers != null) G.Powers.CastPower(_pendingPower, pt);
+                    CurrentMode = Mode.Normal;
+                }
+                else if (Input.GetMouseButtonDown(1)) CurrentMode = Mode.Normal;
+                return;
+            }
+
             // ----- landing-spot click -----
             if (CurrentMode == Mode.LandTarget)
             {
@@ -407,6 +421,12 @@ namespace VoidClash
                 return;
             }
 
+            // commander powers (F3/F4/F5 target a spot) + race Overdrive (F6, instant)
+            if (Input.GetKeyDown(KeyCode.F3)) { BeginPower(CommanderPower.Airstrike); return; }
+            if (Input.GetKeyDown(KeyCode.F4)) { BeginPower(CommanderPower.HealWave); return; }
+            if (Input.GetKeyDown(KeyCode.F5)) { BeginPower(CommanderPower.Freeze); return; }
+            if (Input.GetKeyDown(KeyCode.F6) && G.Powers != null) { G.Powers.TryOverdrive(); return; }
+
             if (G.Selection.HasCombatUnitsSelected && Input.GetKeyDown(KeyCode.A))
             {
                 CurrentMode = Mode.AttackMoveTarget;
@@ -455,6 +475,21 @@ namespace VoidClash
         public void BeginAttackMoveMode()
         {
             if (G.Selection.HasCombatUnitsSelected) CurrentMode = Mode.AttackMoveTarget;
+        }
+
+        /// <summary>Enter targeting for a commander power (HUD button or F3/F4/F5).</summary>
+        public void BeginPower(CommanderPower power)
+        {
+            if (G.Powers == null) return;
+            if (!G.Powers.PowerReady)
+            {
+                if (G.Hud != null) G.Hud.Notify("Commander power is recharging");
+                if (G.Audio != null) G.Audio.Play("error", 0.5f);
+                return;
+            }
+            _pendingPower = power;
+            CurrentMode = Mode.PowerTarget;
+            if (G.Hud != null) G.Hud.Notify($"{power}: choose a target spot");
         }
 
         public void BeginLandMode()

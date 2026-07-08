@@ -102,6 +102,12 @@ namespace VoidClash
         public void SpawnHarvestSparkle(Vector3 pos)
             => Burst("fx_harvest", pos, new Color(0.4f, 0.95f, 1f), 3, 0.1f, 1.4f, 0.4f);
 
+        public void SpawnHealBurst(Vector3 pos)
+            => Burst("fx_heal", pos, new Color(0.4f, 1f, 0.5f), 10, 0.18f, 2.2f, 0.7f, false, 1.2f);
+
+        public void SpawnFrostBurst(Vector3 pos)
+            => Burst("fx_frost", pos + Vector3.up * 0.4f, new Color(0.6f, 0.9f, 1f), 24, 0.22f, 4f, 0.9f, false, 1.6f);
+
         public ParticleSystem AttachConstructionDust(Transform parent, float size)
         {
             var ps = MakeSystem("fx_construction", new Color(0.55f, 0.5f, 0.45f), 0.55f, 1.2f, 1.1f);

@@ -570,6 +570,58 @@ namespace VoidClash.Tests
         }
 
         // ------------------------------------------------------------------
+        // v0.13.0 — commander powers (Airstrike / Heal / Freeze) and race Overdrive.
+        // ------------------------------------------------------------------
+        [UnityTest]
+        [Timeout(300000)]
+        public IEnumerator CommanderPowers_AirstrikeHealFreezeOverdrive()
+        {
+            // fresh Terran match from Setup()
+            Time.timeScale = 8f;
+            G.AI.enabled = false;
+            Assert.IsNotNull(G.Powers, "commander powers exist");
+            G.Powers.DebugMakeReady();
+
+            Vector3 spot = Vector3.zero;
+
+            // Airstrike damages an enemy in the blast
+            var enemy = UnitFactory.Spawn(G.DB.Unit("soldier"), Faction.Enemy, spot);
+            Assert.IsNotNull(enemy, "enemy target");
+            float ehp = enemy.Health.Current;
+            Assert.IsTrue(G.Powers.CastPower(CommanderPower.Airstrike, spot), "airstrike casts");
+            yield return WaitUntil(() => enemy == null || enemy.IsDead || enemy.Health.Current < ehp - 1f,
+                25f, "airstrike damages the enemy");
+
+            // Heal Wave restores a hurt ally
+            G.Powers.DebugMakeReady();
+            var ally = UnitFactory.Spawn(G.DB.Unit("soldier"), Faction.Player, spot + Vector3.right * 3f);
+            ally.Health.TakeDamage(50f, DamageClass.Normal, null);
+            float hurt = ally.Health.Current;
+            Assert.IsTrue(G.Powers.CastPower(CommanderPower.HealWave, ally.Position), "heal casts");
+            yield return null;
+            Assert.Greater(ally.Health.Current, hurt, "heal restores HP");
+
+            // Freeze stops an enemy cold
+            G.Powers.DebugMakeReady();
+            var frozen = UnitFactory.Spawn(G.DB.Unit("soldier"), Faction.Enemy, spot + Vector3.forward * 18f);
+            Assert.IsTrue(G.Powers.CastPower(CommanderPower.Freeze, frozen.Position), "freeze casts");
+            yield return null;
+            Assert.IsTrue(frozen.IsFrozen, "enemy is frozen");
+
+            // Overdrive boosts the selected combat unit
+            G.Powers.DebugMakeReady();
+            var od = UnitFactory.Spawn(G.DB.Unit("soldier"), Faction.Player, spot + Vector3.right * 6f);
+            float baseSpeed = od.Agent.speed;
+            G.Selection.SelectSingle(od, false);
+            Assert.IsTrue(G.Powers.TryOverdrive(), "overdrive activates");
+            yield return null;
+            Assert.Greater(od.Agent.speed, baseSpeed, "overdrive boosts move speed");
+            Assert.IsTrue(od.IsOverdriven, "unit is overdriven");
+
+            LogGuard.AssertClean();
+        }
+
+        // ------------------------------------------------------------------
         // v0.12.0 — the AI can play every race in a custom skirmish, and
         // difficulty gives the enemy a real head start.
         // ------------------------------------------------------------------
