@@ -52,6 +52,10 @@ Implemented:
 - Added race-accent HUD top edge and a cleaner objective strip.
 - Added smoke-test coverage for `PlayerBasePad`, `EnemyBasePad`, and `CenterBeacon`.
 
+Release artifact:
+
+- Target package: `VoidClash-v0.15.0-prealpha-win64.zip`
+
 Still pre-alpha:
 
 - This is the first implemented slice of the big visual mind map, not a full alpha gate.

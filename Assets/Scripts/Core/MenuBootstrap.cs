@@ -184,7 +184,7 @@ namespace VoidClash
             var status = UIFactory.Panel(canvas.transform, "BottomStatus", new Color(0.02f, 0.04f, 0.08f, 0.82f));
             UIFactory.SetRect(status, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 18f), new Vector2(980f, 54f));
             var hint = UIFactory.Label(status, "hint",
-                "v0.14.0 pre-alpha  |  FREE PLAY: choose your race, AI race, and difficulty.",
+                "v0.15.0 pre-alpha  |  BATTLEFIELD IDENTITY UPDATE",
                 18, TextAnchor.MiddleCenter, new Color(0.6f, 0.75f, 0.9f));
             UIFactory.Stretch(hint.rectTransform, 8f);
         }

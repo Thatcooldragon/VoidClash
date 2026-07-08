@@ -217,7 +217,7 @@ runner did not emit an XML results file, so that run is not counted as passed.
 ## Release Artifacts
 
 - `Build/` is the local compiled player folder and is not committed.
-- `VoidClash-v0.14.0-prealpha-win64.zip` is the latest packaged Windows release archive currently present.
+- `VoidClash-v0.15.0-prealpha-win64.zip` is the latest packaged Windows release archive once the local build step completes.
 - Older release zips are kept as historical artifacts when already tracked.
 
 ## Known Rough Edges
