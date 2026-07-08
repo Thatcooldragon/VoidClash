@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using System.Collections;
 
 namespace VoidClash
 {
@@ -40,6 +41,29 @@ namespace VoidClash
         public void Focus(Vector3 worldPos)
         {
             _target = Clamp(worldPos);
+            Apply();
+        }
+
+        public void PlayIntroPan(Vector3 from, Vector3 to, float seconds)
+        {
+            StopAllCoroutines();
+            StartCoroutine(IntroPanRoutine(from, to, seconds));
+        }
+
+        IEnumerator IntroPanRoutine(Vector3 from, Vector3 to, float seconds)
+        {
+            float t = 0f;
+            from = Clamp(from);
+            to = Clamp(to);
+            while (t < seconds)
+            {
+                t += Time.unscaledDeltaTime;
+                float u = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t / Mathf.Max(0.01f, seconds)));
+                _target = Vector3.Lerp(from, to, u);
+                Apply();
+                yield return null;
+            }
+            _target = to;
             Apply();
         }
 

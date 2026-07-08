@@ -63,6 +63,7 @@ namespace VoidClash.Tests
             Assert.IsNotNull(GameObject.Find("PlayerBasePad"), "player base identity pad should exist");
             Assert.IsNotNull(GameObject.Find("EnemyBasePad"), "enemy base identity pad should exist");
             Assert.IsNotNull(GameObject.Find("CenterBeacon"), "center battlefield landmark should exist");
+            Assert.IsNotNull(GameObject.Find("FactionAtmosphere"), "v0.16 faction atmosphere dressing should exist");
         }
 
         [UnityTearDown]
@@ -367,6 +368,17 @@ namespace VoidClash.Tests
                 Assert.IsFalse(string.IsNullOrEmpty(mission.storyBeatText), $"{mission.title} has story flavor");
                 Assert.AreNotEqual(AIPersonality.Balanced, mission.aiPersonality, $"{mission.title} has AI personality");
             }
+        }
+
+        [Test]
+        public void V016VisualIdentity_MaterialsAndPaletteExist()
+        {
+            foreach (var mat in new[] { "zerg_creep", "protoss_field", "bubble_foam", "dots_orbit", "shadow_marker" })
+                Assert.IsNotNull(MaterialLibrary.Get(mat), $"{mat} material exists");
+
+            Assert.AreEqual("Bubble", FactionPalette.RaceName(PlayerRace.Bubble));
+            Assert.AreEqual("Dots", FactionPalette.RaceName(PlayerRace.Dots));
+            Assert.Greater(FactionPalette.ForEnemyRace(EnemyRace.Protoss).Accent.b, 0.8f, "Protoss palette has cyan shine");
         }
 
         [Test]

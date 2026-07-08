@@ -51,6 +51,8 @@ namespace VoidClash
 
             Vector3 muzzlePos = _muzzle.position;
             bool seen = _owner.Faction == Faction.Player || _owner.VisibleToPlayer;
+            var recoil = _owner.transform.Find("Visual")?.GetComponent<AttackRecoil>();
+            if (recoil != null && target != null) recoil.Punch(target.Position - _owner.Position);
 
             if (_melee)
             {

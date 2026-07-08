@@ -213,7 +213,8 @@ namespace VoidClash
             Destroy(go.GetComponent<Collider>());
             go.transform.position = pos + Vector3.up * 0.08f;
             go.transform.localScale = new Vector3(Radius, 0.06f, Radius);
-            go.GetComponent<Renderer>().sharedMaterial = MaterialLibrary.Get("zerg_accent");
+            go.GetComponent<Renderer>().sharedMaterial = MaterialLibrary.Get("bubble_foam");
+            if (G.Effects != null) G.Effects.SpawnPoisonCloud(pos, Radius);
             var gas = go.AddComponent<PoisonGas>();
             gas._owner = owner;
         }

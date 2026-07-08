@@ -159,6 +159,7 @@ namespace VoidClash
 
             if (!silent)
             {
+                if (G.Effects != null) G.Effects.SpawnBuildComplete(transform.position, Radius + 1.5f, Faction);
                 if (Faction == Faction.Player && G.Audio != null) G.Audio.Play("build_done");
                 if (Faction == Faction.Player && G.Hud != null) G.Hud.Notify($"{Data.displayName} complete");
             }
@@ -239,6 +240,7 @@ namespace VoidClash
             Flight = FlightState.Lifting;
             _hasFlightDest = false;
             _obstacle.enabled = false; // un-carve: ground under the building opens up
+            if (G.Effects != null) G.Effects.SpawnLandingDust(transform.position, Radius + 1.2f, Faction);
             if (Faction == Faction.Player && G.Audio != null) G.Audio.Play("build_place", 0.6f);
             if (G.Selection != null && G.Selection.IsSelected(this)) G.Selection.RaiseChanged();
         }
@@ -319,6 +321,7 @@ namespace VoidClash
                         Flight = FlightState.Grounded;
                         _landing = false;
                         _obstacle.enabled = true; // carve again
+                        if (G.Effects != null) G.Effects.SpawnLandingDust(transform.position, Radius + 1.3f, Faction);
                         if (Faction == Faction.Player && G.Audio != null) G.Audio.Play("build_done", 0.5f);
                         if (G.Selection != null && G.Selection.IsSelected(this)) G.Selection.RaiseChanged();
                     }

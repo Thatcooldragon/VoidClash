@@ -15,6 +15,17 @@ Core idea: the game already has systems. The next update should make every scree
 - HUD gained a race-accent top edge and objective strip.
 - Smoke tests now verify the base pads and center beacon exist.
 
+## v0.16 Full Implementation Pass - 2026-07-08
+
+- First impression: menu version badge, Free Play matchup preview, campaign threat card.
+- Battlefield look: faction atmosphere overlays, tactical floor plates, lane/cliff glow, base pads, center landmark.
+- Faction pass: shared palette constants, Zerg creep, Protoss shine, Bubble foam, Dots orbit language, boss aura/shockwave.
+- Motion: idle loops, attack recoil, build completion pulse, lift-off/landing rings, signal motion.
+- Combat spectacle: richer projectile impacts, melee arcs, damage-class sparks, poison readability, Dots shape bursts.
+- Commander powers: airstrike shadow and stronger support/hostile markers.
+- UI/campaign: minimap frame, command-card accent, power-ready colors, objective plaque, enemy threat briefing, result accent.
+- Tech/release: helper components, material definitions, smoke assertions, screenshot smoke support, v0.16 package target.
+
 ```mermaid
 mindmap
   root((VoidClash v0.15 Battlefield Identity Update))

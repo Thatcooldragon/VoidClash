@@ -26,6 +26,10 @@ namespace VoidClash
             }
             if (data.id == "dot_core" && visual != null)
                 visual.gameObject.AddComponent<DotPowerRing>();
+            if ((data.id == "dot_core" || data.id == "dot_giant") && visual != null)
+                visual.gameObject.AddComponent<OrbitingDots>().MaterialName = "dots_orbit";
+            if (visual != null && data.canAttack && visual.gameObject.GetComponent<AttackRecoil>() == null)
+                visual.gameObject.AddComponent<AttackRecoil>().Distance = data.damageClass == DamageClass.Siege ? 0.32f : 0.16f;
 
             Unit unit = data.isWorker ? go.AddComponent<WorkerUnit>() : go.AddComponent<Unit>();
             unit.Init(data, faction);

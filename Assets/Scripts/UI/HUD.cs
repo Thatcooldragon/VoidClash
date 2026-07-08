@@ -209,12 +209,14 @@ namespace VoidClash
         {
             var panel = UIFactory.Panel(_canvas.transform, "MinimapPanel", UIFactory.PanelColor);
             UIFactory.SetRect(panel, new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(10f, 10f), new Vector2(250f, 250f));
+            var frame = UIFactory.Panel(panel, "MinimapFrame", CurrentRaceAccent());
+            UIFactory.Stretch(frame, 3f);
 
             var imgGo = new GameObject("minimap");
             imgGo.transform.SetParent(panel, false);
             _minimapImage = imgGo.AddComponent<RawImage>();
             _minimapRT = (RectTransform)imgGo.transform;
-            UIFactory.Stretch(_minimapRT, 8f);
+            UIFactory.Stretch(_minimapRT, 10f);
 
             var trigger = imgGo.AddComponent<EventTrigger>();
             void AddEvent(EventTriggerType type)
@@ -403,7 +405,7 @@ namespace VoidClash
                 _powerLabels[i].text = pReady ? $"{_powerNames[i]}\n<F{i + 3}>" : $"{_powerNames[i]}\n{pPct}%";
                 _powerBtns[i].interactable = pReady;
                 var img = _powerBtns[i].GetComponent<Image>();
-                if (img != null) img.color = pReady ? UIFactory.PanelLight : new Color(0.08f, 0.1f, 0.13f, 0.92f);
+                if (img != null) img.color = pReady ? CurrentRaceAccent() : new Color(0.08f, 0.1f, 0.13f, 0.92f);
             }
 
             bool odReady = G.Powers.OverdriveReady;
@@ -411,19 +413,26 @@ namespace VoidClash
             _powerLabels[3].text = odReady ? $"{_powerNames[3]}\n<F6>" : $"{_powerNames[3]}\n{odPct}%";
             _powerBtns[3].interactable = odReady;
             var oimg = _powerBtns[3].GetComponent<Image>();
-            if (oimg != null) oimg.color = odReady ? new Color(0.2f, 0.42f, 0.16f, 0.95f) : new Color(0.08f, 0.1f, 0.13f, 0.92f);
+            if (oimg != null) oimg.color = odReady ? CurrentRaceAccent() : new Color(0.08f, 0.1f, 0.13f, 0.92f);
         }
 
         void BuildCommandCard()
         {
             _commandCard = UIFactory.Panel(_canvas.transform, "CommandCard", UIFactory.PanelColor);
             UIFactory.SetRect(_commandCard, new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-10f, 10f), new Vector2(330f, 230f));
+            var stripe = UIFactory.Panel(_commandCard, "CommandAccent", CurrentRaceAccent());
+            stripe.anchorMin = new Vector2(0f, 1f);
+            stripe.anchorMax = new Vector2(1f, 1f);
+            stripe.pivot = new Vector2(0.5f, 1f);
+            stripe.anchoredPosition = Vector2.zero;
+            stripe.sizeDelta = new Vector2(0f, 4f);
         }
 
         void RebuildCommandCard()
         {
             if (_commandCard == null) return;
-            foreach (Transform c in _commandCard) Destroy(c.gameObject);
+            foreach (Transform c in _commandCard)
+                if (c.name != "CommandAccent") Destroy(c.gameObject);
             _hotkeys.Clear();
 
             var sel = G.Selection.Selected;
@@ -839,6 +848,12 @@ namespace VoidClash
             bool victory = state == MatchState.Victory;
             _endTitle.text = victory ? "VICTORY" : "DEFEAT";
             _endTitle.color = victory ? new Color(0.4f, 1f, 0.55f) : new Color(1f, 0.35f, 0.3f);
+            var box = _endTitle.transform.parent as RectTransform;
+            if (box != null)
+            {
+                var stripe = UIFactory.Panel(box, "ResultAccent", victory ? new Color(0.4f, 1f, 0.55f, 0.9f) : new Color(1f, 0.25f, 0.18f, 0.9f));
+                UIFactory.SetRect(stripe, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -110f), new Vector2(330f, 4f));
+            }
             if (_endBody != null)
             {
                 var m = Campaign.Current;
@@ -853,7 +868,7 @@ namespace VoidClash
 
         RectTransform _briefingPanel;
 
-        public void ShowBriefing(string title, string body)
+        public void ShowBriefing(string title, string body, System.Action onStart = null)
         {
             if (Application.isBatchMode) return; // tests run unattended
             _briefingPanel = UIFactory.Panel(_canvas.transform, "Briefing", new Color(0f, 0f, 0f, 0.82f));
@@ -875,12 +890,24 @@ namespace VoidClash
             var intel = UIFactory.Label(box, "intelHeader", "COMMAND INTEL", 17, TextAnchor.MiddleLeft, new Color(0.58f, 0.78f, 1f));
             UIFactory.SetRect(intel.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -184f), new Vector2(700f, 24f));
             var b = UIFactory.Label(box, "body", body, 20, TextAnchor.UpperLeft);
-            UIFactory.SetRect(b.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -318f), new Vector2(700f, 240f));
+            UIFactory.SetRect(b.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(-115f, -318f), new Vector2(470f, 240f));
+
+            var threat = UIFactory.Panel(box, "threat", new Color(0.04f, 0.07f, 0.1f, 0.95f));
+            UIFactory.SetRect(threat, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-52f, -308f), new Vector2(210f, 190f));
+            string enemy = Campaign.Current != null ? Campaign.Current.enemyRace.ToString().ToUpperInvariant() : "ENEMY";
+            string tactic = Campaign.Current != null && Campaign.Current.bossUnitId != null ? "BOSS TARGET"
+                : (Campaign.Current != null && Campaign.Current.aiPersonality == AIPersonality.Swarm ? "SWARM WAVES"
+                : (Campaign.Current != null && Campaign.Current.aiPersonality == AIPersonality.Turtle ? "FORTIFIED FRONT" : "RTS PRESSURE"));
+            var th = UIFactory.Label(threat, "th", "ENEMY THREAT", 15, TextAnchor.MiddleCenter, CurrentRaceAccent());
+            UIFactory.SetRect(th.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -20f), new Vector2(180f, 24f));
+            var tv = UIFactory.Label(threat, "tv", $"{enemy}\n{tactic}\n\nRecommended:\nScout, expand, then strike.", 17, TextAnchor.UpperLeft, Color.white);
+            UIFactory.SetRect(tv.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -110f), new Vector2(170f, 130f));
             var start = UIFactory.TextButton(box, "start", "ENGAGE", 24, () =>
             {
                 Time.timeScale = 1f;
                 Destroy(_briefingPanel.gameObject);
                 _briefingPanel = null;
+                onStart?.Invoke();
             });
             UIFactory.SetRect((RectTransform)start.transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 28f), new Vector2(260f, 56f));
             Time.timeScale = 0f; // hold the world while the commander reads
@@ -889,9 +916,9 @@ namespace VoidClash
         static Color CurrentRaceAccent()
         {
             var race = Campaign.Current != null ? Campaign.Current.playerRace : SkirmishConfig.PlayerRaceFromMode;
-            if (race == PlayerRace.Bubble) return new Color(0.35f, 1f, 0.85f, 0.95f);
-            if (race == PlayerRace.Dots) return new Color(1f, 0.58f, 0.28f, 0.95f);
-            return new Color(0.25f, 0.62f, 1f, 0.95f);
+            var c = FactionPalette.RaceAccent(race);
+            c.a = 0.95f;
+            return c;
         }
     }
 }

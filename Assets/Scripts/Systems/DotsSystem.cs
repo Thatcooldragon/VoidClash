@@ -125,6 +125,7 @@ namespace VoidClash
             ConsumeNearest(loose, center, GiantDotCost);
             ConsumeSilently(core);
             var giant = UnitFactory.Spawn(data, Faction.Player, center);
+            if (G.Effects != null) G.Effects.SpawnShapeBurst(center, 4.8f);
             if (giant != null && G.Selection != null) G.Selection.SelectSingle(giant, false);
             message = $"A Core Dot hid inside a Dot Giant ({GiantDotCost} Dots)";
             return true;
@@ -154,6 +155,7 @@ namespace VoidClash
 
             ConsumeNearest(loose, center, dotCost);   // eats the Dots closest to the shape
             var shape = UnitFactory.Spawn(data, Faction.Player, center);
+            if (G.Effects != null) G.Effects.SpawnShapeBurst(center, unitId == "dot_core" ? 3.6f : 3.0f);
             if (shape != null && G.Selection != null) G.Selection.SelectSingle(shape, false);
             message = $"Formed a {data.displayName} from {dotCost} Dots";
             return true;

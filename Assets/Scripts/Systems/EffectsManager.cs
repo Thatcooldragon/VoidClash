@@ -148,6 +148,66 @@ namespace VoidClash
         public void SpawnFrostBurst(Vector3 pos)
             => Burst("fx_frost", pos + Vector3.up * 0.4f, new Color(0.6f, 0.9f, 1f), 24, 0.22f, 4f, 0.9f, false, 1.6f);
 
+        public void SpawnBuildComplete(Vector3 pos, float radius, Faction f)
+        {
+            SpawnShockwave(pos + Vector3.up * 0.08f, radius, f == Faction.Player ? "marker_move" : "marker_attack", 0.8f);
+            Burst("fx_build_complete", pos + Vector3.up * 1f, FactionGlow(f), 18, 0.14f, 2.8f, 0.55f, false, 1.4f);
+        }
+
+        public void SpawnLandingDust(Vector3 pos, float radius, Faction f)
+        {
+            SpawnShockwave(pos + Vector3.up * 0.06f, radius, f == Faction.Player ? "lane_edge" : "warning_gold", 0.65f);
+            Burst("fx_landing_dust", pos + Vector3.up * 0.2f, new Color(0.62f, 0.62f, 0.58f), 20, 0.22f, 2.6f, 0.55f, false, 0.7f);
+        }
+
+        public void SpawnPoisonCloud(Vector3 pos, float radius)
+        {
+            SpawnShockwave(pos + Vector3.up * 0.06f, radius, "zerg_creep", 1.2f);
+            Burst("fx_poison_cloud", pos + Vector3.up * 0.7f, new Color(0.65f, 1f, 0.28f), 22, 0.28f, 1.8f, 1.25f, false, 0.8f);
+        }
+
+        public void SpawnShapeBurst(Vector3 pos, float radius)
+        {
+            SpawnShockwave(pos + Vector3.up * 0.08f, radius, "dots_orbit", 0.9f);
+            Burst("fx_shape_burst", pos + Vector3.up * 0.55f, new Color(1f, 0.68f, 0.22f), 24, 0.13f, 4.2f, 0.65f, false, 1.2f);
+        }
+
+        public void SpawnBossShockwave(Vector3 pos)
+        {
+            SpawnShockwave(pos + Vector3.up * 0.1f, 10f, "warning_gold", 1.5f);
+            Burst("fx_boss_shockwave", pos + Vector3.up * 1.2f, new Color(1f, 0.35f, 0.18f), 42, 0.35f, 7f, 1.1f, false, 3.2f);
+        }
+
+        public void SpawnAirstrikeShadow(Vector3 pos, float radius)
+        {
+            var go = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            go.name = "fx_aircraft_shadow";
+            Destroy(go.GetComponent<Collider>());
+            go.transform.position = pos + new Vector3(-radius * 1.4f, 0.13f, -radius * 0.55f);
+            go.transform.rotation = Quaternion.Euler(90f, 0f, -18f);
+            go.transform.localScale = new Vector3(radius * 2.4f, radius * 0.55f, 1f);
+            go.layer = LayerMask.NameToLayer("FX");
+            var r = go.GetComponent<Renderer>();
+            r.sharedMaterial = MaterialLibrary.Get("shadow_marker");
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            go.AddComponent<FadeAndDie>().Init(1.15f);
+        }
+
+        void SpawnShockwave(Vector3 pos, float radius, string mat, float life)
+        {
+            var go = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            go.name = "fx_shockwave";
+            Destroy(go.GetComponent<Collider>());
+            go.transform.position = pos;
+            go.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+            go.transform.localScale = Vector3.one * 0.2f;
+            go.layer = LayerMask.NameToLayer("FX");
+            var r = go.GetComponent<Renderer>();
+            r.sharedMaterial = MaterialLibrary.Get(mat);
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            go.AddComponent<TimedFadeScale>().Init(life, Vector3.one * 0.2f, Vector3.one * radius * 2f);
+        }
+
         public ParticleSystem AttachConstructionDust(Transform parent, float size)
         {
             var ps = MakeSystem("fx_construction", new Color(0.55f, 0.5f, 0.45f), 0.55f, 1.2f, 1.1f);

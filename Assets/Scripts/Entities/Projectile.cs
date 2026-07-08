@@ -57,7 +57,7 @@ namespace VoidClash
             {
                 if (_target != null && !_target.IsDead && _target.Health != null)
                     _target.Health.TakeDamage(_damage, _dc, _owner != null && !_owner.IsDead ? _owner : null);
-                if (G.Effects != null) G.Effects.SpawnImpact(_lastTargetPos, _faction);
+                if (G.Effects != null) G.Effects.SpawnDamageImpact(_lastTargetPos, _faction, _dc);
                 Destroy(gameObject);
                 return;
             }

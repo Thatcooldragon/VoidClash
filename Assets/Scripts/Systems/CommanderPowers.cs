@@ -55,7 +55,11 @@ namespace VoidClash
         IEnumerator AirstrikeRoutine(Vector3 point)
         {
             if (G.Hud != null) G.Hud.Notify("Airstrike inbound!");
-            if (G.Effects != null) G.Effects.SpawnPowerMarker(point, StrikeRadius, true);
+            if (G.Effects != null)
+            {
+                G.Effects.SpawnPowerMarker(point, StrikeRadius, true);
+                G.Effects.SpawnAirstrikeShadow(point, StrikeRadius);
+            }
             yield return new WaitForSeconds(1.3f);
 
             for (int i = 0; i < 6; i++)
@@ -74,7 +78,11 @@ namespace VoidClash
         void HealWave(Vector3 point)
         {
             if (G.Hud != null) G.Hud.Notify("Healing wave!");
-            if (G.Effects != null) G.Effects.SpawnPowerMarker(point, HealRadius, false);
+            if (G.Effects != null)
+            {
+                G.Effects.SpawnPowerMarker(point, HealRadius, false);
+                G.Effects.SpawnBuildComplete(point, HealRadius * 0.4f, Faction.Player);
+            }
             foreach (var e in Entity.All)
                 if (e != null && !e.IsDead && e.Faction == Faction.Player && e.Health != null
                     && Vector3.Distance(e.Position, point) <= HealRadius)

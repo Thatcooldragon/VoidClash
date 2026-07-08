@@ -77,3 +77,24 @@ Main pillars:
 Success sentence:
 
 > VoidClash is still early, but now it looks like a real strategy game with a clear identity.
+
+## 2026-07-08 - v0.16.0 Full Visual Identity Update
+
+Working title:
+
+- **Full Visual Identity Update**
+
+Implemented across the mind map:
+
+- First impression: v0.16 menu badge, Free Play matchup preview, campaign threat cards.
+- Battlefield: faction atmosphere overlays, base pads, center beacon, lane/cliff glow, tactical plate ground.
+- Factions: shared `FactionPalette`, race-tinted HUD, Zerg creep tint, Protoss field shine, Bubble foam, Dots orbit language.
+- Animation/motion: idle motion, attack recoil, build-completion flashes, lift-off and landing rings, signal motion.
+- Combat spectacle: damage-type impacts, projectile impact upgrade, melee arcs, Dots shape bursts, poison clouds, boss shockwave.
+- Commander powers: airstrike aircraft shadow, stronger heal ring, race-colored ready states.
+- UI/campaign: minimap frame, command-card accent, objective strip, briefing enemy threat panel, victory/defeat accent.
+- Tech/verification: shared palette/helper components, v0.16 smoke assertions, existing screenshot smoke tool remains the image gate.
+
+Release target:
+
+- `VoidClash-v0.16.0-prealpha-win64.zip`

@@ -413,6 +413,50 @@ namespace VoidClash
             BuildSignalArray(new Vector3(8f, 0f, -28f), 152f, "enemy_accent");
         }
 
+        public void BuildFactionAtmosphere(PlayerRace playerRace, PlayerRace skirmishEnemyRace, EnemyRace campaignEnemyRace)
+        {
+            var parent = new GameObject("FactionAtmosphere").transform;
+            parent.SetParent(_root, false);
+            AddBaseAtmosphere(parent, PlayerBasePos, AtmosphereMaterial(playerRace, false), 8.8f, "PlayerFrontAtmosphere");
+            string enemyMat = campaignEnemyRace == EnemyRace.Zerg ? "zerg_creep"
+                : (campaignEnemyRace == EnemyRace.Protoss ? "protoss_field" : AtmosphereMaterial(skirmishEnemyRace, true));
+            AddBaseAtmosphere(parent, EnemyBasePos, enemyMat, 9.2f, "EnemyFrontAtmosphere");
+        }
+
+        static string AtmosphereMaterial(PlayerRace race, bool enemy)
+        {
+            if (race == PlayerRace.Bubble) return "bubble_foam";
+            if (race == PlayerRace.Dots) return "dots_orbit";
+            return enemy ? "base_enemy" : "base_player";
+        }
+
+        void AddBaseAtmosphere(Transform parent, Vector3 center, string mat, float radius, string name)
+        {
+            var pad = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            pad.name = name;
+            DestroyImmediate(pad.GetComponent<Collider>());
+            pad.transform.SetParent(parent, false);
+            pad.transform.position = center + Vector3.up * 0.032f;
+            pad.transform.localScale = new Vector3(radius, 0.02f, radius);
+            pad.GetComponent<Renderer>().sharedMaterial = MaterialLibrary.Get(mat);
+            pad.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            pad.AddComponent<WorldPulse>().Amount = 0.025f;
+
+            for (int i = 0; i < 6; i++)
+            {
+                float angle = i * 60f + 18f;
+                var shard = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                shard.name = $"{name}Shard";
+                DestroyImmediate(shard.GetComponent<Collider>());
+                shard.transform.SetParent(parent, false);
+                shard.transform.position = center + Quaternion.Euler(0f, angle, 0f) * Vector3.forward * (radius * 0.55f) + Vector3.up * 0.12f;
+                shard.transform.rotation = Quaternion.Euler(0f, angle, 0f);
+                shard.transform.localScale = new Vector3(0.12f, 0.08f, 1.45f);
+                shard.GetComponent<Renderer>().sharedMaterial = MaterialLibrary.Get(mat);
+                shard.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            }
+        }
+
         void BuildCenterBeacon()
         {
             var root = new GameObject("CenterBeacon").transform;

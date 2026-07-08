@@ -90,6 +90,11 @@ namespace VoidClash
             // free this unit's supply (reserved at queue time or at initial spawn)
             if (!IsDead && Data != null && G.PlayerBank != null && G.EnemyBank != null && Faction != Faction.Neutral)
                 G.Bank(Faction).ReleaseSupply(Data.supplyCost);
+            if (!IsDead && Data != null && G.Effects != null)
+            {
+                if (Data.id == "overlord" || Data.id == "dot_giant") G.Effects.SpawnBossShockwave(transform.position);
+                else if (Data.id == "bubble" || Data.id == "poison_bubble") G.Effects.SpawnPoisonCloud(transform.position, 2.2f);
+            }
             base.OnDeath(killer);
         }
 
@@ -179,6 +184,7 @@ namespace VoidClash
                 var r = _iceVisual.GetComponent<Renderer>();
                 r.sharedMaterial = MaterialLibrary.Get("frost");
                 r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                _iceVisual.AddComponent<WorldPulse>().Amount = 0.04f;
             }
         }
 
@@ -200,6 +206,7 @@ namespace VoidClash
                 var r = _odGlow.GetComponent<Renderer>();
                 r.sharedMaterial = MaterialLibrary.Get("overdrive");
                 r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                _odGlow.AddComponent<WorldPulse>().Amount = 0.08f;
             }
         }
 

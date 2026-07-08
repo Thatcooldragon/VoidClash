@@ -37,7 +37,8 @@ namespace VoidClash
             "ring_player", "ring_enemy", "ring_hover", "fog", "marker_move", "marker_attack",
             "projectile_player", "projectile_enemy", "rally", "frost", "overdrive",
             "base_player", "base_enemy", "base_neutral", "lane_edge", "center_beacon",
-            "warning_gold", "ui_panel_deep"
+            "warning_gold", "ui_panel_deep", "zerg_creep", "protoss_field", "bubble_foam",
+            "dots_orbit", "shadow_marker"
         };
 
         public static Material Build(string name)
@@ -122,6 +123,11 @@ namespace VoidClash
                 case "center_beacon": return Emissive("mat_center_beacon", new Color(1f, 0.78f, 0.25f), 2.4f, new Color(0.18f, 0.12f, 0.04f));
                 case "warning_gold": return Emissive("mat_warning_gold", new Color(1f, 0.62f, 0.14f), 1.65f, new Color(0.22f, 0.14f, 0.04f));
                 case "ui_panel_deep": return UnlitColor("mat_ui_panel_deep", new Color(0.018f, 0.024f, 0.032f, 0.95f));
+                case "zerg_creep": return UnlitTransparent("mat_zerg_creep", new Color(0.42f, 0.04f, 0.16f, 0.38f));
+                case "protoss_field": return UnlitTransparent("mat_protoss_field", new Color(0.42f, 0.92f, 1f, 0.34f));
+                case "bubble_foam": return UnlitTransparent("mat_bubble_foam", new Color(0.42f, 1f, 0.82f, 0.32f));
+                case "dots_orbit": return Emissive("mat_dots_orbit", new Color(1f, 0.58f, 0.24f), 2.2f, new Color(0.28f, 0.12f, 0.03f));
+                case "shadow_marker": return UnlitTransparent("mat_shadow_marker", new Color(0f, 0f, 0f, 0.48f));
                 default:
                     Debug.LogError($"VoidClash: unknown material '{name}'");
                     return Lit("mat_missing", Color.magenta);

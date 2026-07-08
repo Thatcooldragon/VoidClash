@@ -67,6 +67,7 @@ namespace VoidClash
             G.Audio.Init();
             SetupEnvironment();
             G.Map.Build();               // includes runtime NavMesh bake
+            G.Map.BuildFactionAtmosphere(_playerRace, _enemyRace, mission != null ? mission.enemyRace : EnemyRace.Terran);
             G.Cam.Init(MapBuilder.PlayerBasePos + new Vector3(2f, 0f, 2f));
             SpawnStartingBases();
             G.Fog.Init();
@@ -93,7 +94,12 @@ namespace VoidClash
                     G.AI.RegisterBoss(boss);
                 }
             }
-            G.Hud.ShowBriefing(mission.title, mission.briefing);
+            G.Hud.ShowBriefing(mission.title, mission.briefing, () =>
+            {
+                if (G.Cam != null) G.Cam.PlayIntroPan(MapBuilder.EnemyBasePos, MapBuilder.PlayerBasePos + new Vector3(2f, 0f, 2f), 2.7f);
+                if (G.Effects != null) G.Effects.SpawnPowerMarker(MapBuilder.EnemyBasePos, 6f, true);
+                if (G.Hud != null) G.Hud.Notify("Objective pinged. Build up, scout, and strike when ready.");
+            });
             gameObject.AddComponent<StoryDirector>().Init(mission);
         }
 

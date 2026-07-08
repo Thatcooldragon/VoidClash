@@ -1,6 +1,6 @@
 # VoidClash
 
-*Pre-Alpha v0.15.0 - Unity 6.3 (6000.3.16f1)*
+*Pre-Alpha v0.16.0 - Unity 6.3 (6000.3.16f1)*
 
 VoidClash is a real-time strategy game built entirely in Unity/C#, in the spirit of StarCraft. The
 player commands prototype Terran, Bubble, and Dots factions with worker economy, structure-driven
@@ -33,14 +33,15 @@ Unity.exe -batchmode -quit -projectPath <path> -executeMethod VoidClash.Editor.B
 The player lands at `Build/VoidClash.exe`. Release zips are stored separately from `Build/` so the
 repo stays source-first.
 
-## v0.15.0 Visual Update
+## v0.16.0 Full Visual Identity Update
 
-- Battlefield identity pass: sci-fi tactical ground plates, glowing lane guides, visible cliff edges,
-  base pads, and a center beacon.
-- Presentation motion: idle unit bob/sway, pulsing building accents, animated signal lamps, and
-  rotating signal dishes.
-- Combat feedback: melee swipe arcs and damage-class impact sparks.
-- HUD polish: race-colored top bar edge and a cleaner objective strip.
+- First impression: v0.16 menu badge, Free Play matchup preview, campaign threat cards.
+- Battlefield identity: sci-fi tactical plates, base pads, center beacon, lane/cliff glow, and
+  faction atmosphere for Terran, Bubble, Dots, Zerg, and Protoss fronts.
+- Motion and combat: idle motion, attack recoil, build-completion flashes, lift/landing rings,
+  Dots formation bursts, poison readability, stronger commander-power spectacle, and boss shockwaves.
+- UI polish: race-tinted minimap frame, command-card accent, power-ready flash colors, objective strip,
+  stronger briefing/end presentation, and screenshot-smoke support.
 
 ## Modes
 
@@ -217,7 +218,7 @@ runner did not emit an XML results file, so that run is not counted as passed.
 ## Release Artifacts
 
 - `Build/` is the local compiled player folder and is not committed.
-- `VoidClash-v0.15.0-prealpha-win64.zip` is the latest packaged Windows release archive once the local build step completes.
+- `VoidClash-v0.16.0-prealpha-win64.zip` is the latest packaged Windows release archive once the local build step completes.
 - Older release zips are kept as historical artifacts when already tracked.
 
 ## Known Rough Edges

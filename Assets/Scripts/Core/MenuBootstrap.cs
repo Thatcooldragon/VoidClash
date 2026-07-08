@@ -184,7 +184,7 @@ namespace VoidClash
             var status = UIFactory.Panel(canvas.transform, "BottomStatus", new Color(0.02f, 0.04f, 0.08f, 0.82f));
             UIFactory.SetRect(status, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 18f), new Vector2(980f, 54f));
             var hint = UIFactory.Label(status, "hint",
-                "v0.15.0 pre-alpha  |  BATTLEFIELD IDENTITY UPDATE",
+                "v0.16.0 pre-alpha  |  FULL VISUAL IDENTITY UPDATE",
                 18, TextAnchor.MiddleCenter, new Color(0.6f, 0.75f, 0.9f));
             UIFactory.Stretch(hint.rectTransform, 8f);
         }
@@ -380,12 +380,31 @@ namespace VoidClash
             ChoiceRow("Difficulty", -260f, new[] { "Easy", "Normal", "Hard" }, (int)_skDifficulty,
                 i => { _skDifficulty = (Difficulty)i; RebuildSkirmishPanel(); });
 
+            BuildMatchupPreview();
+
             var start = UIFactory.TextButton(_skirmishPanel, "start", "START FREE PLAY", 24, StartSkirmish,
                 new Color(0.16f, 0.5f, 0.28f, 0.95f));
             UIFactory.SetRect((RectTransform)start.transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 92f), new Vector2(320f, 58f));
 
             var back = UIFactory.TextButton(_skirmishPanel, "back", "Back", 20, () => ShowSkirmish(false));
             UIFactory.SetRect((RectTransform)back.transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 28f), new Vector2(200f, 48f));
+        }
+
+        void BuildMatchupPreview()
+        {
+            var preview = UIFactory.Panel(_skirmishPanel, "MatchupPreview", new Color(0.025f, 0.045f, 0.065f, 0.9f));
+            UIFactory.SetRect(preview, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -342f), new Vector2(640f, 86f));
+            string enemy = _skEnemy >= 3 ? "Random" : FactionPalette.RaceName((PlayerRace)_skEnemy);
+            string player = FactionPalette.RaceName(_skPlayer);
+            var accent = FactionPalette.RaceAccent(_skPlayer);
+            var stripe = UIFactory.Panel(preview, "stripe", accent);
+            UIFactory.SetRect(stripe, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(0f, 0f), new Vector2(5f, 70f));
+            string personality = _skDifficulty == Difficulty.Hard ? "enemy starts ahead and attacks earlier"
+                : (_skDifficulty == Difficulty.Easy ? "slower pressure for learning" : "standard RTS pressure");
+            var label = UIFactory.Label(preview, "label",
+                $"{player} vs {enemy}  |  {_skDifficulty}\n{personality}",
+                20, TextAnchor.MiddleLeft, Color.white);
+            UIFactory.SetRect(label.rectTransform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(28f, 0f), new Vector2(580f, 60f));
         }
 
         void ChoiceRow(string label, float y, string[] options, int selected, System.Action<int> onPick)
