@@ -8,6 +8,13 @@ namespace VoidClash
     /// environment, map, navmesh, factions, systems, UI, AI.</summary>
     public class GameBootstrap : MonoBehaviour
     {
+        PlayerRace _playerRace;
+        PlayerRace _enemyRace;
+        int _enemyStartBonus;
+
+        /// <summary>Extra starting minerals the skirmish enemy gets at each difficulty.</summary>
+        public static int DifficultyStartBonus(Difficulty d) => d == Difficulty.Hard ? 120 : 0;
+
         void Awake()
         {
             G.ResetAll();
@@ -15,19 +22,30 @@ namespace VoidClash
             G.EnsureDatabase();
             Time.timeScale = 1f;
 
-            var mission = Campaign.Current; // null = free play
-            bool bubbleLab = mission == null && SkirmishConfig.Mode == SkirmishMode.BubbleLab;
-            bool dotsLab = mission == null && SkirmishConfig.Mode == SkirmishMode.DotsLab;
-            bool bubblePlayer = bubbleLab || mission?.playerRace == PlayerRace.Bubble;
-            bool dotsPlayer = dotsLab || mission?.playerRace == PlayerRace.Dots;
+            var mission = Campaign.Current; // null = free play / skirmish
+
+            // Player race comes from the campaign mission or the skirmish Mode.
+            // Enemy race: campaign enemies are mechanically Terran (Zerg/Protoss are reskins);
+            // a custom skirmish lets the AI actually play Bubble or Dots.
+            _playerRace = mission != null ? mission.playerRace : SkirmishConfig.PlayerRaceFromMode;
+            _enemyRace = mission != null ? PlayerRace.Terran : SkirmishConfig.EnemyRace;
+            bool bubblePlayer = _playerRace == PlayerRace.Bubble;
+            bool dotsPlayer = _playerRace == PlayerRace.Dots;
+
             VisualFactory.EnemyBodyOverride = mission == null || mission.enemyRace == EnemyRace.Terran ? null
                 : (mission.enemyRace == EnemyRace.Zerg ? "zerg_body" : "protoss_body");
             VisualFactory.EnemyAccentOverride = mission == null || mission.enemyRace == EnemyRace.Terran ? null
                 : (mission.enemyRace == EnemyRace.Zerg ? "zerg_accent" : "protoss_accent");
 
-            // banks first — buildings register supply on completion
-            G.PlayerBank = new ResourceBank(Faction.Player, (bubblePlayer || dotsPlayer) ? 0 : (mission?.playerStartMinerals ?? 50));
-            G.EnemyBank = new ResourceBank(Faction.Enemy, mission?.enemyStartMinerals ?? 50);
+            // difficulty (skirmish only) hands the enemy a starting mineral head start
+            _enemyStartBonus = mission == null ? DifficultyStartBonus(SkirmishConfig.Difficulty) : 0;
+
+            // banks first — Terran starts with a mineral count; Bubble/Dots start at 0 and are
+            // seeded by their race start. Buildings register supply on completion.
+            int playerInit = _playerRace == PlayerRace.Terran ? (mission?.playerStartMinerals ?? 50) : 0;
+            int enemyInit = (_enemyRace == PlayerRace.Terran ? (mission?.enemyStartMinerals ?? 50) : 0) + _enemyStartBonus;
+            G.PlayerBank = new ResourceBank(Faction.Player, playerInit);
+            G.EnemyBank = new ResourceBank(Faction.Enemy, enemyInit);
 
             // managers
             G.Game = gameObject.AddComponent<GameManager>();
@@ -155,36 +173,23 @@ namespace VoidClash
 
         void SpawnStartingBases()
         {
-            if (Campaign.Current?.playerRace == PlayerRace.Bubble)
-            {
-                SpawnBubbleLabStart(Campaign.Current.playerStartMinerals);
-                SpawnTerranStart(Faction.Enemy, MapBuilder.EnemyBasePos);
-                return;
-            }
+            int pSeed = Campaign.Current?.playerStartMinerals ?? RaceSeed(_playerRace);
+            SpawnRaceStart(_playerRace, Faction.Player, MapBuilder.PlayerBasePos, pSeed);
+            SpawnRaceStart(_enemyRace, Faction.Enemy, MapBuilder.EnemyBasePos, RaceSeed(_enemyRace));
+        }
 
-            if (Campaign.Current?.playerRace == PlayerRace.Dots)
-            {
-                SpawnDotsLabStart(Campaign.Current.playerStartMinerals);
-                SpawnTerranStart(Faction.Enemy, MapBuilder.EnemyBasePos);
-                return;
-            }
+        /// <summary>Extra minerals a self-building race is seeded with (Terran uses bank init instead).</summary>
+        static int RaceSeed(PlayerRace race) =>
+            race == PlayerRace.Bubble ? 90 : (race == PlayerRace.Dots ? 170 : 0);
 
-            if (Campaign.Current == null && SkirmishConfig.Mode == SkirmishMode.BubbleLab)
+        void SpawnRaceStart(PlayerRace race, Faction faction, Vector3 basePos, int seed)
+        {
+            switch (race)
             {
-                SpawnBubbleLabStart();
-                SpawnTerranStart(Faction.Enemy, MapBuilder.EnemyBasePos);
-                return;
+                case PlayerRace.Bubble: SpawnBubbleStart(faction, basePos, seed); break;
+                case PlayerRace.Dots:   SpawnDotsStart(faction, basePos, seed); break;
+                default:                SpawnTerranStart(faction, basePos); break;
             }
-
-            if (Campaign.Current == null && SkirmishConfig.Mode == SkirmishMode.DotsLab)
-            {
-                SpawnDotsLabStart();
-                SpawnTerranStart(Faction.Enemy, MapBuilder.EnemyBasePos);
-                return;
-            }
-
-            SpawnTerranStart(Faction.Player, MapBuilder.PlayerBasePos);
-            SpawnTerranStart(Faction.Enemy, MapBuilder.EnemyBasePos);
         }
 
         void SpawnTerranStart(Faction faction, Vector3 basePos)
@@ -205,55 +210,49 @@ namespace VoidClash
             }
         }
 
-        void SpawnBubbleLabStart(int startMinerals = 75)
+        void SpawnBubbleStart(Faction faction, Vector3 basePos, int seed)
         {
-            Vector3 basePos = MapBuilder.PlayerBasePos;
-
             // Bubble Nexus — the foam HQ (supply + passive minerals + build menu).
-            BuildingFactory.Place(G.DB.Building("bubble_core"), Faction.Player, basePos, true);
+            BuildingFactory.Place(G.DB.Building("bubble_core"), faction, basePos, true);
 
             // A Bubble Spring seated beside the home mineral field so income + bubbles flow at once.
             var node = MineralNode.FindNearest(basePos, 60f);
             Vector3 springPos = node != null
                 ? node.transform.position + (basePos - node.transform.position).normalized * 3.6f
                 : basePos + new Vector3(-4.5f, 0f, -4.5f);
-            BuildingFactory.Place(G.DB.Building("bubble_spring"), Faction.Player,
+            BuildingFactory.Place(G.DB.Building("bubble_spring"), faction,
                 BuildingPlacer.SnapToBuildGrid(springPos), true);
 
-            // Seed a small amount of minerals to shape your first extra structures.
-            // (Poison Pool, Aerator, Foam Turret are yours to build when you want them.)
-            G.PlayerBank.AddMinerals(startMinerals);
+            G.Bank(faction).AddMinerals(seed);
 
-            // A small starting cluster of bubbles gathering at the base, ready to command.
+            // A small starting cluster of bubbles gathering at the base.
             Vector3 toCenter = (Vector3.zero - basePos).normalized;
             Vector3 gather = basePos + toCenter * 4f;
             var bubbleData = G.DB.Unit("bubble");
             for (int i = 0; i < 3; i++)
             {
                 Vector3 pos = basePos + Quaternion.Euler(0f, i * 120f, 0f) * Vector3.forward * 4f;
-                var u = UnitFactory.Spawn(bubbleData, Faction.Player, pos);
+                var u = UnitFactory.Spawn(bubbleData, faction, pos);
                 if (u != null) u.CommandMove(gather);
             }
         }
 
-        void SpawnDotsLabStart(int startMinerals = 160)
+        void SpawnDotsStart(Faction faction, Vector3 basePos, int seed)
         {
-            Vector3 basePos = MapBuilder.PlayerBasePos;
-
-            UnitFactory.Spawn(G.DB.Unit("dot_core"), Faction.Player, basePos);
+            UnitFactory.Spawn(G.DB.Unit("dot_core"), faction, basePos);
 
             Vector3 toCenter = (Vector3.zero - basePos).normalized;
             Vector3 printerPos = BuildingPlacer.SnapToBuildGrid(basePos + toCenter * 4.2f + Vector3.right * 1.5f);
-            BuildingFactory.Place(G.DB.Building("dot_printer"), Faction.Player, printerPos, true);
+            BuildingFactory.Place(G.DB.Building("dot_printer"), faction, printerPos, true);
 
-            G.PlayerBank.AddMinerals(startMinerals);
+            G.Bank(faction).AddMinerals(seed);
 
             var dotData = G.DB.Unit("dot");
             Vector3 gather = basePos + toCenter * 4f;
             for (int i = 0; i < 6; i++)
             {
                 Vector3 pos = basePos + Quaternion.Euler(0f, i * 60f, 0f) * Vector3.forward * 3.4f;
-                var u = UnitFactory.Spawn(dotData, Faction.Player, pos);
+                var u = UnitFactory.Spawn(dotData, faction, pos);
                 if (u != null) u.CommandMove(gather);
             }
         }

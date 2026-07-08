@@ -179,11 +179,12 @@ namespace VoidClash
 
             BuildOptions(canvas);
             BuildCampaignPanel(canvas);
+            BuildSkirmishPanel(canvas);
 
             var status = UIFactory.Panel(canvas.transform, "BottomStatus", new Color(0.02f, 0.04f, 0.08f, 0.82f));
-            UIFactory.SetRect(status, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 18f), new Vector2(900f, 54f));
+            UIFactory.SetRect(status, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 18f), new Vector2(980f, 54f));
             var hint = UIFactory.Label(status, "hint",
-                "v0.11.0 pre-alpha  |  race campaigns, Bubble swarms, Dots shapes, build, scout, survive",
+                "v0.12.0 pre-alpha  |  SKIRMISH: any race vs any race + difficulty. Terran, Bubble, Dots.",
                 18, TextAnchor.MiddleCenter, new Color(0.6f, 0.75f, 0.9f));
             UIFactory.Stretch(hint.rectTransform, 8f);
         }
@@ -196,10 +197,10 @@ namespace VoidClash
             var sigil = UIFactory.Label(top, "Sigil", "VC", 24, TextAnchor.MiddleCenter, new Color(0.45f, 0.9f, 1f));
             UIFactory.SetRect(sigil.rectTransform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(18f, 0f), new Vector2(72f, 48f));
 
-            TopNavButton(top, "CAMPAIGN", 120f, 220f, true, () => ShowCampaign(true, PlayerRace.Terran));
-            TopNavButton(top, "FREE PLAY", 350f, 210f, false, () => { Campaign.Current = null; SkirmishConfig.Mode = SkirmishMode.Terran; SceneManager.LoadScene("Game"); });
-            TopNavButton(top, "OPTIONS", 570f, 190f, false, () => ShowOptions(true));
-            TopNavButton(top, "QUIT", 770f, 150f, false, GameManager.QuitApplication);
+            TopNavButton(top, "CAMPAIGN", 120f, 200f, true, () => ShowCampaign(true, PlayerRace.Terran));
+            TopNavButton(top, "SKIRMISH", 330f, 200f, false, () => ShowSkirmish(true));
+            TopNavButton(top, "OPTIONS", 540f, 180f, false, () => ShowOptions(true));
+            TopNavButton(top, "QUIT", 730f, 150f, false, GameManager.QuitApplication);
         }
 
         void TopNavButton(RectTransform parent, string label, float x, float w, bool active, System.Action action)
@@ -274,6 +275,7 @@ namespace VoidClash
             _optionsPanel.gameObject.SetActive(show);
             _mainPanel.gameObject.SetActive(!show);
             if (_campaignPanel != null) _campaignPanel.gameObject.SetActive(false);
+            if (_skirmishPanel != null) _skirmishPanel.gameObject.SetActive(false);
         }
 
         RectTransform _campaignPanel;
@@ -337,6 +339,79 @@ namespace VoidClash
             _campaignPanel.gameObject.SetActive(show);
             _mainPanel.gameObject.SetActive(!show);
             if (_optionsPanel != null) _optionsPanel.gameObject.SetActive(false);
+            if (_skirmishPanel != null) _skirmishPanel.gameObject.SetActive(false);
+        }
+
+        // ---------- New Skirmish (any race vs any race + difficulty) ----------
+
+        RectTransform _skirmishPanel;
+        PlayerRace _skPlayer = PlayerRace.Terran;
+        int _skEnemy = 3;                 // 0 Terran, 1 Bubble, 2 Dots, 3 Random
+        Difficulty _skDifficulty = Difficulty.Normal;
+
+        void BuildSkirmishPanel(Canvas canvas)
+        {
+            _skirmishPanel = UIFactory.Panel(canvas.transform, "SkirmishPanel", UIFactory.PanelColor);
+            UIFactory.SetRect(_skirmishPanel, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -30f), new Vector2(760f, 520f));
+            _skirmishPanel.gameObject.SetActive(false);
+            RebuildSkirmishPanel();
+        }
+
+        void RebuildSkirmishPanel()
+        {
+            if (_skirmishPanel == null) return;
+            foreach (Transform c in _skirmishPanel) Destroy(c.gameObject);
+
+            var title = UIFactory.Label(_skirmishPanel, "title", "NEW SKIRMISH", 32, TextAnchor.MiddleCenter);
+            UIFactory.SetRect(title.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -40f), new Vector2(500f, 44f));
+
+            ChoiceRow("Your race", -110f, new[] { "Terran", "Bubble", "Dots" }, (int)_skPlayer,
+                i => { _skPlayer = (PlayerRace)i; RebuildSkirmishPanel(); });
+            ChoiceRow("Enemy race", -185f, new[] { "Terran", "Bubble", "Dots", "Random" }, _skEnemy,
+                i => { _skEnemy = i; RebuildSkirmishPanel(); });
+            ChoiceRow("Difficulty", -260f, new[] { "Easy", "Normal", "Hard" }, (int)_skDifficulty,
+                i => { _skDifficulty = (Difficulty)i; RebuildSkirmishPanel(); });
+
+            var start = UIFactory.TextButton(_skirmishPanel, "start", "START BATTLE", 24, StartSkirmish,
+                new Color(0.16f, 0.5f, 0.28f, 0.95f));
+            UIFactory.SetRect((RectTransform)start.transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 92f), new Vector2(320f, 58f));
+
+            var back = UIFactory.TextButton(_skirmishPanel, "back", "Back", 20, () => ShowSkirmish(false));
+            UIFactory.SetRect((RectTransform)back.transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 28f), new Vector2(200f, 48f));
+        }
+
+        void ChoiceRow(string label, float y, string[] options, int selected, System.Action<int> onPick)
+        {
+            var lab = UIFactory.Label(_skirmishPanel, label + "_lbl", label, 21, TextAnchor.MiddleLeft, new Color(0.8f, 0.9f, 1f));
+            UIFactory.SetRect(lab.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(34f, y), new Vector2(180f, 34f));
+
+            float bx = 230f;
+            for (int i = 0; i < options.Length; i++)
+            {
+                bool sel = i == selected;
+                var color = sel ? new Color(0.2f, 0.55f, 0.95f, 0.98f) : new Color(0.06f, 0.1f, 0.16f, 0.95f);
+                int captured = i;
+                var btn = UIFactory.TextButton(_skirmishPanel, label + captured, options[i], 17, () => onPick(captured), color);
+                UIFactory.SetRect((RectTransform)btn.transform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(bx, y), new Vector2(118f, 34f));
+                bx += 124f;
+            }
+        }
+
+        void StartSkirmish()
+        {
+            PlayerRace enemy = _skEnemy >= 3 ? (PlayerRace)Random.Range(0, 3) : (PlayerRace)_skEnemy;
+            Campaign.Current = null;
+            SkirmishConfig.SetSkirmish(_skPlayer, enemy, _skDifficulty);
+            SceneManager.LoadScene("Game");
+        }
+
+        void ShowSkirmish(bool show)
+        {
+            if (show) RebuildSkirmishPanel();
+            _skirmishPanel.gameObject.SetActive(show);
+            _mainPanel.gameObject.SetActive(!show);
+            if (_optionsPanel != null) _optionsPanel.gameObject.SetActive(false);
+            if (_campaignPanel != null) _campaignPanel.gameObject.SetActive(false);
         }
 
         static List<MissionDef> MissionsForRace(PlayerRace race)

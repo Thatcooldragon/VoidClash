@@ -1,15 +1,15 @@
 # VoidClash
 
-*Pre-Alpha v0.11.0 - Unity 6.3 (6000.3.16f1)*
+*Pre-Alpha v0.12.0 - Unity 6.3 (6000.3.16f1)*
 
 VoidClash is a real-time strategy game built entirely in Unity/C#, in the spirit of StarCraft. The
 player commands prototype Terran, Bubble, and Dots factions with worker economy, structure-driven
 economy, mobile power-core economy, base building, lift-off buildings, fog of war, and a rule-based
-AI opponent.
+AI opponent that can play any of the three races.
 
-The game is playable as Free Play, Bubble Lab, Dots Lab, or through race-specific campaign fronts
-against Zerg, Protoss, and Terran enemies. v0.11.0 splits campaign mission display by race so the
-Terran, Bubble, and Dots cards each show only their own missions and progress.
+The game is playable as a custom Skirmish (any race vs any race with a difficulty setting), or
+through race-specific campaign fronts against Zerg, Protoss, and Terran enemies. v0.12.0 adds the
+New Skirmish screen and teaches the AI to play Bubble and Dots, not just Terran.
 
 Everything ships from code: 3D art is assembled from Unity primitives, materials and textures are
 generated in project code, sound effects and voice chirps are synthesized, and both scenes build
@@ -36,9 +36,9 @@ repo stays source-first.
 
 ## Modes
 
-- Free Play: a skirmish against the Terran AI.
-- Bubble Tide: a self-building Bubble lab where a Nexus produces fragile bubbles.
-- Dots Lab: a prototype race lab with Dot Printers, Shape Matrix, Core Dots, Kite/Spike shapes, and Giant shape.
+- Skirmish (New): choose your race, the enemy race (Terran / Bubble / Dots / Random) and a
+  difficulty (Easy / Normal / Hard), then fight. The AI plays whichever race you pick for it —
+  any matchup, including mirrors.
 - Campaign: ten missions, unlocked in order, with local progress:
   1. First Contact: Zerg swarm pressure.
   2. The Golden Armada: Protoss armor and slower power waves.
@@ -110,6 +110,16 @@ Dots on their own; loose Dots are the race's raw material and are spent to creat
 Matrix unlocks shaping commands: Core Dot, flying Dot Kite, long-range Dot Spike, and Dot Giant.
 Core Dots trickle minerals. A Dot Giant costs loose Dots and swallows a Core Dot; when the Giant
 dies, the Core Dot escapes.
+
+## v0.12.0 Highlights
+
+- New Skirmish screen: pick your race, the enemy race (+Random), and difficulty, then START BATTLE.
+- The enemy AI now plays all three races. Bubble and Dots enemies are structure-driven — they build,
+  earn minerals, and send their auto-produced swarms at you; Terran uses the full economy/army logic.
+- Difficulty scaling: Easy = a slow, small, late army; Hard = a mineral head start with faster
+  building and bigger, earlier waves.
+- Fixed Dots income so an enemy Dots faction actually earns minerals from its Core Dots.
+- Any-race starts: the race base spawner is generalized so either faction can begin as any race.
 
 ## v0.11.0 Highlights
 

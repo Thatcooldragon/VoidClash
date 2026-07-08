@@ -67,6 +67,8 @@ namespace VoidClash.Tests
         {
             Campaign.Current = null;
             SkirmishConfig.Mode = SkirmishMode.Terran;
+            SkirmishConfig.EnemyRace = PlayerRace.Terran;
+            SkirmishConfig.Difficulty = Difficulty.Normal;
             Time.timeScale = 1f;
             yield return null;
         }
@@ -565,6 +567,59 @@ namespace VoidClash.Tests
                 60f, "Poison Pool morphing");
 
             LogGuard.AssertClean();
+        }
+
+        // ------------------------------------------------------------------
+        // v0.12.0 — the AI can play every race in a custom skirmish, and
+        // difficulty gives the enemy a real head start.
+        // ------------------------------------------------------------------
+        [UnityTest]
+        [Timeout(900000)]
+        public IEnumerator Skirmish_AIPlaysBubbleThenDots()
+        {
+            // --- enemy plays BUBBLE ---
+            Campaign.Current = null;
+            SkirmishConfig.SetSkirmish(PlayerRace.Terran, PlayerRace.Bubble, Difficulty.Normal);
+            Time.timeScale = 1f;
+            SceneManager.LoadScene("Game");
+            yield return null;
+            yield return null;
+
+            Assert.AreEqual(1, Count<Building>(Faction.Enemy, b => b.Data.id == "bubble_core"), "enemy started as Bubble");
+            Assert.AreEqual(0, Count<Building>(Faction.Enemy, b => b.Data.id == "cc"), "enemy is not Terran");
+            Time.timeScale = 10f;
+            yield return WaitUntil(
+                () => Count<Unit>(Faction.Enemy, u => u.Data.id == "bubble" || u.Data.id == "poison_bubble") >= 6,
+                70f, "enemy Bubble production");
+            yield return WaitUntil(
+                () => Count<Building>(Faction.Enemy, b => b.Data.techGroup == "bubble") >= 3,
+                140f, "enemy AI builds more Bubble structures");
+
+            // --- enemy plays DOTS ---
+            SkirmishConfig.SetSkirmish(PlayerRace.Terran, PlayerRace.Dots, Difficulty.Normal);
+            Time.timeScale = 1f;
+            SceneManager.LoadScene("Game");
+            yield return null;
+            yield return null;
+
+            Assert.AreEqual(1, Count<Building>(Faction.Enemy, b => b.Data.id == "dot_printer"), "enemy started as Dots");
+            Assert.AreEqual(1, Count<Unit>(Faction.Enemy, u => u.Data.id == "dot_core"), "enemy has a Core Dot");
+            Time.timeScale = 10f;
+            yield return WaitUntil(() => Count<Unit>(Faction.Enemy, u => u.Data.id == "dot") >= 6, 70f, "enemy Dot production");
+            yield return WaitUntil(
+                () => Count<Building>(Faction.Enemy, b => b.Data.techGroup == "dots") >= 2,
+                140f, "enemy AI builds more Dot structures");
+
+            LogGuard.AssertClean();
+        }
+
+        [Test]
+        public void Skirmish_HardDifficultyGivesEnemyHeadStart()
+        {
+            Assert.AreEqual(0, GameBootstrap.DifficultyStartBonus(Difficulty.Easy), "Easy enemy gets no head start");
+            Assert.AreEqual(0, GameBootstrap.DifficultyStartBonus(Difficulty.Normal), "Normal enemy gets no head start");
+            Assert.Greater(GameBootstrap.DifficultyStartBonus(Difficulty.Hard),
+                GameBootstrap.DifficultyStartBonus(Difficulty.Normal), "Hard enemy gets a mineral head start");
         }
 
         // ------------------------------------------------------------------

@@ -6,10 +6,28 @@ namespace VoidClash
     public enum PlayerRace { Terran, Bubble, Dots }
     public enum AIPersonality { Balanced, Rusher, Turtle, Expander, Tech, Swarm }
     public enum SkirmishMode { Terran, BubbleLab, DotsLab }
+    public enum Difficulty { Easy, Normal, Hard }
 
+    /// <summary>Skirmish setup chosen on the New Skirmish menu (or by the legacy lab buttons).</summary>
     public static class SkirmishConfig
     {
-        public static SkirmishMode Mode = SkirmishMode.Terran;
+        public static SkirmishMode Mode = SkirmishMode.Terran; // decides the PLAYER race + intro hints
+        public static PlayerRace EnemyRace = PlayerRace.Terran; // which race the AI plays in skirmish
+        public static Difficulty Difficulty = Difficulty.Normal;
+
+        /// <summary>Player race implied by the current lab/skirmish Mode.</summary>
+        public static PlayerRace PlayerRaceFromMode =>
+            Mode == SkirmishMode.BubbleLab ? PlayerRace.Bubble :
+            Mode == SkirmishMode.DotsLab ? PlayerRace.Dots : PlayerRace.Terran;
+
+        /// <summary>Set everything for a custom skirmish and pick the Mode from the player race.</summary>
+        public static void SetSkirmish(PlayerRace player, PlayerRace enemy, Difficulty difficulty)
+        {
+            Mode = player == PlayerRace.Bubble ? SkirmishMode.BubbleLab :
+                   player == PlayerRace.Dots ? SkirmishMode.DotsLab : SkirmishMode.Terran;
+            EnemyRace = enemy;
+            Difficulty = difficulty;
+        }
     }
 
     /// <summary>Everything that makes one campaign mission different from free play.</summary>

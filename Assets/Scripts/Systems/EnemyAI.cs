@@ -38,6 +38,13 @@ namespace VoidClash
         const float WaveWarningLead = 25f;
         const float BossWarningLead = 45f;
 
+        // which race the AI plays, and self-building race cadence
+        PlayerRace _enemyRace = PlayerRace.Terran;
+        float _bubbleBuildInterval = 18f;
+        float _dotsBuildInterval = 20f;
+        float _selfBuildTimer;
+        float _swarmTimer;
+
         readonly List<Unit> _army = new List<Unit>();
         readonly List<Unit> _waveOut = new List<Unit>();
         bool _defending;
@@ -53,22 +60,56 @@ namespace VoidClash
         public void Init(Vector3 basePos)
         {
             _basePos = basePos;
+            // campaign enemies are mechanically Terran; a skirmish AI plays the chosen race
+            _enemyRace = Campaign.Current != null ? PlayerRace.Terran : SkirmishConfig.EnemyRace;
+
             var m = Campaign.Current;
-            if (m == null) return;
-            _nextWaveTime = m.firstWaveTime;
-            _waveInterval = m.waveInterval;
-            _waveSize = m.firstWaveSize;
-            _waveGrowth = m.waveSizeGrowth;
-            _workerTarget = m.aiWorkerCap;
-            _turretTarget = m.aiTurrets;
-            _buildFactory = m.aiBuildsFactory;
-            _personality = m.aiPersonality;
-            _armyMixLight = m.armyMix;
-            _armyMixHeavy = m.armyMix;
-            _bossAttackTime = m.bossAttackTime;
-            _bossWarningSent = false;
-            _warnedWaveTime = -1f;
-            ApplyPersonality();
+            if (m != null)
+            {
+                _nextWaveTime = m.firstWaveTime;
+                _waveInterval = m.waveInterval;
+                _waveSize = m.firstWaveSize;
+                _waveGrowth = m.waveSizeGrowth;
+                _workerTarget = m.aiWorkerCap;
+                _turretTarget = m.aiTurrets;
+                _buildFactory = m.aiBuildsFactory;
+                _personality = m.aiPersonality;
+                _armyMixLight = m.armyMix;
+                _armyMixHeavy = m.armyMix;
+                _bossAttackTime = m.bossAttackTime;
+                _bossWarningSent = false;
+                _warnedWaveTime = -1f;
+                ApplyPersonality();
+            }
+            else
+            {
+                ApplyDifficulty(SkirmishConfig.Difficulty);
+                // don't insta-place a second structure on frame 1 — wait one full interval
+                _selfBuildTimer = _enemyRace == PlayerRace.Bubble ? _bubbleBuildInterval : _dotsBuildInterval;
+            }
+        }
+
+        /// <summary>Skirmish difficulty tunes economy, army timing, and self-build cadence.</summary>
+        void ApplyDifficulty(Difficulty d)
+        {
+            _bubbleBuildInterval = 18f;
+            _dotsBuildInterval = 20f;
+            switch (d)
+            {
+                case Difficulty.Easy:
+                    _nextWaveTime = 260f; _waveInterval = 140f; _waveSize = 5; _waveGrowth = 3;
+                    _workerTarget = 10; _turretTarget = 1; _buildFactory = false;
+                    _factoryTime = 230f; _secondRaxTime = 340f; _turretTime = 270f; _expandTime = 999f;
+                    _bubbleBuildInterval = 28f; _dotsBuildInterval = 32f;
+                    break;
+                case Difficulty.Hard:
+                    _nextWaveTime = 150f; _waveInterval = 85f; _waveSize = 8; _waveGrowth = 5;
+                    _workerTarget = 16; _turretTarget = 3; _buildFactory = true;
+                    _factoryTime = 120f; _secondRaxTime = 200f; _turretTime = 165f; _expandTime = 300f;
+                    _bubbleBuildInterval = 12f; _dotsBuildInterval = 14f;
+                    break;
+                // Normal keeps the existing default fields
+            }
         }
 
         void ApplyPersonality()
@@ -133,10 +174,104 @@ namespace VoidClash
             _tick = 1.0f;
 
             CleanLists();
+
+            // Bubble and Dots enemies are structure-driven: their systems auto-produce and
+            // auto-attack, so the AI just keeps building and re-pushes any idle swarm.
+            if (_enemyRace == PlayerRace.Bubble) { TickBubbleAI(); TickSwarmAttack(); return; }
+            if (_enemyRace == PlayerRace.Dots) { TickDotsAI(); TickSwarmAttack(); return; }
+
             RefreshCounts();
             TickEconomy();
             TickProduction();
             TickArmy();
+        }
+
+        // ---------- Bubble / Dots (self-building) AI ----------
+
+        void TickBubbleAI()
+        {
+            _selfBuildTimer -= 1f;
+            if (_selfBuildTimer > 0f) return;
+            _selfBuildTimer = _bubbleBuildInterval;
+
+            if (CountEnemyBuilding("bubble_spring") < 2 && TryBuildSelfNearMinerals("bubble_spring")) return;
+            if (CountEnemyBuilding("poison_pool") < 1 && TryBuildSelf("poison_pool")) return;
+            if (CountEnemyBuilding("foam_turret") < _turretTarget && TryBuildSelf("foam_turret")) return;
+            if (CountEnemyBuilding("aerator") < 1 && TryBuildSelf("aerator")) return;
+            TryBuildSelfNearMinerals("bubble_spring"); // keep expanding income + bubble output
+        }
+
+        void TickDotsAI()
+        {
+            _selfBuildTimer -= 1f;
+            if (_selfBuildTimer > 0f) return;
+            _selfBuildTimer = _dotsBuildInterval;
+
+            if (CountEnemyBuilding("dot_printer") < 3 && TryBuildSelf("dot_printer")) return;
+            if (CountEnemyBuilding("shape_matrix") < 1 && TryBuildSelf("shape_matrix")) return;
+            TryBuildSelf("dot_printer"); // more printers = a bigger dot swarm
+        }
+
+        /// <summary>Re-sends idle enemy combat units at the player so the swarm keeps pressing.</summary>
+        void TickSwarmAttack()
+        {
+            _swarmTimer -= 1f;
+            if (_swarmTimer > 0f) return;
+            _swarmTimer = 4f;
+            Vector3 target = FindPlayerTarget();
+            foreach (var e in Entity.All)
+                if (e is Unit u && !(u is WorkerUnit) && u.Faction == Faction.Enemy && !u.IsDead
+                    && u.State == UnitState.Idle)
+                    u.CommandAttackMove(target);
+        }
+
+        int CountEnemyBuilding(string id)
+        {
+            int n = 0;
+            foreach (var e in Entity.All)
+                if (e is Building b && b.Faction == Faction.Enemy && !b.IsDead && b.Data.id == id
+                    && (b.IsComplete || !b.IsDead)) n++;
+            return n;
+        }
+
+        /// <summary>Places a self-building structure with no worker (Bubble/Dots).</summary>
+        bool TryBuildSelf(string id)
+        {
+            var data = G.DB.Building(id);
+            if (data == null || !Bank.CanAfford(data.mineralCost)) return false;
+            Vector3? spot = FindBuildSpot(data);
+            if (!spot.HasValue) return false;
+            if (!Bank.TrySpend(data.mineralCost)) return false;
+            G.Placer.PlaceAt(data, Faction.Enemy, spot.Value); // selfBuild → completes on its own
+            return true;
+        }
+
+        bool TryBuildSelfNearMinerals(string id)
+        {
+            var data = G.DB.Building(id);
+            if (data == null || !Bank.CanAfford(data.mineralCost)) return false;
+            var node = NearestEnemyMineral();
+            Vector3 anchor = node != null
+                ? node.transform.position + (_basePos - node.transform.position).normalized * 3.6f
+                : _basePos;
+            Vector3? spot = FindSpotAround(data, anchor, 3, 0f);
+            if (!spot.HasValue) return false;
+            if (!Bank.TrySpend(data.mineralCost)) return false;
+            G.Placer.PlaceAt(data, Faction.Enemy, spot.Value);
+            return true;
+        }
+
+        MineralNode NearestEnemyMineral()
+        {
+            MineralNode best = null;
+            float bestD = float.MaxValue;
+            foreach (var n in MineralNode.All)
+            {
+                if (n == null || n.Depleted) continue;
+                float d = (n.transform.position - _basePos).sqrMagnitude;
+                if (d < bestD) { bestD = d; best = n; }
+            }
+            return best;
         }
 
         void CleanLists()
@@ -306,6 +441,11 @@ namespace VoidClash
 
             int maxRing = data.id == "cc" && _ccCount > 0 ? 3 : (data.id == "sensor" ? 2 : 4);
             float startDist = data.id == "cc" && _ccCount > 0 ? 0f : (data.id == "sensor" ? 2f : 6f);
+            return FindSpotAround(data, anchor, maxRing, startDist);
+        }
+
+        Vector3? FindSpotAround(BuildingData data, Vector3 anchor, int maxRing, float startDist)
+        {
             for (int ring = 1; ring <= maxRing; ring++)
             {
                 float dist = startDist + ring * 4.5f;

@@ -21,8 +21,6 @@ namespace VoidClash
         public const int SpikeDotCost = 8;
         public const int GiantDotCost = 25;
 
-        float _mineralFraction;
-
         void OnEnable() => Entity.AnyDied += OnEntityDied;
         void OnDisable() => Entity.AnyDied -= OnEntityDied;
 
@@ -33,18 +31,28 @@ namespace VoidClash
             TickPrinters();
         }
 
+        readonly Dictionary<int, float> _incomeFraction = new Dictionary<int, float>();
+
         void TickCoreIncome()
         {
-            foreach (var e in Entity.All)
-            {
-                if (!(e is Unit u) || u.IsDead || u.Faction != Faction.Player || u.Data.id != "dot_core") continue;
-                _mineralFraction += CoreMineralsPerSec * Time.deltaTime;
-            }
+            // each faction's Core Dots trickle minerals into that faction's bank
+            AccrueCoreIncome(Faction.Player);
+            AccrueCoreIncome(Faction.Enemy);
+        }
 
-            int whole = Mathf.FloorToInt(_mineralFraction);
-            if (whole <= 0) return;
-            _mineralFraction -= whole;
-            G.PlayerBank.AddMinerals(whole);
+        void AccrueCoreIncome(Faction faction)
+        {
+            int cores = 0;
+            foreach (var e in Entity.All)
+                if (e is Unit u && !u.IsDead && u.Faction == faction && u.Data.id == "dot_core") cores++;
+            if (cores == 0) return;
+
+            int key = (int)faction;
+            _incomeFraction.TryGetValue(key, out float frac);
+            frac += cores * CoreMineralsPerSec * Time.deltaTime;
+            int whole = Mathf.FloorToInt(frac);
+            if (whole > 0) { frac -= whole; G.Bank(faction).AddMinerals(whole); }
+            _incomeFraction[key] = frac;
         }
 
         void TickPrinters()
