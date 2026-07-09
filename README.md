@@ -23,15 +23,22 @@ stock Unity/URP.
 - Open `Assets/Scenes/MainMenu.unity` and press Play.
 
 To build the Windows player from Unity, use `VoidClash -> Build Windows EXE`.
+To build the browser player from Unity, use `VoidClash -> Build WebGL`.
 
-Headless build:
+Headless Windows build:
 
 ```powershell
 Unity.exe -batchmode -quit -projectPath <path> -executeMethod VoidClash.Editor.BuildGame.Run
 ```
 
-The player lands at `Build/VoidClash.exe`. Release zips are stored separately from `Build/` so the
-repo stays source-first.
+Headless browser build:
+
+```powershell
+Unity.exe -batchmode -quit -projectPath <path> -executeMethod VoidClash.Editor.BuildGame.RunWebGL
+```
+
+The Windows player lands at `Build/VoidClash.exe`. The browser build lands at `BuildWebGL/`.
+Release zips are stored separately from build folders so the repo stays source-first.
 
 ## v0.16.0 Full Visual Identity Update
 
@@ -72,6 +79,7 @@ repo stays source-first.
 | Shift + click/drag | Add/remove from selection |
 | Double-click | Select all units of that type currently on screen |
 | Right-click | Move, attack, harvest, set rally, or fly an airborne building |
+| Two-finger tap on touch screens | Same as right-click / context order |
 | A, then left-click | Attack-move |
 | S / H | Stop / Hold position |
 | L | Lift off or choose a landing zone for lift-capable buildings |
@@ -218,7 +226,9 @@ runner did not emit an XML results file, so that run is not counted as passed.
 ## Release Artifacts
 
 - `Build/` is the local compiled player folder and is not committed.
+- `BuildWebGL/` is the local browser player folder and is not committed.
 - `VoidClash-v0.16.0-prealpha-win64.zip` is the latest packaged Windows release archive once the local build step completes.
+- `VoidClash-v0.16.0-webgl.zip` is the upload-ready browser build archive once the local WebGL build step completes.
 - Older release zips are kept as historical artifacts when already tracked.
 
 ## Known Rough Edges

@@ -1,14 +1,18 @@
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Build.Reporting;
+using UnityEditor.WebGL;
 using UnityEngine;
 
 namespace VoidClash.Editor
 {
-    /// <summary>Builds the standalone Windows player. Batch:
-    /// -executeMethod VoidClash.Editor.BuildGame.Run</summary>
+    /// <summary>Builds the player. Batch:
+    /// -executeMethod VoidClash.Editor.BuildGame.Run
+    /// -executeMethod VoidClash.Editor.BuildGame.RunWebGL</summary>
     public static class BuildGame
     {
+        static readonly string[] Scenes = { "Assets/Scenes/MainMenu.unity", "Assets/Scenes/Game.unity" };
+
         [MenuItem("VoidClash/Build Windows EXE")]
         public static void Run()
         {
@@ -18,24 +22,47 @@ namespace VoidClash.Editor
 
             var options = new BuildPlayerOptions
             {
-                scenes = new[] { "Assets/Scenes/MainMenu.unity", "Assets/Scenes/Game.unity" },
+                scenes = Scenes,
                 locationPathName = "Build/VoidClash.exe",
                 target = BuildTarget.StandaloneWindows64,
                 options = BuildOptions.None,
             };
 
+            RunBuild(options, "VoidClash Windows build");
+        }
+
+        [MenuItem("VoidClash/Build WebGL")]
+        public static void RunWebGL()
+        {
+            AddAlwaysIncludedShader("Skybox/Procedural");
+
+            PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Disabled;
+            PlayerSettings.WebGL.decompressionFallback = true;
+
+            var options = new BuildPlayerOptions
+            {
+                scenes = Scenes,
+                locationPathName = "BuildWebGL",
+                target = BuildTarget.WebGL,
+                options = BuildOptions.None,
+            };
+
+            RunBuild(options, "VoidClash WebGL build");
+        }
+
+        static void RunBuild(BuildPlayerOptions options, string label)
+        {
             var report = BuildPipeline.BuildPlayer(options);
             if (report.summary.result == BuildResult.Succeeded)
             {
-                Debug.Log($"VoidClash build succeeded: {report.summary.outputPath} " +
+                Debug.Log($"{label} succeeded: {report.summary.outputPath} " +
                           $"({report.summary.totalSize / (1024 * 1024)} MB)");
+                return;
             }
-            else
-            {
-                Debug.LogError($"VoidClash build FAILED: {report.summary.result}, " +
-                               $"{report.summary.totalErrors} errors");
-                if (Application.isBatchMode) EditorApplication.Exit(1);
-            }
+
+            Debug.LogError($"{label} FAILED: {report.summary.result}, " +
+                           $"{report.summary.totalErrors} errors");
+            if (Application.isBatchMode) EditorApplication.Exit(1);
         }
 
         static void AddAlwaysIncludedShader(string shaderName)

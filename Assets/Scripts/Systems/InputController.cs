@@ -19,8 +19,15 @@ namespace VoidClash
         Entity _lastClicked;
         float _lastGroupTapTime;
         int _lastGroupTapped = -1;
+        bool _twoFingerTapTracking;
+        bool _twoFingerTapOverUI;
+        Vector2 _twoFingerTapStart;
+        Vector2 _twoFingerTapLast;
+        float _twoFingerTapStartTime;
 
         const float DragThreshold = 10f;
+        const float TwoFingerTapMaxDuration = 0.35f;
+        const float TwoFingerTapMoveLimit = 48f;
         int _selectableMask;
         int _groundMask;
 
@@ -53,15 +60,23 @@ namespace VoidClash
             }
 
             HandleHover();
-            HandleMouse();
+            bool touchShortcutActive = HandleTouchShortcuts();
+            if (!touchShortcutActive) HandleMouse();
             HandleKeys();
         }
 
         bool PointerOverUI => EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
+        static bool PointerOverTouchUI(int fingerId) =>
+            EventSystem.current != null && EventSystem.current.IsPointerOverGameObject(fingerId);
 
         Entity RaycastEntity(out RaycastHit hit)
         {
-            var ray = G.Cam.Cam.ScreenPointToRay(Input.mousePosition);
+            return RaycastEntityAt(Input.mousePosition, out hit);
+        }
+
+        Entity RaycastEntityAt(Vector3 screenPosition, out RaycastHit hit)
+        {
+            var ray = G.Cam.Cam.ScreenPointToRay(screenPosition);
             if (Physics.Raycast(ray, out hit, 500f, _selectableMask))
             {
                 var e = hit.collider.GetComponentInParent<Entity>();
@@ -73,7 +88,12 @@ namespace VoidClash
 
         MineralNode RaycastMineral()
         {
-            var ray = G.Cam.Cam.ScreenPointToRay(Input.mousePosition);
+            return RaycastMineralAt(Input.mousePosition);
+        }
+
+        MineralNode RaycastMineralAt(Vector3 screenPosition)
+        {
+            var ray = G.Cam.Cam.ScreenPointToRay(screenPosition);
             if (Physics.Raycast(ray, out var hit, 500f, LayerMask.GetMask("Minerals")))
                 return hit.collider.GetComponentInParent<MineralNode>();
             return null;
@@ -81,10 +101,15 @@ namespace VoidClash
 
         bool RaycastGround(out Vector3 pos)
         {
+            return RaycastGroundAt(Input.mousePosition, out pos);
+        }
+
+        bool RaycastGroundAt(Vector3 screenPosition, out Vector3 pos)
+        {
             pos = Vector3.zero;
-            var ray = G.Cam.Cam.ScreenPointToRay(Input.mousePosition);
+            var ray = G.Cam.Cam.ScreenPointToRay(screenPosition);
             if (Physics.Raycast(ray, out var hit, 500f, _groundMask)) { pos = hit.point; return true; }
-            return G.Cam.ScreenToGround(Input.mousePosition, out pos);
+            return G.Cam.ScreenToGround(screenPosition, out pos);
         }
 
         void HandleHover()
@@ -185,7 +210,42 @@ namespace VoidClash
 
             // ----- right: context command -----
             if (Input.GetMouseButtonDown(1) && !PointerOverUI)
-                RightClickCommand();
+                ContextCommandAt(Input.mousePosition);
+        }
+
+        bool HandleTouchShortcuts()
+        {
+            if (!Input.touchSupported) return false;
+
+            if (Input.touchCount == 2)
+            {
+                var a = Input.GetTouch(0);
+                var b = Input.GetTouch(1);
+                var midpoint = (a.position + b.position) * 0.5f;
+
+                if (!_twoFingerTapTracking || a.phase == TouchPhase.Began || b.phase == TouchPhase.Began)
+                {
+                    _twoFingerTapTracking = true;
+                    _twoFingerTapOverUI = PointerOverTouchUI(a.fingerId) || PointerOverTouchUI(b.fingerId);
+                    _twoFingerTapStart = midpoint;
+                    _twoFingerTapLast = midpoint;
+                    _twoFingerTapStartTime = Time.unscaledTime;
+                    return true;
+                }
+
+                _twoFingerTapLast = midpoint;
+                return true;
+            }
+
+            if (!_twoFingerTapTracking) return false;
+
+            float duration = Time.unscaledTime - _twoFingerTapStartTime;
+            float movement = (_twoFingerTapLast - _twoFingerTapStart).magnitude;
+            if (!_twoFingerTapOverUI && duration <= TwoFingerTapMaxDuration && movement <= TwoFingerTapMoveLimit)
+                ContextCommandAt(_twoFingerTapLast);
+
+            _twoFingerTapTracking = false;
+            return true;
         }
 
         void ClickSelect(bool shift)
@@ -237,15 +297,15 @@ namespace VoidClash
             }
         }
 
-        void RightClickCommand()
+        void ContextCommandAt(Vector3 screenPosition)
         {
             G.Selection.Prune();
             var sel = G.Selection.Selected;
             if (sel.Count == 0) return;
 
-            var targetEntity = RaycastEntity(out _);
-            var mineral = RaycastMineral();
-            RaycastGround(out var groundPos);
+            var targetEntity = RaycastEntityAt(screenPosition, out _);
+            var mineral = RaycastMineralAt(screenPosition);
+            RaycastGroundAt(screenPosition, out var groundPos);
 
             if (targetEntity is Building ownSite && ownSite.Faction == Faction.Player && !ownSite.IsComplete)
             {
