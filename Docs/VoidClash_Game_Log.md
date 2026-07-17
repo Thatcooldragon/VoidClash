@@ -99,27 +99,23 @@ Release target:
 
 - `VoidClash-v0.16.0-prealpha-win64.zip`
 
-## 2026-07-09 - Emergency Browser Access Build
+## 2026-07-17 - PC-Only Focus
 
 Goal:
 
-- Keep VoidClash playable from iPad, Android phone, or Meta Quest 3 without buying a website and without redoing the project.
+- Remove the temporary browser/mobile path and keep VoidClash focused on the PC version.
 
 Implemented:
 
-- Installed Unity Web Build Support for Unity `6000.3.16f1`.
-- Added `VoidClash -> Build WebGL` and `BuildGame.RunWebGL`.
-- Configured WebGL output for static hosting by disabling WebGL compression.
-- Added a touch shortcut: two-finger tap sends the same context command as right-click.
-- Added `Docs/WebGL_Free_Hosting.md` with itch.io, GitHub Pages, and same-Wi-Fi options.
+- Removed the WebGL build menu/command.
+- Removed the touch-screen two-finger command shortcut.
+- Removed browser hosting notes from the repo.
+- Restored WebGL compression/decompression settings to their previous project values.
 
 Verification:
 
-- WebGL build succeeded.
-- Output folder: `BuildWebGL/`
-- Upload archive: `VoidClash-v0.16.0-webgl.zip`
-- Unity reported browser build size: about 69 MB.
+- PC build path remains `VoidClash -> Build Windows EXE` and `BuildGame.Run`.
 
-Recommended no-cost path:
+Current direction:
 
-- Upload `VoidClash-v0.16.0-webgl.zip` to itch.io as an HTML game for the fastest playable link.
+- Keep improving the PC RTS version we were already working on.
