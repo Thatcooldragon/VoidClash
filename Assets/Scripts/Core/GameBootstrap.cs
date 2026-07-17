@@ -63,6 +63,7 @@ namespace VoidClash
             G.Cam = gameObject.AddComponent<CameraController>();
             G.AI = gameObject.AddComponent<EnemyAI>();
             G.Hud = gameObject.AddComponent<HUD>();
+            G.Guidance = gameObject.AddComponent<OnboardingDirector>();
 
             G.Audio.Init();
             SetupEnvironment();
@@ -73,6 +74,7 @@ namespace VoidClash
             G.Fog.Init();
             G.Minimap.Init();
             G.Hud.Build();
+            G.Guidance.Init(_playerRace);
             if (bubblePlayer) ShowBubbleLabIntro();
             if (dotsPlayer) ShowDotsLabIntro();
             G.AI.Init(MapBuilder.EnemyBasePos);

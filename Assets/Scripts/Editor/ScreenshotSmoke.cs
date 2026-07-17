@@ -49,6 +49,16 @@ namespace VoidClash.Editor
             EditorApplication.isPlaying = true;
         }
 
+        /// <summary>Capture the v0.17 first-match guidance HUD in the current PC Game View.</summary>
+        public static void RunGuidance()
+        {
+            SessionState.SetBool(Flag, true);
+            SessionState.SetInt(PhaseKey, 40);
+            SessionState.SetFloat(MarkKey, -1f);
+            EditorApplication.update += Tick;
+            EditorApplication.isPlaying = true;
+        }
+
         static void Advance(int phase)
         {
             SessionState.SetInt(PhaseKey, phase);
@@ -289,6 +299,33 @@ namespace VoidClash.Editor
                     if (Elapsed > 2.5f && !SnapPending)
                     {
                         SkirmishConfig.Mode = SkirmishMode.Terran;
+                        SessionState.SetBool(Flag, false);
+                        EditorApplication.Exit(0);
+                    }
+                    break;
+
+                case 40: // enter a standard Terran skirmish
+                    if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != "Game"
+                        || SkirmishConfig.Mode != SkirmishMode.Terran)
+                    {
+                        Campaign.Current = null;
+                        SkirmishConfig.SetSkirmish(PlayerRace.Terran, PlayerRace.Terran, Difficulty.Normal);
+                        UnityEngine.SceneManagement.SceneManager.LoadScene("Game");
+                        Advance(41);
+                    }
+                    break;
+
+                case 41: // capture the real overlay UI, including learning steps
+                    if (Elapsed > 5f)
+                    {
+                        ScreenCapture.CaptureScreenshot("shot_v17_guidance.png");
+                        Advance(42);
+                    }
+                    break;
+
+                case 42: // give ScreenCapture time to flush, then quit
+                    if (Elapsed > 2.5f)
+                    {
                         SessionState.SetBool(Flag, false);
                         EditorApplication.Exit(0);
                     }

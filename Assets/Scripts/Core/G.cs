@@ -22,6 +22,7 @@ namespace VoidClash
         public static BubbleSystem Bubble;
         public static CommanderPowers Powers;
         public static DotsSystem Dots;
+        public static OnboardingDirector Guidance;
         public static GameDatabase DB;
 
         public static ResourceBank Bank(Faction f) => f == Faction.Player ? PlayerBank : EnemyBank;
@@ -31,6 +32,7 @@ namespace VoidClash
             Game = null; PlayerBank = null; EnemyBank = null; Fog = null; Selection = null;
             Input = null; Placer = null; Hud = null; Audio = null; Effects = null;
             Map = null; Cam = null; Minimap = null; AI = null; Bubble = null; Powers = null; Dots = null;
+            Guidance = null;
             Entity.ClearRegistry();
             MineralNode.ClearRegistry();
         }

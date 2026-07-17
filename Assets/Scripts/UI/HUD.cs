@@ -19,6 +19,8 @@ namespace VoidClash
         float _notifyUntil;
         Image _dragRect;
         RectTransform _pausePanel, _endPanel;
+        RectTransform _guidancePanel;
+        Text _guidanceProgress, _guidanceTitle, _guidanceBody;
         Text _endTitle;
         Text _endBody;
         Text _tooltipText;
@@ -37,6 +39,7 @@ namespace VoidClash
             BuildCommandCard();
             BuildPowersPanel();
             BuildNotify();
+            BuildGuidancePanel();
             BuildDragRect();
             BuildTooltip();
             BuildPausePanel();
@@ -757,6 +760,41 @@ namespace VoidClash
             G.Audio.Play("error", 0.8f);
         }
 
+        // ---------- First-match guidance ----------
+
+        void BuildGuidancePanel()
+        {
+            _guidancePanel = UIFactory.Panel(_canvas.transform, "GuidancePanel", new Color(0.02f, 0.04f, 0.07f, 0.92f));
+            UIFactory.SetRect(_guidancePanel, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -98f), new Vector2(720f, 70f));
+
+            var stripe = UIFactory.Panel(_guidancePanel, "stripe", CurrentRaceAccent());
+            UIFactory.SetRect(stripe, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), Vector2.zero, new Vector2(5f, 58f));
+
+            _guidanceProgress = UIFactory.Label(_guidancePanel, "progress", "1 / 5", 15, TextAnchor.MiddleCenter, CurrentRaceAccent());
+            UIFactory.SetRect(_guidanceProgress.rectTransform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(18f, 0f), new Vector2(70f, 48f));
+
+            _guidanceTitle = UIFactory.Label(_guidancePanel, "title", "NEXT STEP", 19, TextAnchor.MiddleLeft, Color.white);
+            UIFactory.SetRect(_guidanceTitle.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(96f, -9f), new Vector2(500f, 26f));
+
+            _guidanceBody = UIFactory.Label(_guidancePanel, "body", "", 15, TextAnchor.MiddleLeft, new Color(0.68f, 0.78f, 0.9f));
+            UIFactory.SetRect(_guidanceBody.rectTransform, new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(96f, 8f), new Vector2(550f, 24f));
+
+            var close = UIFactory.TextButton(_guidancePanel, "close", "X", 17,
+                () => { if (G.Guidance != null) G.Guidance.SetVisible(false); }, UIFactory.PanelLight);
+            UIFactory.SetRect((RectTransform)close.transform, new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(-12f, 0f), new Vector2(42f, 42f));
+            _guidancePanel.gameObject.SetActive(false);
+        }
+
+        public void SetGuidance(string progress, string title, string body, bool visible)
+        {
+            if (_guidancePanel == null) return;
+            _guidancePanel.gameObject.SetActive(visible);
+            if (!visible) return;
+            _guidanceProgress.text = progress;
+            _guidanceTitle.text = title;
+            _guidanceBody.text = body;
+        }
+
         // ---------- Drag rect ----------
 
         void BuildDragRect()
@@ -798,7 +836,7 @@ namespace VoidClash
             _pausePanel = UIFactory.Panel(_canvas.transform, "PausePanel", new Color(0f, 0f, 0f, 0.7f));
             UIFactory.Stretch(_pausePanel);
             var box = UIFactory.Panel(_pausePanel, "box", UIFactory.PanelColor);
-            UIFactory.SetRect(box, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(360f, 380f));
+            UIFactory.SetRect(box, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(360f, 442f));
             var title = UIFactory.Label(box, "title", "PAUSED", 34, TextAnchor.MiddleCenter);
             UIFactory.SetRect(title.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -40f), new Vector2(300f, 50f));
 
@@ -809,8 +847,9 @@ namespace VoidClash
             }
             MenuButton("Resume", -110f, () => G.Game.SetPaused(false));
             MenuButton("Restart", -172f, () => G.Game.Restart());
-            MenuButton("Main Menu", -234f, () => G.Game.QuitToMenu());
-            MenuButton("Quit Game", -296f, GameManager.QuitApplication);
+            MenuButton("Show Learning Steps", -234f, () => { if (G.Guidance != null) G.Guidance.SetVisible(true); G.Game.SetPaused(false); });
+            MenuButton("Main Menu", -296f, () => G.Game.QuitToMenu());
+            MenuButton("Quit Game", -358f, GameManager.QuitApplication);
             _pausePanel.gameObject.SetActive(false);
         }
 

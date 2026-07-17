@@ -1,6 +1,6 @@
 # VoidClash
 
-*Pre-Alpha v0.16.0 - Unity 6.3 (6000.3.16f1)*
+*Pre-Alpha v0.17.0 - Unity 6.3 (6000.3.16f1)*
 
 VoidClash is a real-time strategy game built entirely in Unity/C#, in the spirit of StarCraft. The
 player commands prototype Terran, Bubble, and Dots factions with worker economy, structure-driven
@@ -9,6 +9,9 @@ AI opponent that can play any of the three races.
 
 The game is playable as Free Play (choose player race, AI race, and difficulty), or through
 race-specific campaign fronts against Zerg, Protoss, and Terran enemies.
+
+v0.17 adds a five-step learning path for every playable race. It follows real match progress,
+can be hidden with its X button, and can be restored from the pause menu.
 
 Everything ships from code: 3D art is assembled from Unity primitives, materials and textures are
 generated in project code, sound effects and voice chirps are synthesized, and both scenes build

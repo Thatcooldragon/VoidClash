@@ -113,6 +113,9 @@ namespace VoidClash.Tests
             Time.timeScale = 8f;
             G.AI.enabled = false; // keep the opponent passive for this systems test
 
+            Assert.IsNotNull(G.Guidance, "onboarding director is installed in a real match");
+            Assert.AreEqual(5, G.Guidance.TotalSteps, "Terran opening path is active");
+
             // --- economy: the 4 starting workers auto-harvest ---
             int start = G.PlayerBank.Minerals;
             yield return WaitUntil(() => G.PlayerBank.Minerals > start, 60f, "workers to deposit minerals");
@@ -379,6 +382,22 @@ namespace VoidClash.Tests
             Assert.AreEqual("Bubble", FactionPalette.RaceName(PlayerRace.Bubble));
             Assert.AreEqual("Dots", FactionPalette.RaceName(PlayerRace.Dots));
             Assert.Greater(FactionPalette.ForEnemyRace(EnemyRace.Protoss).Accent.b, 0.8f, "Protoss palette has cyan shine");
+        }
+
+        [Test]
+        public void V017Onboarding_AllRacesHaveCompleteLearningPaths()
+        {
+            foreach (var race in new[] { PlayerRace.Terran, PlayerRace.Bubble, PlayerRace.Dots })
+            {
+                var steps = OnboardingDirector.StepTitlesFor(race);
+                Assert.AreEqual(5, steps.Length, $"{race} has a five-step opening path");
+                foreach (var step in steps)
+                    Assert.IsFalse(string.IsNullOrWhiteSpace(step), $"{race} guidance step is named");
+            }
+
+            CollectionAssert.Contains(OnboardingDirector.StepTitlesFor(PlayerRace.Terran), "COMMAND YOUR ARMY");
+            CollectionAssert.Contains(OnboardingDirector.StepTitlesFor(PlayerRace.Bubble), "SEND THE BUBBLE WAVE");
+            CollectionAssert.Contains(OnboardingDirector.StepTitlesFor(PlayerRace.Dots), "MOVE AS A SHAPE ARMY");
         }
 
         [Test]

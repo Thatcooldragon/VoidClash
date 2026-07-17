@@ -119,3 +119,35 @@ Verification:
 Current direction:
 
 - Keep improving the PC RTS version we were already working on.
+
+## 2026-07-17 - v0.17.0 Feel Good To Play Update
+
+Goal:
+
+- Make the existing PC game easier to understand and more satisfying to command.
+
+Implemented:
+
+- Added a live five-step opening path for Terran, Bubble, and Dots players.
+- Guidance reacts to real selection, building, production, shape-forming, and attack orders.
+- Added a compact next-step HUD panel with progress and a familiar X hide button.
+- Added `Show Learning Steps` to the pause menu so hidden help can be restored.
+- Kept and released the existing selection feedback, move/attack markers, attack warnings,
+  build-complete effects, race-colored HUD, richer briefing, smarter waves, and command sounds.
+- Updated the menu and project version to v0.17.0.
+- Added smoke-test coverage proving each race has a complete opening path.
+
+Release target:
+
+- `VoidClash-v0.17.0-prealpha-win64.zip`
+
+Status:
+
+- Still pre-alpha. v0.17 improves clarity and feel; v0.18 is planned as the largest update.
+
+Verification:
+
+- Unity PlayMode tests passed: `18/18`.
+- Windows build succeeded: `Build/VoidClash.exe` (108 MB).
+- The standard PC HUD screenshot confirmed that learning steps do not overlap the main interface.
+- v0.18 plan: `Docs/VoidClash_v0.18_Living_Warfronts_Mind_Map.md`.
